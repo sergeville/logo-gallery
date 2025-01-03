@@ -1,11 +1,10 @@
 import { AuthProvider } from '@/context/AuthContext';
+import type { AppProps } from 'next/app';
 
-function MyApp({ Component, pageProps }) {
+function MyApp({ Component, pageProps }: AppProps) {
   return (
     <AuthProvider>
-      <Layout>
-        <Component {...pageProps} />
-      </Layout>
+      <Component {...pageProps} />
     </AuthProvider>
   );
 }

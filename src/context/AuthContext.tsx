@@ -1,15 +1,26 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
+interface User {
+  _id: string;
+  username: string;
+  email: string;
+  profileImage?: string;
+}
+
 interface AuthContextType {
-  user: any;
-  login: (token: string, userData: any) => void;
+  user: User | null;
+  login: (token: string, userData: User) => void;
   logout: () => void;
 }
 
-const AuthContext = createContext<AuthContextType>({} as AuthContextType);
+const AuthContext = createContext<AuthContextType>({
+  user: null,
+  login: () => {},
+  logout: () => {},
+});
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -19,7 +30,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const login = (token: string, userData: any) => {
+  const login = (token: string, userData: User) => {
     localStorage.setItem('token', token);
     localStorage.setItem('user', JSON.stringify(userData));
     setUser(userData);

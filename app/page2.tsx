@@ -2,11 +2,20 @@
 
 import React, { useState } from 'react';
 import { Search, Sun, Moon, User } from 'lucide-react';
+import Image from 'next/image';
+
+interface Logo {
+  id: number;
+  name: string;
+  url: string;
+  rating: number;
+  description: string;
+}
 
 const LogoGallery = () => {
   const [darkMode, setDarkMode] = useState(false);
   
-  const logos = [
+  const logos: Logo[] = [
     {
       id: 1,
       name: 'Mountain Peak Logo',
@@ -29,6 +38,10 @@ const LogoGallery = () => {
       description: 'Abstract wave pattern in purple'
     }
   ];
+
+  const handleImageError = (event: React.SyntheticEvent<HTMLImageElement>) => {
+    event.currentTarget.src = 'https://placehold.co/400x380/666666/FFFFFF?text=Image+Not+Found';
+  };
 
   return (
     <div className={`min-h-screen ${darkMode ? 'dark bg-black' : 'bg-[#F2F2F7]'}`}>
@@ -71,12 +84,12 @@ const LogoGallery = () => {
                 className="bg-white dark:bg-[#1C1C1E] rounded-xl shadow-sm hover:shadow-md transition-shadow p-6"
               >
                 <div className="relative h-[320px] mb-6 overflow-hidden rounded-lg bg-gray-50 dark:bg-gray-900">
-                  <img
+                  <Image
                     src={logo.url}
                     alt={logo.name}
-                    className="w-full h-full object-contain p-4"
-                    width={400}
-                    height={380}
+                    fill
+                    className="object-contain p-4"
+                    onError={handleImageError}
                   />
                 </div>
                 

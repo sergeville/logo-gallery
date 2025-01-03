@@ -18,7 +18,7 @@ Create `.env` file in root directory:
 ```env
 MONGODB_URI=mongodb://localhost:27017/logo_gallery
 JWT_SECRET=your_jwt_secret_here
-NEXT_PUBLIC_API_URL=http://localhost:3000/api
+NEXT_PUBLIC_API_URL=http://localhost:3000/
 ```
 
 ## 3. Database Setup
@@ -46,7 +46,7 @@ export async function connectDB() {
 
 ### Create API Routes
 
-`src/pages/api/auth/login.ts`:
+`src/pages/login.ts`:
 ```typescript
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { User } from '@/models/User';

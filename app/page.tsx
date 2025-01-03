@@ -1,15 +1,18 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Search, Sun, Moon, User } from 'lucide-react';
+import { Search, Sun, Moon, User, LogOut, Upload } from 'lucide-react';
+import Image from 'next/image';
+import AuthModal from './components/AuthModal';
+import UploadModal from './components/UploadModal';
+import { useAuth } from './context/AuthContext';
 
 interface Logo {
   _id: string;
   name: string;
-  url: string | undefined;
-  path: string;
-  description?: string;
-  userId?: {
+  url: string;
+  description: string;
+  userId: {
     username: string;
     profileImage: string;
   };
@@ -17,204 +20,130 @@ interface Logo {
   averageRating: number;
 }
 
-interface User {
-  _id: string;
-  username: string;
-  email: string;
-  profileImage?: string;
-}
-
 export default function Page() {
+  const { user, logout } = useAuth();
   const [darkMode, setDarkMode] = useState(false);
   const [logos, setLogos] = useState<Logo[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [user, setUser] = useState<User | null>(null);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [error, setError] = useState('');
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
 
-  // Dark mode effect
   useEffect(() => {
-    const isDarkMode = localStorage.getItem('darkMode') === 'true';
-    setDarkMode(isDarkMode);
-    if (isDarkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, []);
-
-  // Fetch logos
-  useEffect(() => {
-    const fetchLogos = async () => {
-      try {
-        const response = await fetch('/api/logos');
-        if (!response.ok) {
-          throw new Error('Failed to fetch logos');
-        }
-        const data = await response.json();
-        console.log('Raw logo data:', JSON.stringify(data, null, 2));
-        setLogos(data.logos);
-      } catch (err) {
-        console.error('Error details:', err);
-        setError(err instanceof Error ? err.message : 'Failed to fetch logos');
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchLogos();
   }, []);
 
-  const toggleDarkMode = () => {
-    const newDarkMode = !darkMode;
-    setDarkMode(newDarkMode);
-    localStorage.setItem('darkMode', String(newDarkMode));
-    
-    if (newDarkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
+  const fetchLogos = async () => {
+    try {
+      const response = await fetch('/api/logos');
+      const data = await response.json();
+      console.log('Fetched logos data:', data);
+      setLogos(data.logos);
+    } catch (err) {
+      setError('Failed to load logos');
+      console.error('Error fetching logos:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const getImageUrl = (logo: Logo | undefined) => {
-    if (!logo) {
-      return 'https://placehold.co/400x380/666666/FFFFFF?text=No+Logo+Data';
-    }
-
-    if (!logo.path && !logo.url) {
-      return 'https://placehold.co/400x380/666666/FFFFFF?text=No+Image+Path';
-    }
-
-    if (logo.url?.startsWith('http')) {
-      return logo.url;
-    }
-
-    // Remove /api/ and handle trailing slash
-    const cleanPath = logo.path.replace('/api/uploads/', 'uploads/');
-    const baseUrl = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/').replace(/\/$/, '');
-    return `${baseUrl}/${cleanPath}`;
+  const handleAuthClick = () => {
+    setAuthMode('login');
+    setShowAuthModal(true);
   };
-  
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as HTMLElement;
-      if (isDropdownOpen && !target.closest('.user-dropdown')) {
-        setIsDropdownOpen(false);
-      }
-    };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isDropdownOpen]);
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const response = await fetch('/api/user');
-        if (response.ok) {
-          const data = await response.json();
-          setUser(data.user);
-        }
-      } catch (error) {
-        console.error('Error fetching user:', error);
-      }
-    };
-
-    fetchUser();
-  }, []);
+  const handleUploadSuccess = () => {
+    fetchLogos(); // Refresh the logos list
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
+    <div className={`min-h-screen ${darkMode ? 'dark bg-black' : 'bg-[#F2F2F7]'}`}>
       {/* Header */}
-      <header className="fixed top-0 w-full bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm z-10 transition-colors duration-200">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <h1 className="text-xl font-bold text-gray-900 dark:text-white transition-colors">
-              Logo Gallery
-            </h1>
-            <div className="flex items-center gap-4">
-              <Search className="h-5 w-5 text-gray-600 dark:text-gray-300" />
-              <div className="relative">
-                <button
-                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  className="flex items-center gap-2 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                >
-                  <User className="h-5 w-5 text-gray-600 dark:text-gray-300" />
-                  {user?.username && (
-                    <span className="text-sm text-gray-600 dark:text-gray-300">
-                      {user.username}
-                    </span>
-                  )}
-                </button>
-                
-                {isDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 z-20">
-                    {user ? (
-                      <>
-                        <div className="px-4 py-2 border-b border-gray-200 dark:border-gray-700">
-                          <p className="text-sm font-medium text-gray-900 dark:text-white">{user.username}</p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">{user.email}</p>
-                        </div>
-                        <a
-                          href="/profile"
-                          className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                        >
-                          Profile
-                        </a>
-                        <a
-                          href="/settings"
-                          className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                        >
-                          Settings
-                        </a>
-                        <button
-                          onClick={() => {
-                            // Add logout logic here
-                            setUser(null);
-                            setIsDropdownOpen(false);
-                          }}
-                          className="block w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700"
-                        >
-                          Sign out
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        <a
-                          href="/login"
-                          className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                        >
-                          Sign in
-                        </a>
-                        <a
-                          href="/register"
-                          className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                        >
-                          Register
-                        </a>
-                      </>
-                    )}
-                  </div>
-                )}
+      <header className="fixed w-full backdrop-blur-lg bg-white/70 dark:bg-black/70 h-16 flex items-center justify-between px-4 border-b border-gray-200 dark:border-gray-800 z-10">
+        <div className="flex items-center space-x-4">
+          <h1 className="text-xl font-bold text-gray-900 dark:text-white">Logo Gallery</h1>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <input
+              type="text"
+              placeholder="Search logos..."
+              className="pl-10 pr-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+        </div>
+        
+        <div className="flex items-center space-x-4">
+          <button
+            onClick={() => setDarkMode(!darkMode)}
+            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
+          >
+            {darkMode ? (
+              <Sun className="h-5 w-5 text-gray-900 dark:text-white" />
+            ) : (
+              <Moon className="h-5 w-5 text-gray-900 dark:text-white" />
+            )}
+          </button>
+          
+          {user ? (
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={() => setShowUploadModal(true)}
+                className="flex items-center space-x-2 px-4 py-2 rounded-lg bg-green-500 hover:bg-green-600 text-white"
+              >
+                <Upload className="h-4 w-4" />
+                <span>Upload</span>
+              </button>
+              <div className="flex items-center space-x-2">
+                <Image
+                  src={user.profileImage}
+                  alt={user.username}
+                  width={32}
+                  height={32}
+                  className="rounded-full"
+                />
+                <span className="text-sm font-medium text-gray-900 dark:text-white">
+                  {user.username}
+                </span>
               </div>
               <button
-                onClick={toggleDarkMode}
-                className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                aria-label="Toggle dark mode"
+                onClick={logout}
+                className="flex items-center space-x-2 px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white"
               >
-                {darkMode ? (
-                  <Sun className="h-5 w-5 text-yellow-500" />
-                ) : (
-                  <Moon className="h-5 w-5 text-gray-600" />
-                )}
+                <LogOut className="h-4 w-4" />
+                <span>Logout</span>
               </button>
             </div>
-          </div>
+          ) : (
+            <button 
+              onClick={() => {
+                setAuthMode('login');
+                setShowAuthModal(true);
+              }}
+              className="flex items-center space-x-2 px-4 py-2 rounded-lg bg-blue-500 hover:bg-blue-600 text-white"
+            >
+              <User className="h-4 w-4" />
+              <span>Sign In</span>
+            </button>
+          )}
         </div>
       </header>
 
-      {/* Main Content */}
+      {/* Auth Modal */}
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        mode={authMode}
+        onModeChange={setAuthMode}
+      />
+
+      {/* Upload Modal */}
+      <UploadModal
+        isOpen={showUploadModal}
+        onClose={() => setShowUploadModal(false)}
+        onUploadSuccess={handleUploadSuccess}
+      />
+
       <main className="flex-grow pt-20 pb-20">
         <div className="container mx-auto px-4">
           {loading ? (
@@ -225,82 +154,80 @@ export default function Page() {
             <div className="text-center text-error p-4">
               {error}
             </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {logos.map((logo) => (
-                <div key={logo._id} className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-                  <div className="relative h-[320px] mb-4 bg-gray-100 dark:bg-gray-700 rounded-lg">
-                    <img
-                      src={getImageUrl(logo)}
-                      alt={logo.name || 'Logo'}
-                      className="w-full h-full object-contain p-4"
-                      width={400}
-                      height={380}
-                      onError={(e) => {
-                        const logoName = logo?.name || 'Unknown';
-                        console.error(`Failed to load image for ${logoName}`, {
-                          logo: JSON.stringify(logo, null, 2)
-                        });
-                        e.currentTarget.src = 'https://placehold.co/400x380/666666/FFFFFF?text=Image+Not+Found';
-                      }}
-                    />
-                  </div>
-                  <div className="flex items-start justify-between mb-4">
-                    <div>
-                      <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                        {logo.name}
-                      </h2>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        by {logo.userId?.username || 'Unknown User'}
-                      </p>
-                    </div>
-                    <div className="flex items-center">
-                      <span className="text-sm font-medium text-gray-600 dark:text-gray-300 mr-2">
-                        {typeof logo.averageRating === 'number' ? logo.averageRating.toFixed(1) : '0.0'}
-                      </span>
-                      <span className="text-yellow-400">⭐</span>
-                    </div>
-                  </div>
-                  <p className="text-gray-600 dark:text-gray-300 mb-4">
-                    {logo.description}
-                  </p>
-                  {logo.tags && logo.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-2">
-                      {logo.tags.map((tag) => (
-                        <span
-                          key={tag}
-                          className="px-2 py-1 text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-full"
-                        >
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  )}
+          ) : user ? (
+            <>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+                Your Logos
+              </h2>
+              {logos.filter(logo => logo.userId.username === user.username).length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {logos
+                    .filter(logo => logo.userId.username === user.username)
+                    .map((logo) => (
+                      <div key={logo._id} className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+                        <div className="relative h-[320px] mb-4 bg-gray-100 dark:bg-gray-700 rounded-lg">
+                          <Image
+                            src={logo.url}
+                            alt={logo.name}
+                            fill
+                            priority
+                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                            className="object-contain p-4"
+                            onError={(e) => {
+                              console.error(`Failed to load image: ${logo.url}`);
+                              e.currentTarget.src = 'https://placehold.co/400x380/666666/FFFFFF?text=Image+Not+Found';
+                            }}
+                          />
+                        </div>
+                        <div className="flex items-start justify-between mb-4">
+                          <div>
+                            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                              {logo.name}
+                            </h2>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                              {logo.description}
+                            </p>
+                            <div className="flex flex-wrap gap-2 mt-2">
+                              {logo.tags.map((tag) => (
+                                <span key={tag} className="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-1 rounded">
+                                  {tag}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                          <div className="flex items-center">
+                            <span className="text-sm font-medium text-gray-600 dark:text-gray-300 mr-2">
+                              {logo.averageRating.toFixed(1)}
+                            </span>
+                            <span className="text-yellow-400">⭐</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                 </div>
-              ))}
+              ) : (
+                <div className="text-center py-12">
+                  <div className="text-gray-500 dark:text-gray-400 text-lg">
+                    No images uploaded by {user.username}
+                  </div>
+                  <button 
+                    onClick={() => setShowUploadModal(true)}
+                    className="mt-4 px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                  >
+                    Upload Your First Logo
+                  </button>
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="text-center py-12">
+              <div className="text-gray-500 dark:text-gray-400 text-lg">
+                Please sign in to view your logos
+              </div>
             </div>
           )}
         </div>
       </main>
-
-      {/* Footer */}
-      <footer className="fixed bottom-0 w-full bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm transition-colors">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex justify-between items-center">
-            <p className="text-sm text-gray-600 dark:text-gray-300">
-              © 2024 Your Company. All rights reserved.
-            </p>
-            <div className="flex gap-4">
-              <a href="#" className="text-sm text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white transition-colors">
-                Privacy Policy
-              </a>
-              <a href="#" className="text-sm text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white transition-colors">
-                Terms of Service
-              </a>
-            </div>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }

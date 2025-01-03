@@ -1,36 +1,75 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Logo Gallery
+
+A modern web application for managing and showcasing logos, built with Next.js, TypeScript, and MongoDB.
+
+## Features
+
+- User authentication (login/register)
+- Logo upload and management
+- Dark mode support
+- Responsive design
+- Rating system
+- Tag-based organization
+
+## Tech Stack
+
+- Next.js 14
+- TypeScript
+- MongoDB
+- Tailwind CSS
+- Docker
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
 
+- Node.js 18 or later
+- Docker and Docker Compose
+- Git
+
+### Installation
+
+1. Clone the repository:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/sergeville/logo-gallery.git
+cd logo-gallery
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Install dependencies:
+```bash
+npm install
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. Start the development environment:
+```bash
+docker-compose up --build
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+The application will be available at http://localhost:3000
 
-## Learn More
+### Environment Variables
 
-To learn more about Next.js, take a look at the following resources:
+Create a `.env` file in the root directory with the following variables:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```env
+MONGODB_URI=mongodb://mongodb:27017/logo-gallery
+JWT_SECRET=your_jwt_secret_here
+NEXT_PUBLIC_API_URL=http://localhost:3000
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Development
 
-## Deploy on Vercel
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm start` - Start production server
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Docker Support
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The project includes Docker configuration for both development and production environments:
+
+- Development: `docker-compose up --build`
+- Production: Use the Dockerfile with appropriate environment variables
+
+## License
+
+MIT

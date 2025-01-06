@@ -2,6 +2,13 @@
 
 A modern web application for managing and showcasing logos, built with Next.js, TypeScript, and MongoDB.
 
+## Documentation
+
+- [Database Configuration](docs/database.md) - Complete guide for database setup across all environments
+- [Testing Guide](TESTING.md) - Testing setup and guidelines
+- [Changelog](CHANGELOG.md) - Version history and changes
+- [Implementation Guide](implementation-guide.md) - Development guidelines and practices
+
 ## Features
 
 - User authentication (login/register)

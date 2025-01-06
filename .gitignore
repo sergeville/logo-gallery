@@ -64,3 +64,13 @@ pids
 *.pid
 *.seed
 *.pid.lock
+
+# Environment files
+.env
+.env.local
+.env.*.local
+.env.production
+!.env.production.template
+.env.development.local
+.env.test.local
+.env.production.local

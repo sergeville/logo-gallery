@@ -64,11 +64,46 @@ JWT_SECRET=your_jwt_secret_here
 NEXT_PUBLIC_API_URL=http://localhost:3000
 ```
 
+### Environment Setup
+
+1. Initial Setup
+```bash
+# Copy the example environment file for development
+cp .env.example .env.development
+
+# Edit .env.development with your development settings:
+MONGODB_URI=mongodb://localhost:27017/LogoGalleryDevelopmentDB
+NODE_ENV=development
+JWT_SECRET=your_jwt_secret_here
+NEXT_PUBLIC_API_URL=http://localhost:3000
+```
+
+2. Environment-Specific Files
+Each environment has its own configuration file:
+- Development: `.env.development`
+- Test: `.env.test`
+- Production: `.env.production`
+
+3. Database Names
+Each environment uses its own database:
+- Development: `LogoGalleryDevelopmentDB`
+- Test: `LogoGalleryTestDB`
+- Production: `LogoGalleryProductionDB`
+
+For detailed configuration instructions, see:
+- [Database Documentation](docs/database.md)
+- [Environment Configuration Guide](docs/database.md#environment-specific-configurations)
+
 ## Development
 
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm start` - Start production server
+To start the development server:
+```bash
+# Start with development environment
+NODE_ENV=development npm run dev
+
+# Or using Docker
+docker-compose up --build
+```
 
 ## Docker Support
 
@@ -80,3 +115,17 @@ The project includes Docker configuration for both development and production en
 ## License
 
 MIT
+
+## Development Guidelines
+
+### Database Changes
+Before making any changes to the database structure, types, or related code, please refer to our [Database Validation Checklist](docs/VALIDATION_CHECKLIST.md). This checklist helps maintain consistency across:
+- Database schemas
+- TypeScript types
+- Test data generation
+- Model relationships
+- Environment configurations
+
+### Documentation
+- [Database Configuration](docs/database.md) - Database setup and configuration
+- [Validation Checklist](docs/VALIDATION_CHECKLIST.md) - Checklist for database changes

@@ -66,11 +66,11 @@ pids
 *.pid.lock
 
 # Environment files
-.env
-.env.local
-.env.*.local
-.env.production
+.env*
+!.env.example
 !.env.production.template
-.env.development.local
-.env.test.local
-.env.production.local
+
+# Keep environment templates but ignore actual environment files
+.env.development
+.env.test
+.env.production

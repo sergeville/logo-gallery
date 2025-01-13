@@ -1,20 +1,22 @@
 import '@testing-library/jest-dom';
-import { TextEncoder, TextDecoder } from 'util';
-import { jest } from '@jest/globals';
-import React from 'react';
-import { getMongoClient, closeConnection, getDb } from './app/lib/db-config';
+import { MongoClient } from 'mongodb';
 import { config } from 'dotenv';
+import path from 'path';
 
-config({ path: '.env.test' });
+// Load test environment variables
+config({ path: path.join(__dirname, '.env.test') });
+
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/LogoGalleryTestDB';
 
 let mongoClient: MongoClient;
 
 beforeAll(async () => {
-  mongoClient = new MongoClient(process.env.MONGODB_URI || 'mongodb://localhost:27017/MockForLogGalleryTestData');
+  mongoClient = new MongoClient(MONGODB_URI);
   await mongoClient.connect();
-  
+  console.log('Connected to MongoDB for testing');
+
   // Clear all collections before tests
-  const db = await getDb();
+  const db = mongoClient.db();
   const collections = await db.listCollections().toArray();
   for (const collection of collections) {
     await db.collection(collection.name).deleteMany({});
@@ -24,245 +26,111 @@ beforeAll(async () => {
 afterAll(async () => {
   if (mongoClient) {
     await mongoClient.close();
+    console.log('Closed MongoDB connection');
   }
-  await closeConnection();
 });
 
-// Mock Response and Request
-class MockResponse {
-  headers: Headers;
-  ok: boolean;
-  redirected: boolean;
-  status: number;
-  statusText: string;
-  type: ResponseType;
-  url: string;
-  body: ReadableStream | null;
-  bodyUsed: boolean;
+// Mock fetch for API calls
+global.fetch = jest.fn();
 
-  constructor(body?: BodyInit | null, init?: ResponseInit) {
-    this.headers = new Headers(init?.headers);
-    this.status = init?.status || 200;
-    this.statusText = init?.statusText || 'OK';
-    this.ok = this.status >= 200 && this.status < 300;
-    this.redirected = false;
-    this.type = 'default';
-    this.url = '';
-    this.body = null;
-    this.bodyUsed = false;
-    
-    if (body && typeof body === 'string') {
-      try {
-        const parsedBody = JSON.parse(body);
-        this._bodyInit = parsedBody;
-      } catch {
-        this._bodyInit = body;
-      }
-    } else {
-      this._bodyInit = body || null;
-    }
+// Mock FormData
+class MockFormData implements FormData {
+  private data = new Map<string, any>();
+
+  append(name: string, value: string | Blob, fileName?: string): void {
+    this.data.set(name, value);
   }
 
-  _bodyInit: any;
-
-  async arrayBuffer(): Promise<ArrayBuffer> {
-    return new ArrayBuffer(0);
+  delete(name: string): void {
+    this.data.delete(name);
   }
 
-  async blob(): Promise<Blob> {
-    return new Blob();
+  get(name: string): FormDataEntryValue | null {
+    return this.data.get(name) || null;
   }
 
-  async formData(): Promise<FormData> {
-    return new FormData();
+  getAll(name: string): FormDataEntryValue[] {
+    const value = this.data.get(name);
+    return value ? [value] : [];
   }
 
-  async json(): Promise<any> {
-    return this._bodyInit || {};
+  has(name: string): boolean {
+    return this.data.has(name);
   }
 
-  async text(): Promise<string> {
-    return this._bodyInit ? JSON.stringify(this._bodyInit) : '';
+  set(name: string, value: string | Blob, fileName?: string): void {
+    this.data.set(name, value);
   }
 
-  clone(): Response {
-    return new MockResponse(this._bodyInit, {
-      status: this.status,
-      statusText: this.statusText,
-      headers: this.headers,
-    });
+  forEach(callbackfn: (value: FormDataEntryValue, key: string, parent: FormData) => void): void {
+    this.data.forEach((value, key) => callbackfn(value, key, this));
+  }
+
+  entries(): IterableIterator<[string, FormDataEntryValue]> {
+    return this.data.entries();
+  }
+
+  keys(): IterableIterator<string> {
+    return this.data.keys();
+  }
+
+  values(): IterableIterator<FormDataEntryValue> {
+    return this.data.values();
+  }
+
+  [Symbol.iterator](): IterableIterator<[string, FormDataEntryValue]> {
+    return this.entries();
   }
 }
 
-class MockRequest {
-  cache: RequestCache;
-  credentials: RequestCredentials;
-  destination: RequestDestination;
-  headers: Headers;
-  integrity: string;
-  keepalive: boolean;
-  method: string;
-  mode: RequestMode;
-  redirect: RequestRedirect;
-  referrer: string;
-  referrerPolicy: ReferrerPolicy;
-  signal: AbortSignal;
-  url: string;
-  body: ReadableStream | null;
-  bodyUsed: boolean;
+global.FormData = MockFormData as any;
 
-  constructor(input: RequestInfo | URL, init?: RequestInit) {
-    this.cache = 'default';
-    this.credentials = 'same-origin';
-    this.destination = 'document';
-    this.headers = new Headers(init?.headers);
-    this.integrity = '';
-    this.keepalive = false;
-    this.method = init?.method || 'GET';
-    this.mode = 'cors';
-    this.redirect = 'follow';
-    this.referrer = 'about:client';
-    this.referrerPolicy = 'strict-origin-when-cross-origin';
-    this.signal = new AbortController().signal;
-    this.url = typeof input === 'string' ? input : input.toString();
-    this.body = null;
-    this.bodyUsed = false;
-  }
+// Mock Next.js Response
+const createResponse = (data: any, init?: ResponseInit) => {
+  const response = new Response(JSON.stringify(data), {
+    ...init,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(init?.headers || {}),
+    },
+  });
 
-  async arrayBuffer(): Promise<ArrayBuffer> {
-    return new ArrayBuffer(0);
-  }
+  response.json = () => Promise.resolve(data);
+  
+  Object.defineProperty(response, 'status', {
+    get() {
+      return init?.status || 200;
+    },
+  });
 
-  async blob(): Promise<Blob> {
-    return new Blob();
-  }
+  return response;
+};
 
-  async formData(): Promise<FormData> {
-    return new FormData();
-  }
+jest.mock('next/server', () => ({
+  NextResponse: {
+    json: jest.fn((data, init) => createResponse(data, init)),
+  },
+}));
 
-  async json(): Promise<any> {
-    return {};
-  }
+// Mock Next.js router
+jest.mock('next/router', () => ({
+  useRouter: () => ({
+    push: jest.fn(),
+    replace: jest.fn(),
+    prefetch: jest.fn(),
+    query: {},
+  }),
+}));
 
-  async text(): Promise<string> {
-    return '';
-  }
-
-  clone(): Request {
-    return new MockRequest(this.url, {
-      method: this.method,
-      headers: this.headers,
-    });
-  }
-}
-
-// Set up global mocks
-Object.defineProperty(global, 'Response', {
-  writable: true,
-  value: MockResponse,
-});
-
-Object.defineProperty(global, 'Request', {
-  writable: true,
-  value: MockRequest,
-});
-
-// Mock window.matchMedia
-Object.defineProperty(window, 'matchMedia', {
-  writable: true,
-  value: jest.fn().mockImplementation(query => ({
-    matches: false,
-    media: query,
-    onchange: null,
-    addListener: jest.fn(),
-    removeListener: jest.fn(),
-    addEventListener: jest.fn(),
-    removeEventListener: jest.fn(),
-    dispatchEvent: jest.fn(),
-  })),
-});
-
-// Mock Next.js components and hooks
+// Mock Next.js navigation
 jest.mock('next/navigation', () => ({
   useRouter: () => ({
     push: jest.fn(),
     replace: jest.fn(),
     prefetch: jest.fn(),
+    back: jest.fn(),
+    forward: jest.fn(),
   }),
-  useSearchParams: () => new URLSearchParams(),
   usePathname: () => '/',
-}));
-
-// Mock Next.js Image component
-jest.mock('next/image', () => ({
-  __esModule: true,
-  default: (props: any) => {
-    return React.createElement('img', { ...props, alt: props.alt || '' });
-  },
-}));
-
-// Mock Dialog from @headlessui/react
-const Dialog = {
-  Root: ({ open, onClose, children }: any) => {
-    if (!open) return null;
-    return (
-      <div role="dialog" aria-modal="true" data-testid="auth-modal">
-        {children}
-      </div>
-    );
-  },
-  Panel: ({ children, className }: any) => (
-    <div role="dialog-panel" className={className}>
-      {children}
-    </div>
-  ),
-  Title: ({ children, className }: any) => (
-    <h3 role="dialog-title" className={className}>
-      {children}
-    </h3>
-  ),
-  Description: ({ children, className }: any) => (
-    <p role="dialog-description" className={className}>
-      {children}
-    </p>
-  ),
-};
-
-jest.mock('@headlessui/react', () => ({
-  __esModule: true,
-  Dialog: Object.assign(Dialog.Root, {
-    Panel: Dialog.Panel,
-    Title: Dialog.Title,
-    Description: Dialog.Description,
-  }),
-}));
-
-// Mock NextResponse
-const NextResponse = {
-  json: (data: any, init?: ResponseInit) => {
-    const response = new MockResponse(JSON.stringify(data), {
-      ...init,
-      headers: {
-        ...init?.headers,
-        'content-type': 'application/json',
-      },
-    });
-    return response;
-  },
-  redirect: (url: string, init?: number | ResponseInit) => {
-    const status = typeof init === 'number' ? init : init?.status || 307;
-    const response = new MockResponse(null, { status });
-    response.headers.set('Location', url);
-    return response;
-  },
-  next: (init?: ResponseInit) => {
-    return new MockResponse(null, init);
-  },
-};
-
-// Mock next/server module
-jest.mock('next/server', () => ({
-  __esModule: true,
-  NextResponse,
+  useSearchParams: () => new URLSearchParams(),
 })); 

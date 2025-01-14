@@ -5,104 +5,121 @@ This guide describes how to generate and manage test data using MongoDB in the t
 
 ## Directory Structure
 ```
-test/
+scripts/
 ├── seed/                   # Test data generation scripts
 │   ├── users.ts           # User data generation
 │   ├── logos.ts           # Logo data generation
-│   └── relationships.ts   # Relationship data generation
+│   └── __tests__/         # Test files for seed scripts
 └── seed-data/             # Static test data files
-    ├── images/            # Test images
-    └── templates/         # Data templates
+    └── images/            # Test images
 ```
 
-## Required Scripts
+## Implemented Scripts
 
-### 1. User Data Generation (`test/seed/users.ts`)
+### 1. User Data Generation (`scripts/seed/users.ts`)
 ```typescript
 interface UserSeedOptions {
   count: number;
-  withProfiles: boolean;
-  roles?: string[];
+  withProfiles?: boolean;
+  roles?: Array<'user' | 'admin'>;
+  passwordHash?: string;
 }
 
-async function seedUsers(options: UserSeedOptions) {
-  // Generate user data
-}
-```
+// Generate multiple users
+const users = await seedUsers({
+  count: 10,
+  withProfiles: true,
+  roles: ['user', 'admin']
+});
 
-### 2. Logo Data Generation (`test/seed/logos.ts`)
-```typescript
-interface LogoSeedOptions {
-  count: number;
-  perUser: number;
-  withRatings: boolean;
-}
+// Generate admin users
+const admins = await seedAdmins(2);
 
-async function seedLogos(options: LogoSeedOptions) {
-  // Generate logo data
-}
-```
-
-### 3. Relationships (`test/seed/relationships.ts`)
-```typescript
-interface RelationshipSeedOptions {
-  votesPerLogo: number;
-  commentsPerLogo: number;
-}
-
-async function seedRelationships(options: RelationshipSeedOptions) {
-  // Generate relationships
-}
-```
-
-## Usage Example
-
-```typescript
-import { setupTestData } from '../test/seed';
-
-describe('Logo Gallery Tests', () => {
-  beforeAll(async () => {
-    await setupTestData({
-      users: {
-        count: 10,
-        withProfiles: true,
-        roles: ['user', 'admin']
-      },
-      logos: {
-        count: 30,
-        perUser: 3,
-        withRatings: true
-      },
-      relationships: {
-        votesPerLogo: 5,
-        commentsPerLogo: 3
-      }
-    });
-  });
+// Create a single test user
+const testUser = await createTestUser({
+  email: 'custom@example.com'
 });
 ```
 
-## Data Requirements
+### 2. Logo Data Generation (`scripts/seed/logos.ts`)
+```typescript
+interface LogoSeedOptions {
+  count: number;
+  perUser?: number;
+  withRatings?: boolean;
+  userIds: ObjectId[];
+  minVotes?: number;
+  maxVotes?: number;
+}
+
+// Generate multiple logos
+const logos = await seedLogos({
+  count: 10,
+  userIds: existingUserIds,
+  withRatings: true,
+  perUser: 2
+});
+
+// Create a single test logo
+const testLogo = await createTestLogo(userId, {
+  name: 'Custom Logo'
+});
+```
+
+### 3. Relationship Data Generation (`scripts/seed/relationships.ts`)
+```typescript
+interface RelationshipSeedOptions {
+  users: { _id: ObjectId }[];
+  logos: { _id: ObjectId }[];
+  commentsPerLogo?: number;
+  collectionsPerUser?: number;
+  logosPerCollection?: number;
+  favoritesPerUser?: number;
+  maxRepliesPerComment?: number;
+}
+
+// Generate all relationships
+const relationships = await seedRelationships({
+  users: existingUsers,
+  logos: existingLogos,
+  commentsPerLogo: 3,
+  collectionsPerUser: 2,
+  favoritesPerUser: 5
+});
+
+// Or generate specific relationships
+const comments = await seedComments({ users, logos });
+const collections = await seedCollections({ users, logos });
+const favorites = await seedFavorites({ users, logos });
+```
+
+## Data Models
 
 ### Users Collection
 ```typescript
 interface User {
+  _id: ObjectId;
   username: string;
   email: string;
   password: string; // hashed
   profile: {
-    image: string;
-    bio: string;
+    image?: string;
+    bio?: string;
+    location?: string;
+    website?: string;
+    company?: string;
   };
+  role: 'user' | 'admin';
   createdAt: Date;
   lastLogin: Date;
-  role: string;
+  isActive: boolean;
 }
 ```
 
 ### Logos Collection
 ```typescript
 interface Logo {
+  _id: ObjectId;
   name: string;
   url: string;
   description: string;
@@ -119,87 +136,150 @@ interface Logo {
 }
 ```
 
-## Implementation Guidelines
+### Comments Collection
+```typescript
+interface Comment {
+  _id: ObjectId;
+  logoId: ObjectId;
+  userId: ObjectId;
+  content: string;
+  createdAt: Date;
+  updatedAt: Date;
+  likes: number;
+  replies?: Comment[];
+}
+```
 
-### 1. Data Generation
-- Use realistic data patterns
-- Maintain referential integrity
-- Generate consistent timestamps
-- Include edge cases
+### Collections Collection
+```typescript
+interface Collection {
+  _id: ObjectId;
+  name: string;
+  description: string;
+  userId: ObjectId;
+  logoIds: ObjectId[];
+  isPublic: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+```
 
-### 2. Image Handling
-- Store test images in `test/seed-data/images`
-- Support multiple formats (PNG, JPEG, SVG)
-- Include various dimensions
-- Keep file sizes small
+### Favorites Collection
+```typescript
+interface Favorite {
+  _id: ObjectId;
+  userId: ObjectId;
+  logoId: ObjectId;
+  createdAt: Date;
+}
+```
 
-### 3. Performance
-- Use bulk operations
-- Implement cleanup strategies
-- Cache common data
-- Handle large datasets efficiently
+## Features
+
+### User Generation
+- Random username and email generation
+- Password hashing with bcrypt
+- Optional profile generation
+- Role assignment (user/admin)
+- Timestamp management
+
+### Logo Generation
+- Style-based naming
+- Tag system with predefined categories
+- Rating and voting system
+- Even distribution among users
+- Dynamic description generation
+- Timestamp management
+
+### Relationship Generation
+- Nested comment structure with replies
+- Public and private collections
+- Like counts for comments
+- Even distribution of favorites
+- Realistic content generation
+- Timestamp management for all relationships
+
+## Usage Examples
+
+### Complete Test Data Setup
+```typescript
+import { seedUsers } from '../seed/users';
+import { seedLogos } from '../seed/logos';
+import { seedRelationships } from '../seed/relationships';
+
+async function setupCompleteTestData() {
+  // Create users and logos first
+  const users = await seedUsers({
+    count: 10,
+    withProfiles: true
+  });
+
+  const logos = await seedLogos({
+    count: 30,
+    userIds: users.map(u => u._id),
+    withRatings: true
+  });
+
+  // Then create all relationships
+  const relationships = await seedRelationships({
+    users,
+    logos,
+    commentsPerLogo: 3,
+    collectionsPerUser: 2,
+    favoritesPerUser: 5,
+    maxRepliesPerComment: 2
+  });
+
+  return { users, logos, relationships };
+}
+```
+
+### Testing Usage
+```typescript
+describe('Logo Gallery Tests', () => {
+  let testUser;
+  let testLogo;
+
+  beforeEach(async () => {
+    testUser = await createTestUser();
+    testLogo = await createTestLogo(testUser._id);
+  });
+
+  it('should handle logo operations', async () => {
+    // Test with generated data
+  });
+});
+```
 
 ## Best Practices
 
-1. **Data Isolation**
-   - Use separate test database
-   - Clean up after tests
-   - Don't mix with development data
-   - Reset database state between tests
-
-2. **Data Quality**
-   - Generate realistic test data
+1. **Data Generation**
+   - Use realistic data patterns
+   - Maintain referential integrity
+   - Generate consistent timestamps
    - Include edge cases
+
+2. **Testing**
+   - Clean up test data after tests
+   - Use isolated test databases
    - Maintain data relationships
-   - Use consistent patterns
+   - Test edge cases
 
 3. **Performance**
-   - Use efficient bulk operations
-   - Implement proper indexing
-   - Clean up old test data
+   - Use bulk operations for large datasets
+   - Implement proper cleanup
    - Monitor database size
-
-4. **Maintenance**
-   - Document data structures
-   - Version control test data
-   - Update seed scripts
-   - Track data dependencies
+   - Handle large datasets efficiently
 
 ## Configuration
 
-Test data generation uses the test environment configuration:
-
-```typescript
-// config/test/testing.ts
-export const testingConfig = {
-  seedData: {
-    path: 'test/seed-data',
-    cleanup: true,
-    batchSize: 100
-  },
-  images: {
-    maxSize: 1024 * 1024, // 1MB
-    formats: ['png', 'jpg', 'svg']
-  }
+The test environment uses Jest with the following configuration:
+```javascript
+// jest.config.js
+module.exports = {
+  preset: 'ts-jest',
+  testEnvironment: 'node',
+  roots: ['<rootDir>/scripts'],
+  testMatch: ['**/__tests__/**/*.test.ts'],
 };
-```
-
-## Troubleshooting
-
-1. **Data Generation Issues**
-   - Check database connection
-   - Verify file permissions
-   - Monitor memory usage
-   - Check error logs
-
-2. **Image Problems**
-   - Verify image paths
-   - Check file permissions
-   - Validate image formats
-   - Monitor storage space
-
-3. **Performance Issues**
-   - Use batch operations
-   - Implement indexing
-   - Monitor query performance
-   - Clean up old data 
+``` 

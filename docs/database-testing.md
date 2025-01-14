@@ -1,39 +1,58 @@
 # Database Testing Documentation
 
 ## Overview
-This document describes the database testing infrastructure for the Logo Gallery application. The testing setup uses MongoDB and provides utilities for managing test data, connections, and common database operations.
+This document describes the database testing infrastructure for the Logo Gallery application, including our seeding strategy for test data generation.
+
+## Test Data Generation
+
+### Seeding Strategy
+The application uses a structured seeding approach with three main components:
+
+1. **User Seeding** (`scripts/seed/users.ts`)
+   - Generates test users with profiles
+   - Supports both regular and admin users
+   - Includes password hashing and profile generation
+
+2. **Logo Seeding** (`scripts/seed/logos.ts`)
+   - Creates test logos with metadata
+   - Supports ratings and voting
+   - Maintains user relationships
+   - Includes tag and style generation
+
+### Usage Example
+```typescript
+import { seedUsers } from './scripts/seed/users';
+import { seedLogos } from './scripts/seed/logos';
+
+async function setupTestDatabase() {
+  // Create test users
+  const users = await seedUsers({
+    count: 10,
+    withProfiles: true,
+    roles: ['user', 'admin']
+  });
+
+  // Create test logos
+  const logos = await seedLogos({
+    count: 30,
+    userIds: users.map(u => u._id),
+    withRatings: true,
+    perUser: 3
+  });
+
+  return { users, logos };
+}
+```
 
 ## Test Database Helper
 
-The test database helper (`test-db-helper.ts`) provides a comprehensive set of utilities for interacting with the test database. It includes:
+The test database helper provides utilities for managing test data:
 
 ### Connection Management
-- Connection establishment with configurable timeouts
-- Automatic index creation on connection
-- Connection pooling and reuse
-- Graceful disconnection handling
-- Error handling and cleanup
-
-### Data Operations
-- CRUD operations for users and logos
-- Bulk operations support
-- Transaction management
-- Collection management
-- Query utilities
-
-### Configuration
-- Environment-based configuration via `MONGODB_TEST_URI`
-- Default connection to `mongodb://localhost:27017/LogoGalleryTest`
-- Configurable timeouts (default: 5 seconds)
-- Automatic index management
-
-## Usage
-
-### Basic Connection
 ```typescript
 import { testDbHelper } from './utils/test-db-helper';
 
-// Connect to the test database
+// Connect to test database
 await testDbHelper.connect();
 
 // Perform operations...
@@ -58,177 +77,122 @@ try {
 
 ### Data Operations
 ```typescript
-// Insert a user
-const user = await testDbHelper.insertUser({
-  email: 'test@example.com',
-  username: 'testuser',
-  // ...
-});
+// Insert test data
+const user = await testDbHelper.insertUser(userData);
+const logo = await testDbHelper.insertLogo(logoData);
 
-// Insert a logo
-const logo = await testDbHelper.insertLogo({
-  name: 'Test Logo',
-  ownerId: user._id,
-  // ...
-});
-
-// Find logos by owner
-const userLogos = await testDbHelper.findLogosByOwnerId(user._id);
+// Find data
+const userLogos = await testDbHelper.findLogosByUserId(user._id);
 ```
-
-## Test Setup
-
-### Environment Variables
-- `MONGODB_TEST_URI`: MongoDB connection string for tests
-  - Default: `mongodb://localhost:27017/LogoGalleryTest`
-  - Format: `mongodb://[username:password@]host[:port]/database`
-
-### Database Indexes
-The following indexes are automatically created:
-- Users:
-  - `email`: Unique index
-  - `username`: Unique index
-- Logos:
-  - `name, ownerId`: Compound unique index
-  - `category`: Index for category queries
-  - `tags`: Index for tag queries
 
 ## Best Practices
 
-### Connection Management
-1. Always use `try/finally` blocks to ensure proper cleanup:
+### 1. Test Data Generation
+- Use seed scripts for consistent data
+- Maintain referential integrity
+- Include edge cases
+- Use realistic data patterns
+
+### 2. Test Isolation
+```typescript
+describe('Logo Tests', () => {
+  let testUser;
+  let testLogo;
+
+  beforeEach(async () => {
+    await testDbHelper.clearCollections();
+    testUser = await createTestUser();
+    testLogo = await createTestLogo(testUser._id);
+  });
+
+  afterEach(async () => {
+    await testDbHelper.clearCollections();
+  });
+});
+```
+
+### 3. Error Handling
 ```typescript
 try {
   await testDbHelper.connect();
   // Test operations...
+} catch (error) {
+  console.error('Test database error:', error);
+  throw error;
 } finally {
   await testDbHelper.disconnect();
 }
 ```
 
-2. Clear collections between tests:
-```typescript
-beforeEach(async () => {
-  await testDbHelper.clearCollections();
-});
+## Configuration
+
+### Environment Variables
+```env
+MONGODB_TEST_URI=mongodb://localhost:27017/LogoGalleryTest
 ```
 
-### Data Generation
-1. Use the provided helper functions:
-```typescript
-const testUser = generateTestUser({
-  role: 'admin' // Override specific fields
-});
-
-const testLogo = generateTestLogo(userId, {
-  category: 'Technology' // Override specific fields
-});
+### Jest Configuration
+```javascript
+// jest.config.js
+module.exports = {
+  preset: 'ts-jest',
+  testEnvironment: 'node',
+  roots: ['<rootDir>/scripts'],
+  testMatch: ['**/__tests__/**/*.test.ts'],
+};
 ```
-
-2. Use transactions for related operations:
-```typescript
-await testDbHelper.startTransaction();
-try {
-  const user = await testDbHelper.insertUser(userData);
-  const logo = await testDbHelper.insertLogo({ ...logoData, ownerId: user._id });
-  await testDbHelper.commitTransaction();
-} catch (error) {
-  await testDbHelper.abortTransaction();
-  throw error;
-}
-```
-
-## Error Handling
-
-### Connection Errors
-The helper handles various connection scenarios:
-- Invalid URI format
-- Network connectivity issues
-- Authentication failures
-- Timeout issues
-
-### Operation Errors
-All database operations include:
-- Type checking
-- Connection state validation
-- Error wrapping with context
-- Automatic cleanup on failure
 
 ## Testing Strategy
 
-### Unit Tests
+### 1. Unit Tests
 - Test individual database operations
-- Verify error handling
-- Check data validation
-- Test connection management
+- Verify data validation
+- Check error handling
+- Test helper functions
 
-### Integration Tests
-- Test transaction management
-- Verify data relationships
+### 2. Integration Tests
+- Test data relationships
+- Verify cascading operations
 - Test bulk operations
-- Check index constraints
+- Check constraints
 
-## Performance Considerations
-
-### Connection Pooling
-- Connections are reused when possible
-- Pool size is configurable
-- Idle connections are cleaned up
-
-### Timeouts
-- Connection timeout: 5 seconds
-- Server selection timeout: 5 seconds
-- Operation timeout: Configurable per operation
-
-### Batch Operations
-- Use bulk operations for multiple inserts/updates
-- Use streams for large data sets
-- Implement pagination where appropriate
+### 3. Performance Tests
+- Test with large datasets
+- Verify bulk operation efficiency
+- Check query performance
+- Monitor memory usage
 
 ## Troubleshooting
 
 ### Common Issues
 1. Connection Failures
-   - Check MongoDB service is running
+   - Check MongoDB service
    - Verify connection string
    - Check network connectivity
-   - Verify authentication credentials
+   - Verify credentials
 
-2. Timeout Errors
-   - Increase timeout settings
-   - Check database load
-   - Verify network latency
+2. Data Generation Issues
+   - Check seed script logs
+   - Verify data integrity
+   - Check for missing references
+   - Monitor memory usage
 
-3. Index Errors
-   - Check unique constraint violations
-   - Verify index definitions
-   - Check data consistency
-
-### Debugging
-1. Enable MongoDB logging:
-```typescript
-const client = new MongoClient(uri, {
-  logger: console,
-  logLevel: 'debug'
-});
-```
-
-2. Check connection status:
-```typescript
-const isConnected = client.isConnected();
-console.log('Connection status:', isConnected);
-```
+3. Performance Issues
+   - Use bulk operations
+   - Implement proper indexes
+   - Monitor query patterns
+   - Clean up test data
 
 ## Maintenance
 
 ### Regular Tasks
-1. Update index definitions as schema changes
-2. Review and update timeout settings
-3. Update test data generators
-4. Review and clean up test data
+1. Update seed scripts as schema changes
+2. Review and update test data patterns
+3. Monitor test database size
+4. Clean up old test data
 
 ### Version Updates
-1. Check MongoDB driver compatibility
-2. Update connection options
-3. Test with new MongoDB versions
-4. Update documentation 
+1. Update MongoDB driver
+2. Check TypeScript types
+3. Update test utilities
+4. Review seed scripts 

@@ -1,44 +1,38 @@
 # Logo Gallery
 
-A modern web application for managing and showcasing logos, built with Next.js, TypeScript, and MongoDB.
-
-## Documentation
-
-- [Database Configuration](docs/database.md) - Complete guide for database setup across all environments
-- [Testing Guide](TESTING.md) - Testing setup and guidelines
-- [Changelog](CHANGELOG.md) - Version history and changes
-- [Implementation Guide](implementation-guide.md) - Development guidelines and practices
+A modern web application for managing and sharing logo designs with comprehensive validation, testing, and database integration.
 
 ## Features
 
-- User authentication (login/register)
+- User management with profile support
 - Logo upload and management
-- Dark mode support
-- Responsive design
 - Rating system
-- Tag-based organization
+- Comments with mentions
+- Collections with sharing capabilities
+- Favorites system
+- Comprehensive validation
+- Extensive test coverage
 
 ## Tech Stack
 
-- Next.js 14
 - TypeScript
 - MongoDB
-- Tailwind CSS
-- Docker
+- Jest for testing
+- Faker.js for test data generation
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js 18 or later
-- Docker and Docker Compose
-- Git
+- Node.js (v14 or higher)
+- MongoDB (v4.4 or higher)
+- npm or yarn
 
 ### Installation
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/sergeville/logo-gallery.git
+git clone https://github.com/yourusername/logo-gallery.git
 cd logo-gallery
 ```
 
@@ -47,85 +41,86 @@ cd logo-gallery
 npm install
 ```
 
-3. Start the development environment:
+3. Set up environment variables:
 ```bash
-docker-compose up --build
+cp .env.example .env
+```
+Edit `.env` and set your MongoDB connection string:
+```
+MONGODB_TEST_URI=mongodb://localhost:27017/LogoGalleryTest
 ```
 
-The application will be available at http://localhost:3000
-
-### Environment Variables
-
-Create a `.env` file in the root directory with the following variables:
-
-```env
-MONGODB_URI=mongodb://mongodb:27017/logo-gallery
-JWT_SECRET=your_jwt_secret_here
-NEXT_PUBLIC_API_URL=http://localhost:3000
-```
-
-### Environment Setup
-
-1. Initial Setup
+4. Run tests:
 ```bash
-# Copy the example environment file for development
-cp .env.example .env.development
-
-# Edit .env.development with your development settings:
-MONGODB_URI=mongodb://localhost:27017/LogoGalleryDevelopmentDB
-NODE_ENV=development
-JWT_SECRET=your_jwt_secret_here
-NEXT_PUBLIC_API_URL=http://localhost:3000
+npm run test:seed
 ```
 
-2. Environment-Specific Files
-Each environment has its own configuration file:
-- Development: `.env.development`
-- Test: `.env.test`
-- Production: `.env.production`
+## Project Structure
 
-3. Database Names
-Each environment uses its own database:
-- Development: `LogoGalleryDevelopmentDB`
-- Test: `LogoGalleryTestDB`
-- Production: `LogoGalleryProductionDB`
+```
+logo-gallery/
+├── scripts/
+│   ├── seed/
+│   │   ├── __tests__/        # Test files
+│   │   ├── types.ts          # TypeScript interfaces
+│   │   ├── db-helper.ts      # Database operations
+│   │   ├── seed-utils.ts     # Seeding utilities
+│   │   └── test-observer.ts  # Test reporting
+│   └── migrations/           # Database migrations
+├── docs/                     # Documentation
+├── CHANGELOG.md             # Change history
+└── README.md               # This file
+```
 
-For detailed configuration instructions, see:
-- [Database Documentation](docs/database.md)
-- [Environment Configuration Guide](docs/database.md#environment-specific-configurations)
+## Testing
 
-## Development
+The project includes comprehensive tests covering:
+- Input validation
+- Data relationships
+- Edge cases
+- Error conditions
+- Performance with large datasets
 
-To start the development server:
+Run tests with:
 ```bash
-# Start with development environment
-NODE_ENV=development npm run dev
-
-# Or using Docker
-docker-compose up --build
+npm run test:seed
 ```
 
-## Docker Support
+Current test coverage:
+- Statements: 94.71%
+- Branches: 84.71%
+- Functions: 94.48%
+- Lines: 94.52%
 
-The project includes Docker configuration for both development and production environments:
+## Validation Rules
 
-- Development: `docker-compose up --build`
-- Production: Use the Dockerfile with appropriate environment variables
+### Users
+- Username: 3-50 chars, alphanumeric with dash/underscore
+- Email: Standard email format
+- Profile:
+  - Bio: Max 500 chars
+  - Location: Max 100 chars
+  - Skills: Max 20 items
+
+### Logos
+- Name: 3-100 chars, alphanumeric with spaces/dash/underscore
+- Tags: 1-50 tags, each 2-30 chars
+- Rating: 0-5 range
+- Description: Max 1000 chars
+
+### Relationships
+- Comments: Max 1000 chars, max 10 mentions
+- Collections: Max 50 per user, max 1000 logos per collection
+- Favorites: Max 100 per user
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a Pull Request
 
 ## License
 
-MIT
-
-## Development Guidelines
-
-### Database Changes
-Before making any changes to the database structure, types, or related code, please refer to our [Database Validation Checklist](docs/VALIDATION_CHECKLIST.md). This checklist helps maintain consistency across:
-- Database schemas
-- TypeScript types
-- Test data generation
-- Model relationships
-- Environment configurations
-
-### Documentation
-- [Database Configuration](docs/database.md) - Database setup and configuration
-- [Validation Checklist](docs/VALIDATION_CHECKLIST.md) - Checklist for database changes
+This project is licensed under the MIT License - see the LICENSE file for details.

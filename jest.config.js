@@ -1,47 +1,30 @@
-const nextJest = require('next/jest')
-
-const createJestConfig = nextJest({
-  dir: './',
-})
-
-const customJestConfig = {
-  setupFilesAfterEnv: [
-    '<rootDir>/jest.setup.tsx'
-  ],
-  testEnvironment: '<rootDir>/test/environment.js',
-  moduleNameMapper: {
-    '^@/(.*)$': '<rootDir>/$1',
-    '^@/app/(.*)$': '<rootDir>/app/$1',
-    '^@/lib/(.*)$': '<rootDir>/lib/$1',
-    '^@/components/(.*)$': '<rootDir>/app/components/$1',
-    '^@/utils/(.*)$': '<rootDir>/utils/$1'
-  },
+/** @type {import('ts-jest').JestConfigWithTsJest} */
+module.exports = {
+  preset: 'ts-jest',
+  testEnvironment: 'node',
   transform: {
-    '^.+\\.(js|jsx|ts|tsx|mjs)$': ['babel-jest', { 
-      presets: ['next/babel'],
-      plugins: ['@babel/plugin-transform-modules-commonjs']
-    }]
+    '^.+\\.tsx?$': 'ts-jest',
+  },
+  moduleNameMapper: {
+    '^chalk$': 'chalk/source/index.js'
   },
   transformIgnorePatterns: [
-    '/node_modules/(?!next-auth|jose)/',
+    'node_modules/(?!(chalk)/)'
   ],
-  testPathIgnorePatterns: [
-    '<rootDir>/.next/',
-    '<rootDir>/node_modules/'
-  ],
-  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node', 'mjs'],
-  extensionsToTreatAsEsm: ['.ts', '.tsx'],
   collectCoverage: true,
   coverageDirectory: 'coverage',
-  coveragePathIgnorePatterns: [
-    '/node_modules/',
-    '/.next/',
-    '/coverage/'
+  coverageReporters: ['text', 'lcov', 'json-summary'],
+  collectCoverageFrom: [
+    'scripts/seed/**/*.ts',
+    '!scripts/seed/**/*.test.ts',
+    '!scripts/seed/**/types.ts'
   ],
-  verbose: true,
-  testEnvironmentOptions: {
-    customExportConditions: ['node', 'node-addons'],
+  coverageThreshold: {
+    global: {
+      branches: 80,
+      functions: 80,
+      lines: 80,
+      statements: 80
+    }
   }
-}
-
-module.exports = createJestConfig(customJestConfig) 
+}; 

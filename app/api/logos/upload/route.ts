@@ -1,73 +1,109 @@
 import { NextResponse } from 'next/server';
-import { writeFile } from 'fs/promises';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { writeFile, unlink } from 'fs/promises';
 import { join } from 'path';
-import { addLogo } from '../../../lib/store';
-import { cookies } from 'next/headers';
+import { v4 as uuidv4 } from 'uuid';
+import { connectToDatabase } from '@/app/lib/db';
+import { ObjectId } from 'mongodb';
 
 export async function POST(request: Request) {
   try {
-    const formData = await request.formData();
-    const file = formData.get('file') as File;
-    const name = formData.get('name') as string;
-    const description = formData.get('description') as string;
-    const tags = formData.get('tags') as string;
+    // Verify authentication
+    const session = await getServerSession(authOptions);
 
-    // Get user data from cookie
-    const cookieStore = cookies();
-    const userDataCookie = cookieStore.get('user');
-    
-    if (!userDataCookie?.value) {
+    if (!session) {
       return NextResponse.json(
-        { success: false, message: 'User not authenticated' },
+        { success: false, message: 'Unauthorized' },
         { status: 401 }
       );
     }
 
-    const userData = JSON.parse(userDataCookie.value);
+    // Parse form data
+    const formData = await request.formData();
+    const file = formData.get('file') as File;
+    const name = formData.get('name') as string;
 
-    if (!file) {
+    if (!file || !name) {
       return NextResponse.json(
-        { success: false, message: 'No file uploaded' },
+        { success: false, message: 'File and name are required' },
         { status: 400 }
       );
     }
 
-    // Create a unique filename
-    const timestamp = Date.now();
-    const filename = `${timestamp}-${file.name}`;
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      return NextResponse.json(
+        { success: false, message: 'Only image files are allowed' },
+        { status: 400 }
+      );
+    }
 
-    // Save file to public/images
-    const path = join(process.cwd(), 'public/images', filename);
-    await writeFile(path, buffer);
+    // Generate unique filename
+    const ext = file.name.split('.').pop();
+    const filename = `${uuidv4()}.${ext}`;
+    const uploadDir = join(process.cwd(), 'public', 'uploads');
 
-    // Create logo entry and add to store
-    const newLogo = {
-      _id: timestamp.toString(),
+    // Save file
+    try {
+      await writeFile(join(uploadDir, filename), Buffer.from(await file.arrayBuffer()));
+    } catch (error) {
+      console.error('Error saving file:', error);
+      return NextResponse.json(
+        { success: false, message: 'Error saving file' },
+        { status: 500 }
+      );
+    }
+
+    // Save logo metadata to database
+    const { db } = await connectToDatabase();
+    const logoData = {
       name,
-      url: `/images/${filename}`,
-      description,
-      userId: {
-        username: userData.username || userData.email.split('@')[0], // Use username or email prefix
-        profileImage: userData.profileImage || 'https://placehold.co/50x50'
+      filename,
+      url: `/uploads/${filename}`,
+      uploadedAt: new Date(),
+      userId: new ObjectId(session.user.id),
+      averageRating: 0,
+      totalVotes: 0,
+      dimensions: {
+        width: 0,
+        height: 0
       },
-      tags: tags.split(',').map(tag => tag.trim()),
-      averageRating: 0
+      fileSize: file.size,
+      fileType: file.type,
+      createdAt: new Date(),
+      updatedAt: new Date()
     };
 
-    // Add to store
-    const savedLogo = addLogo(newLogo);
+    const result = await db.collection('logos').insertOne(logoData);
+
+    if (!result.insertedId) {
+      // If database insert fails, we should clean up the uploaded file
+      try {
+        await unlink(join(uploadDir, filename));
+      } catch (unlinkError) {
+        console.error('Failed to clean up file after failed db insert:', unlinkError);
+      }
+      
+      return NextResponse.json(
+        { success: false, message: 'Failed to save logo metadata' },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json({
       success: true,
-      logo: savedLogo
+      message: 'Logo uploaded successfully',
+      logo: {
+        ...logoData,
+        _id: result.insertedId
+      }
     });
 
   } catch (error) {
     console.error('Upload error:', error);
     return NextResponse.json(
-      { success: false, message: 'Failed to upload file' },
+      { success: false, message: 'Internal server error' },
       { status: 500 }
     );
   }

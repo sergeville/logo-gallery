@@ -1,8 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import Image from 'next/image';
-import { Upload, X } from 'lucide-react';
+import { X, Upload } from 'lucide-react';
 
 interface UploadModalProps {
   isOpen: boolean;
@@ -12,64 +11,71 @@ interface UploadModalProps {
 
 export default function UploadModal({ isOpen, onClose, onUploadSuccess }: UploadModalProps) {
   const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [tags, setTags] = useState('');
   const [file, setFile] = useState<File | null>(null);
-  const [preview, setPreview] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [preview, setPreview] = useState<string | null>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
+      // Validate file type
+      if (!selectedFile.type.startsWith('image/')) {
+        setError('Please select an image file');
+        return;
+      }
+      
       setFile(selectedFile);
+      // Create preview URL
       const reader = new FileReader();
       reader.onloadend = () => {
         setPreview(reader.result as string);
       };
       reader.readAsDataURL(selectedFile);
+      setError('');
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!file) {
-      setError('Please select an image');
+    if (!file || !name) {
+      setError('Please fill in all fields');
       return;
     }
 
-    setLoading(true);
+    setIsLoading(true);
     setError('');
 
     try {
       const formData = new FormData();
-      formData.append('file', file);
       formData.append('name', name);
-      formData.append('description', description);
-      formData.append('tags', tags);
+      formData.append('file', file);
 
       const response = await fetch('/api/logos/upload', {
         method: 'POST',
         body: formData,
+        credentials: 'include'
       });
 
       if (!response.ok) {
-        throw new Error('Failed to upload logo');
+        const data = await response.json();
+        throw new Error(data.message || 'Upload failed');
       }
 
-      onUploadSuccess();
-      onClose();
-      
-      // Reset form
+      // Clear form
       setName('');
-      setDescription('');
-      setTags('');
       setFile(null);
       setPreview(null);
+      setError('');
+      
+      // Call success handler
+      onUploadSuccess();
+      onClose();
     } catch (err) {
+      console.error('Upload error:', err);
       setError(err instanceof Error ? err.message : 'Failed to upload logo');
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
@@ -86,46 +92,13 @@ export default function UploadModal({ isOpen, onClose, onUploadSuccess }: Upload
         </button>
 
         <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">
-          Upload New Logo
+          Upload Logo
         </h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Logo Image
-            </label>
-            <div className="flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-lg">
-              {preview ? (
-                <div className="relative h-48 w-full">
-                  <Image
-                    src={preview}
-                    alt="Preview"
-                    fill
-                    className="object-contain"
-                  />
-                </div>
-              ) : (
-                <div className="space-y-1 text-center">
-                  <Upload className="mx-auto h-12 w-12 text-gray-400" />
-                  <div className="text-sm text-gray-600 dark:text-gray-400">
-                    <label className="relative cursor-pointer rounded-md font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400">
-                      <span>Upload a file</span>
-                      <input
-                        type="file"
-                        className="sr-only"
-                        accept="image/*"
-                        onChange={handleFileChange}
-                      />
-                    </label>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-              Name
+              Logo Name
             </label>
             <input
               type="text"
@@ -138,28 +111,35 @@ export default function UploadModal({ isOpen, onClose, onUploadSuccess }: Upload
 
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-              Description
+              Logo File
             </label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              rows={3}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-              Tags (comma separated)
-            </label>
-            <input
-              type="text"
-              value={tags}
-              onChange={(e) => setTags(e.target.value)}
-              placeholder="logo, brand, design"
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-            />
+            <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-md">
+              <div className="space-y-1 text-center">
+                {preview ? (
+                  <div className="mb-4">
+                    <img src={preview} alt="Preview" className="mx-auto h-32 w-auto" />
+                  </div>
+                ) : (
+                  <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                )}
+                <div className="flex text-sm text-gray-600 dark:text-gray-400">
+                  <label className="relative cursor-pointer bg-white dark:bg-gray-700 rounded-md font-medium text-blue-600 dark:text-blue-400 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500">
+                    <span>Upload a file</span>
+                    <input
+                      type="file"
+                      className="sr-only"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      required
+                    />
+                  </label>
+                  <p className="pl-1">or drag and drop</p>
+                </div>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  PNG, JPG, GIF up to 10MB
+                </p>
+              </div>
+            </div>
           </div>
 
           {error && (
@@ -170,10 +150,10 @@ export default function UploadModal({ isOpen, onClose, onUploadSuccess }: Upload
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={isLoading}
             className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
           >
-            {loading ? 'Uploading...' : 'Upload Logo'}
+            {isLoading ? 'Uploading...' : 'Upload Logo'}
           </button>
         </form>
       </div>

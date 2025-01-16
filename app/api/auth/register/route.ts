@@ -1,40 +1,52 @@
 import { NextResponse } from 'next/server';
-import { connectDB } from '../../../../lib/db';
-import jwt from 'jsonwebtoken';
+import bcrypt from 'bcrypt';
+import { connectToDatabase } from '@/app/lib/db';
+import { User } from '@/app/lib/types';
 
 export async function POST(request: Request) {
   try {
-    await connectDB();
+    const { email, password, name } = await request.json();
 
-    const { email, password, username } = await request.json();
+    if (!email || !password || !name) {
+      return NextResponse.json({
+        success: false,
+        message: 'Email, password, and name are required'
+      }, { status: 400 });
+    }
 
-    // For testing purposes, create a mock user
-    const mockUser = {
-      id: '1',
+    const { db } = await connectToDatabase();
+    const usersCollection = db.collection<User>('users');
+
+    const existingUser = await usersCollection.findOne({ email });
+    if (existingUser) {
+      return NextResponse.json({
+        success: false,
+        message: 'Email already registered'
+      }, { status: 400 });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const newUser: User = {
       email,
-      username: username || email.split('@')[0], // Use provided username or email prefix
-      profileImage: 'https://placehold.co/50x50'
+      password: hashedPassword,
+      name,
+      createdAt: new Date(),
+      updatedAt: new Date()
     };
 
-    // Generate JWT token
-    const token = jwt.sign(
-      { userId: mockUser.id },
-      process.env.JWT_SECRET || 'default-secret-key',
-      { expiresIn: '7d' }
-    );
+    const result = await usersCollection.insertOne(newUser);
 
-    // Return success response
     return NextResponse.json({
       success: true,
-      user: mockUser,
-      token
-    });
+      message: 'User registered successfully',
+      userId: result.insertedId
+    }, { status: 201 });
 
   } catch (error) {
     console.error('Registration error:', error);
-    return NextResponse.json(
-      { success: false, message: 'Registration failed' },
-      { status: 400 }
-    );
+    return NextResponse.json({
+      success: false,
+      message: 'Error registering user'
+    }, { status: 500 });
   }
 } 

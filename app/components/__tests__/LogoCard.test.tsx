@@ -1,7 +1,6 @@
-import React from 'react';
-import { render, fireEvent } from '@testing-library/react';
-import { LogoCard } from '../LogoCard';
-import { ClientLogo } from '@/app/lib/types';
+import { render, fireEvent } from '@testing-library/react'
+import { LogoCard } from '../LogoCard'
+import { ClientLogo } from '@/app/lib/types'
 
 describe('LogoCard', () => {
   const mockOnVote = jest.fn()

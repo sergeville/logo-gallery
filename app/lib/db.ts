@@ -1,44 +1,52 @@
-import { MongoClient } from 'mongodb';
+import { MongoClient, Db } from 'mongodb'
 
-if (!process.env.MONGODB_URI) {
-  throw new Error('Please add your Mongo URI to .env.local')
-}
+let client: MongoClient | null = null;
+let db: Db | null = null;
 
-const uri = process.env.MONGODB_URI;
-const options = {};
-
-let client: MongoClient;
-let clientPromise: Promise<MongoClient>;
-
-if (process.env.NODE_ENV === 'development') {
-  // In development mode, use a global variable so that the value
-  // is preserved across module reloads caused by HMR (Hot Module Replacement).
-  let globalWithMongo = global as typeof globalThis & {
-    _mongoClientPromise?: Promise<MongoClient>
+export async function connectToDatabase(): Promise<{ client: MongoClient; db: Db }> {
+  if (client && db) {
+    return { client, db };
   }
 
-  if (!globalWithMongo._mongoClientPromise) {
-    client = new MongoClient(uri, options)
-    globalWithMongo._mongoClientPromise = client.connect()
+  const uri = process.env.MONGODB_URI || 'mongodb://localhost:27017';
+  let dbName: string;
+
+  switch (process.env.NODE_ENV) {
+    case 'development':
+      dbName = 'LogoGalleryDevelopmentDB';
+      break;
+    case 'test':
+      dbName = 'LogoGalleryTestDB';
+      break;
+    case 'production':
+      dbName = 'LogoGalleryDB';
+      break;
+    default:
+      dbName = 'LogoGalleryDevelopmentDB';
   }
-  clientPromise = globalWithMongo._mongoClientPromise
-} else {
-  // In production mode, it's best to not use a global variable.
-  client = new MongoClient(uri, options)
-  clientPromise = client.connect()
+
+  try {
+    client = await MongoClient.connect(uri);
+    db = client.db(dbName);
+    return { client, db };
+  } catch (error) {
+    console.error('Failed to connect to database:', error);
+    throw error;
+  }
 }
 
-export async function connectToDatabase() {
-  const client = await clientPromise;
-  const dbName = process.env.NODE_ENV === 'development' 
-    ? 'LogoGalleryDevelopmentDB'
-    : process.env.NODE_ENV === 'test'
-    ? 'LogoGalleryTestDB'
-    : 'LogoGalleryDB';
-    
-  const db = client.db(dbName);
-  return { client, db };
+export async function disconnectFromDatabase(): Promise<void> {
+  if (client) {
+    await client.close();
+    client = null;
+    db = null;
+  }
 }
 
-// Export a module-scoped MongoClient promise
-export default clientPromise; 
+export function getDb(): Db | null {
+  return db;
+}
+
+export function getClient(): MongoClient | null {
+  return client;
+}

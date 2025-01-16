@@ -1,40 +1,52 @@
 import { NextResponse } from 'next/server';
-import { connectDB } from '../../../../lib/db';
+import { cookies } from 'next/headers';
 import jwt from 'jsonwebtoken';
+import bcrypt from 'bcrypt';
+import { connectToDatabase } from '@/app/lib/db';
 
 export async function POST(request: Request) {
   try {
-    await connectDB();
-
     const { email, password } = await request.json();
 
-    // For testing purposes, accept any login
-    const mockUser = {
-      id: '1',
-      email: email,
-      username: email.split('@')[0],
-      profileImage: 'https://placehold.co/50x50'
-    };
+    // Check both email and password together
+    if (!email || !password) {
+      return NextResponse.json(
+        { success: false, message: 'Email and password are required' },
+        { status: 400 }
+      );
+    }
 
-    // Generate JWT token
-    const token = jwt.sign(
-      { userId: mockUser.id },
-      process.env.JWT_SECRET || 'default-secret-key',
-      { expiresIn: '7d' }
+    const { db } = await connectToDatabase();
+    const user = await db.collection('users').findOne({ email });
+
+    if (!user) {
+      return NextResponse.json(
+        { success: false, message: 'Invalid credentials' },
+        { status: 401 }
+      );
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+
+    if (!isPasswordValid) {
+      return NextResponse.json(
+        { success: false, message: 'Invalid credentials' },
+        { status: 401 }
+      );
+    }
+
+    // Remove sensitive data before sending
+    const { password: _, ...userWithoutPassword } = user;
+
+    return NextResponse.json(
+      { success: true, user: userWithoutPassword },
+      { status: 200 }
     );
-
-    // Return success response with token
-    return NextResponse.json({
-      success: true,
-      user: mockUser,
-      token
-    });
-
   } catch (error) {
     console.error('Login error:', error);
     return NextResponse.json(
-      { success: false, message: 'Authentication failed' },
-      { status: 401 }
+      { success: false, message: 'Internal server error' },
+      { status: 500 }
     );
   }
 } 

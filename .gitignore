@@ -64,3 +64,13 @@ pids
 *.pid
 *.seed
 *.pid.lock
+
+# Environment files
+.env*
+!.env.example
+!.env.production.template
+
+# Keep environment templates but ignore actual environment files
+.env.development
+.env.test
+.env.production

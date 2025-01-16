@@ -1,184 +1,104 @@
 import { MongoClient, ObjectId } from 'mongodb';
-import { userValidationRules, logoValidationRules } from './utils/validation-rules';
-import { validateField } from './utils/validation-rules';
+import { connectToDatabase, disconnectFromDatabase } from '../../app/lib/db';
+import { hashPassword } from '../../app/lib/auth';
+import { validateUser, validateLogo } from './utils/model-validators';
+import chalk from 'chalk';
 
-interface User {
+interface TestUser {
   _id: ObjectId;
   email: string;
-  username: string;
+  password: string;
   name: string;
-  profile: {
-    website?: string;
-    avatarUrl?: string;
-    bio?: string;
-    location?: string;
-  };
   role: string;
-  status: string;
-  lastLogin: Date;
-  [key: string]: any;
+  createdAt: Date;
 }
 
-interface Logo {
+interface TestLogo {
   _id: ObjectId;
   name: string;
-  description?: string;
-  imageUrl: string;
-  thumbnailUrl: string;
-  ownerId: ObjectId;
-  category: string;
-  tags: string[];
-  dimensions: {
-    width: number;
-    height: number;
-  };
-  fileSize: number;
-  fileType: string;
-  metadata: {
-    version: string;
-    status: string;
-    createdAt: Date;
-    updatedAt: Date;
-  };
-  colors?: string[];
-  [key: string]: any;
+  url: string;
+  userId: ObjectId;
+  createdAt: Date;
 }
-
-const generateTestUsers = (count: number): User[] => {
-  const users: User[] = [];
-  const roles = ['user', 'admin', 'moderator'];
-  const statuses = ['active', 'inactive', 'pending'];
-
-  for (let i = 0; i < count; i++) {
-    const user: User = {
-      _id: new ObjectId(),
-      email: `user${i}@test.com`,
-      username: `testuser${i}`,
-      name: `Test User ${i}`,
-      profile: {
-        website: i % 2 === 0 ? `https://user${i}.test.com` : undefined,
-        avatarUrl: `https://avatars.test.com/user${i}.jpg`,
-        bio: `Bio for test user ${i}`,
-        location: `City ${i}, Country`
-      },
-      role: roles[i % roles.length],
-      status: statuses[i % statuses.length],
-      lastLogin: new Date()
-    };
-
-    // Validate user data
-    for (const rule of userValidationRules) {
-      const value = rule.field.includes('.')
-        ? rule.field.split('.').reduce((obj, key) => obj?.[key], user)
-        : user[rule.field];
-      
-      if (!validateField(value, rule)) {
-        console.warn(`Warning: Generated user data fails validation for ${rule.field}`);
-      }
-    }
-
-    users.push(user);
-  }
-
-  return users;
-};
-
-const generateTestLogos = (users: User[], count: number): Logo[] => {
-  const logos: Logo[] = [];
-  const categories = [
-    'Technology', 'Business', 'Creative', 'Education',
-    'Entertainment', 'Food & Beverage', 'Health', 'Sports'
-  ];
-
-  for (let i = 0; i < count; i++) {
-    const owner = users[i % users.length];
-    const logo: Logo = {
-      _id: new ObjectId(),
-      name: `Test Logo ${i}`,
-      description: `Description for test logo ${i}`,
-      imageUrl: `https://logos.test.com/logo${i}.png`,
-      thumbnailUrl: `https://logos.test.com/logo${i}-thumb.png`,
-      ownerId: owner._id,
-      category: categories[i % categories.length],
-      tags: ['logo', 'test', `tag${i}`],
-      dimensions: {
-        width: 800,
-        height: 600
-      },
-      fileSize: 250 * 1024, // 250KB
-      fileType: 'png',
-      metadata: {
-        version: '1.0.0',
-        status: 'active',
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      colors: ['#FF0000', '#00FF00', '#0000FF']
-    };
-
-    // Validate logo data
-    for (const rule of logoValidationRules) {
-      const value = rule.field.includes('.')
-        ? rule.field.split('.').reduce((obj, key) => obj?.[key], logo)
-        : logo[rule.field];
-      
-      if (!validateField(value, rule)) {
-        console.warn(`Warning: Generated logo data fails validation for ${rule.field}`);
-      }
-    }
-
-    logos.push(logo);
-  }
-
-  return logos;
-};
 
 async function seedTestData() {
-  const uri = process.env.MONGODB_TEST_URI || 'mongodb://localhost:27017/LogoGalleryTest';
-  const client = new MongoClient(uri);
+  const { db } = await connectToDatabase();
+  const usersCollection = db.collection('users');
+  const logosCollection = db.collection('logos');
 
+  // Clear existing data
+  await usersCollection.deleteMany({});
+  await logosCollection.deleteMany({});
+
+  // Create test users
+  const users: TestUser[] = [];
+  for (let i = 1; i <= 5; i++) {
+    const user: TestUser = {
+      _id: new ObjectId(),
+      email: `user${i}@example.com`,
+      password: await hashPassword('password123'),
+      name: `Test User ${i}`,
+      role: 'user',
+      createdAt: new Date()
+    };
+
+    const validationResult = validateUser(user);
+    if (validationResult.errors.length > 0) {
+      console.error(chalk.red(`Invalid user data for user${i}:`));
+      validationResult.errors.forEach(error => {
+        console.error(chalk.red(`  • ${error.message}`));
+      });
+      continue;
+    }
+
+    await usersCollection.insertOne(user);
+    users.push(user);
+    console.log(chalk.green(`Created test user: ${user.email}`));
+  }
+
+  // Create test logos
+  const logos: TestLogo[] = [];
+  for (const user of users) {
+    for (let i = 1; i <= 3; i++) {
+      const logo: TestLogo = {
+        _id: new ObjectId(),
+        name: `Test Logo ${i} for ${user.name}`,
+        url: `https://example.com/logos/logo${i}.png`,
+        userId: user._id,
+        createdAt: new Date()
+      };
+
+      const validationResult = validateLogo(logo);
+      if (validationResult.errors.length > 0) {
+        console.error(chalk.red(`Invalid logo data for logo${i}:`));
+        validationResult.errors.forEach(error => {
+          console.error(chalk.red(`  • ${error.message}`));
+        });
+        continue;
+      }
+
+      await logosCollection.insertOne(logo);
+      logos.push(logo);
+      console.log(chalk.green(`Created test logo: ${logo.name}`));
+    }
+  }
+
+  console.log(chalk.blue('\nSeed data summary:'));
+  console.log(chalk.white(`• Created ${users.length} test users`));
+  console.log(chalk.white(`• Created ${logos.length} test logos`));
+
+  await disconnectFromDatabase();
+}
+
+async function main() {
   try {
-    await client.connect();
-    console.log('Connected to MongoDB test database');
-
-    const db = client.db();
-    
-    // Clear existing data
-    await db.collection('users').deleteMany({});
-    await db.collection('logos').deleteMany({});
-    console.log('Cleared existing test data');
-
-    // Generate and insert test data
-    const users = generateTestUsers(10);
-    const logos = generateTestLogos(users, 30);
-
-    await db.collection('users').insertMany(users);
-    await db.collection('logos').insertMany(logos);
-    console.log('Inserted test data');
-
-    // Create indexes
-    await db.collection('users').createIndex({ email: 1 }, { unique: true });
-    await db.collection('users').createIndex({ username: 1 }, { unique: true });
-    await db.collection('logos').createIndex({ name: 1, ownerId: 1 }, { unique: true });
-    await db.collection('logos').createIndex({ category: 1 });
-    await db.collection('logos').createIndex({ tags: 1 });
-    console.log('Created indexes');
-
+    await seedTestData();
+    console.log(chalk.green('\nTest data seeded successfully!'));
+    process.exit(0);
   } catch (error) {
-    console.error('Error seeding test data:', error);
-    throw error;
-  } finally {
-    await client.close();
-    console.log('Disconnected from MongoDB');
+    console.error(chalk.red('Error seeding test data:'), error);
+    process.exit(1);
   }
 }
 
-// Run the seeding script if this file is executed directly
-if (require.main === module) {
-  seedTestData()
-    .then(() => console.log('Test data seeding completed'))
-    .catch(error => {
-      console.error('Test data seeding failed:', error);
-      process.exit(1);
-    });
-} 
+main(); 

@@ -2,9 +2,19 @@ import { POST as requestReset } from '../request-reset/route'
 import { POST as resetPassword } from '../reset/route'
 import { connectToDatabase } from '@/app/lib/db'
 import { sendEmail } from '@/app/lib/email'
+import { Db } from 'mongodb'
 
 jest.mock('@/app/lib/db')
 jest.mock('@/app/lib/email')
+
+interface MockCollection {
+  findOne: jest.Mock;
+  updateOne: jest.Mock;
+}
+
+interface MockDb {
+  collection: (name: string) => MockCollection;
+}
 
 describe('Password Reset APIs', () => {
   const mockUser = {
@@ -13,15 +23,24 @@ describe('Password Reset APIs', () => {
     password: 'hashedpassword'
   }
 
+  let mockCollection: MockCollection;
+  let mockDb: MockDb;
+
   beforeEach(() => {
+    mockCollection = {
+      findOne: jest.fn().mockResolvedValue(mockUser),
+      updateOne: jest.fn().mockResolvedValue({ modifiedCount: 1 })
+    };
+
+    mockDb = {
+      collection: jest.fn().mockReturnValue(mockCollection)
+    };
+
     (connectToDatabase as jest.Mock).mockResolvedValue({
-      collection: jest.fn().mockReturnValue({
-        findOne: jest.fn().mockResolvedValue(mockUser),
-        updateOne: jest.fn().mockResolvedValue({ modifiedCount: 1 })
-      })
-    })
-    (sendEmail as jest.Mock).mockResolvedValue(true)
-  })
+      db: jest.fn().mockReturnValue(mockDb)
+    });
+    (sendEmail as jest.Mock).mockResolvedValue(true);
+  });
 
   afterEach(() => {
     jest.clearAllMocks()
@@ -47,11 +66,18 @@ describe('Password Reset APIs', () => {
     })
 
     it('returns success even when user not found (security)', async () => {
+      const mockCollectionNoUser: MockCollection = {
+        findOne: jest.fn().mockResolvedValue(null),
+        updateOne: jest.fn()
+      };
+
+      const mockDbNoUser: MockDb = {
+        collection: jest.fn().mockReturnValue(mockCollectionNoUser)
+      };
+
       (connectToDatabase as jest.Mock).mockResolvedValue({
-        collection: jest.fn().mockReturnValue({
-          findOne: jest.fn().mockResolvedValue(null)
-        })
-      })
+        db: jest.fn().mockReturnValue(mockDbNoUser)
+      });
 
       const request = new Request('http://localhost/api/auth/password/request-reset', {
         method: 'POST',
@@ -137,11 +163,18 @@ describe('Password Reset APIs', () => {
     })
 
     it('handles invalid reset token', async () => {
+      const mockCollectionInvalid: MockCollection = {
+        findOne: jest.fn().mockResolvedValue(null),
+        updateOne: jest.fn()
+      };
+
+      const mockDbInvalid: MockDb = {
+        collection: jest.fn().mockReturnValue(mockCollectionInvalid)
+      };
+
       (connectToDatabase as jest.Mock).mockResolvedValue({
-        collection: jest.fn().mockReturnValue({
-          findOne: jest.fn().mockResolvedValue(null)
-        })
-      })
+        db: jest.fn().mockReturnValue(mockDbInvalid)
+      });
 
       const request = new Request('http://localhost/api/auth/password/reset', {
         method: 'POST',
@@ -163,12 +196,18 @@ describe('Password Reset APIs', () => {
     })
 
     it('handles database errors', async () => {
+      const mockCollectionError: MockCollection = {
+        findOne: jest.fn().mockResolvedValue(mockUser),
+        updateOne: jest.fn().mockRejectedValue(new Error('Database error'))
+      };
+
+      const mockDbError: MockDb = {
+        collection: jest.fn().mockReturnValue(mockCollectionError)
+      };
+
       (connectToDatabase as jest.Mock).mockResolvedValue({
-        collection: jest.fn().mockReturnValue({
-          findOne: jest.fn().mockResolvedValue(mockUser),
-          updateOne: jest.fn().mockRejectedValue(new Error('Database error'))
-        })
-      })
+        db: jest.fn().mockReturnValue(mockDbError)
+      });
 
       const request = new Request('http://localhost/api/auth/password/reset', {
         method: 'POST',

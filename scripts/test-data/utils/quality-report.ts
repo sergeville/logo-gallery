@@ -1,210 +1,80 @@
-import { ValidationResult, ValidationError } from './validation-utils';
-import { MongoClient, Collection } from 'mongodb';
+import { ValidationResult, ValidationError } from '@/app/lib/validation';
 import chalk from 'chalk';
 
-interface ValidationIssue {
-  details?: {
-    updatedAt?: Date;
-    createdAt?: Date;
-    [key: string]: any;
-  };
-}
-
 interface QualityMetrics {
-  completeness: number;
-  accuracy: number;
-  consistency: number;
-  timeliness: number;
-}
-
-interface CollectionStats {
   totalDocuments: number;
   validDocuments: number;
   errorCount: number;
   warningCount: number;
+  completeness: number;
+  validity: number;
+}
+
+interface QualityReport {
   metrics: QualityMetrics;
+  recommendations: string[];
 }
 
-interface DataQualityReport {
-  timestamp: Date;
-  collections: {
-    [key: string]: CollectionStats;
-  };
-  overallScore: number;
-  performance: {
-    validationDuration: number;
-    avgValidationTimePerDoc: number;
-  };
-}
-
-export async function generateQualityReport(
-  client: MongoClient,
-  dbName: string,
-  validationResults: Map<string, ValidationResult[]>
-): Promise<DataQualityReport> {
-  const startTime = Date.now();
-  const report: DataQualityReport = {
-    timestamp: new Date(),
-    collections: {},
-    overallScore: 0,
-    performance: {
-      validationDuration: 0,
-      avgValidationTimePerDoc: 0,
-    },
-  };
-
-  // Convert Map entries to array for iteration
-  const entries = Array.from(validationResults.entries());
-  for (const [collectionName, results] of entries) {
-    const collection = client.db(dbName).collection(collectionName);
-    const totalDocs = await collection.countDocuments();
-    
-    const stats = calculateCollectionStats(results, totalDocs);
-    report.collections[collectionName] = stats;
-  }
-
-  // Calculate overall score
-  const collectionScores = Object.values(report.collections).map(stats => 
-    calculateOverallScore(stats.metrics)
-  );
-  report.overallScore = collectionScores.reduce((a, b) => a + b, 0) / collectionScores.length;
-
-  // Add performance metrics
-  const endTime = Date.now();
-  report.performance = {
-    validationDuration: endTime - startTime,
-    avgValidationTimePerDoc: (endTime - startTime) / getTotalDocuments(report),
-  };
-
-  return report;
-}
-
-function calculateCollectionStats(results: ValidationResult[], totalDocs: number): CollectionStats {
-  const errorCount = results.reduce((sum, r) => sum + r.errors.length, 0);
-  const warningCount = results.reduce((sum, r) => sum + r.warnings.length, 0);
-  const validDocs = results.filter(r => r.isValid).length;
-
-  const metrics = {
-    completeness: validDocs / totalDocs,
-    accuracy: 1 - (errorCount / (totalDocs * 10)), // Normalize errors
-    consistency: 1 - (warningCount / (totalDocs * 5)), // Normalize warnings
-    timeliness: calculateTimelinessScore(results),
-  };
+export function generateQualityReport(results: ValidationResult[]): QualityReport {
+  const metrics = calculateMetrics(results);
+  const recommendations = generateRecommendations(metrics);
 
   return {
-    totalDocuments: totalDocs,
-    validDocuments: validDocs,
+    metrics,
+    recommendations
+  };
+}
+
+function calculateMetrics(results: ValidationResult[]): QualityMetrics {
+  const totalDocuments = results.length;
+  const validDocuments = results.filter(r => r.errors.length === 0).length;
+  const errorCount = results.reduce((sum, r) => sum + r.errors.length, 0);
+  const warningCount = results.reduce((sum, r) => sum + r.warnings.length, 0);
+
+  return {
+    totalDocuments,
+    validDocuments,
     errorCount,
     warningCount,
-    metrics,
+    completeness: validDocuments / totalDocuments,
+    validity: 1 - (errorCount / totalDocuments)
   };
 }
 
-function calculateTimelinessScore(results: ValidationResult[]): number {
-  const now = new Date();
-  let score = 0;
-  let count = 0;
+function generateRecommendations(metrics: QualityMetrics): string[] {
+  const recommendations: string[] = [];
 
-  results.forEach(result => {
-    const issues = [...result.errors, ...result.warnings] as ValidationError[];
-    issues.forEach(issue => {
-      if (issue.details?.updatedAt || issue.details?.createdAt) {
-        const dateStr = issue.details.updatedAt || issue.details.createdAt;
-        const date = dateStr instanceof Date ? dateStr : new Date(dateStr);
-        const age = now.getTime() - date.getTime();
-        const ageInDays = age / (1000 * 60 * 60 * 24);
-        score += Math.max(0, 1 - (ageInDays / 365)); // Score decreases with age
-        count++;
-      }
-    });
-  });
-
-  return count > 0 ? score / count : 1;
-}
-
-function calculateOverallScore(metrics: QualityMetrics): number {
-  const weights = {
-    completeness: 0.4,
-    accuracy: 0.3,
-    consistency: 0.2,
-    timeliness: 0.1,
-  };
-
-  return (
-    metrics.completeness * weights.completeness +
-    metrics.accuracy * weights.accuracy +
-    metrics.consistency * weights.consistency +
-    metrics.timeliness * weights.timeliness
-  );
-}
-
-function getTotalDocuments(report: DataQualityReport): number {
-  return Object.values(report.collections).reduce(
-    (sum, stats) => sum + stats.totalDocuments,
-    0
-  );
-}
-
-export function formatQualityReport(report: DataQualityReport): string {
-  let output = '\n📊 Data Quality Report\n';
-  output += `${chalk.gray('Generated at:')} ${report.timestamp.toISOString()}\n\n`;
-
-  // Overall score
-  const scoreColor = report.overallScore >= 0.9 ? 'green' : report.overallScore >= 0.7 ? 'yellow' : 'red';
-  output += `${chalk.bold('Overall Quality Score:')} ${chalk[scoreColor]((report.overallScore * 100).toFixed(1))}%\n\n`;
-
-  // Collection details
-  for (const [collectionName, stats] of Object.entries(report.collections)) {
-    output += `${chalk.bold(collectionName)}\n`;
-    output += `${chalk.gray('Documents:')} ${stats.validDocuments}/${stats.totalDocuments} valid\n`;
-    output += `${chalk.gray('Issues:')} ${chalk.red(stats.errorCount.toString())} errors, ${chalk.yellow(stats.warningCount.toString())} warnings\n`;
-    
-    // Metrics
-    output += `${chalk.gray('Metrics:')}\n`;
-    for (const [metric, value] of Object.entries(stats.metrics)) {
-      const metricColor = value >= 0.9 ? 'green' : value >= 0.7 ? 'yellow' : 'red';
-      output += `  ${chalk.gray(metric)}: ${chalk[metricColor]((value * 100).toFixed(1))}%\n`;
-    }
-    output += '\n';
+  if (metrics.completeness < 0.95) {
+    recommendations.push('Improve data completeness by ensuring all required fields are present');
   }
 
-  // Performance metrics
-  output += `${chalk.bold('Performance')}\n`;
-  output += `${chalk.gray('Total Duration:')} ${report.performance.validationDuration}ms\n`;
-  output += `${chalk.gray('Avg Time per Doc:')} ${report.performance.avgValidationTimePerDoc.toFixed(2)}ms\n`;
+  if (metrics.validity < 0.95) {
+    recommendations.push('Address validation errors to improve data quality');
+  }
 
-  return output;
+  if (metrics.warningCount > 0) {
+    recommendations.push('Review and address warnings to enhance data quality');
+  }
+
+  return recommendations;
 }
 
-export function generateRecommendations(report: DataQualityReport): string {
-  let output = '\n📋 Recommendations\n\n';
+export function formatQualityReport(report: QualityReport): string {
+  let output = chalk.blue('\nQuality Report\n');
 
-  for (const [collectionName, stats] of Object.entries(report.collections)) {
-    const { metrics } = stats;
-    
-    if (metrics.completeness < 0.95) {
-      output += `${chalk.yellow('⚠️')} ${collectionName}: Improve data completeness\n`;
-      output += `   - Review required fields implementation\n`;
-      output += `   - Consider data enrichment processes\n`;
-    }
+  output += chalk.white('\nMetrics:\n');
+  output += chalk.gray(`Total Documents: ${report.metrics.totalDocuments}\n`);
+  output += chalk.green(`Valid Documents: ${report.metrics.validDocuments}\n`);
+  output += chalk.red(`Error Count: ${report.metrics.errorCount}\n`);
+  output += chalk.yellow(`Warning Count: ${report.metrics.warningCount}\n`);
+  output += chalk.cyan(`Completeness: ${(report.metrics.completeness * 100).toFixed(2)}%\n`);
+  output += chalk.cyan(`Validity: ${(report.metrics.validity * 100).toFixed(2)}%\n`);
 
-    if (metrics.accuracy < 0.9) {
-      output += `${chalk.red('❌')} ${collectionName}: Address data accuracy issues\n`;
-      output += `   - Implement stricter validation rules\n`;
-      output += `   - Review error patterns in validation results\n`;
-    }
-
-    if (metrics.consistency < 0.9) {
-      output += `${chalk.yellow('⚠️')} ${collectionName}: Improve data consistency\n`;
-      output += `   - Review and standardize data formats\n`;
-      output += `   - Consider implementing data normalization\n`;
-    }
-
-    if (metrics.timeliness < 0.8) {
-      output += `${chalk.yellow('⚠️')} ${collectionName}: Address data freshness\n`;
-      output += `   - Review update frequency\n`;
-      output += `   - Consider implementing auto-update mechanisms\n`;
-    }
+  if (report.recommendations.length > 0) {
+    output += chalk.white('\nRecommendations:\n');
+    report.recommendations.forEach(rec => {
+      output += chalk.yellow(`• ${rec}\n`);
+    });
   }
 
   return output;

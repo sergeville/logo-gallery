@@ -1,22 +1,37 @@
-import { config } from 'dotenv';
 import path from 'path';
-import { databaseConfig } from './database';
-import { storageConfig } from './storage';
-import { testingConfig } from './testing';
-
-// Load test environment variables
-config({ path: path.join(process.cwd(), '.env.test') });
 
 export const testConfig = {
-  mongodb: databaseConfig,
-  storage: storageConfig,
+  mongodb: {
+    uri: process.env.MONGODB_URI || 'mongodb://localhost:27017/LogoGalleryTestDB',
+    dbName: 'LogoGalleryTestDB',
+    options: {
+      retryWrites: true,
+      w: 'majority'
+    }
+  },
+  storage: {
+    uploadDir: path.join(process.cwd(), 'uploads', 'test'),
+    maxFileSize: 1 * 1024 * 1024, // 1MB
+    allowedFormats: ['image/png', 'image/jpeg', 'image/svg+xml']
+  },
   api: {
-    baseUrl: 'http://localhost:3000',
-    timeout: 5000 // 5 seconds for faster tests
+    baseUrl: 'http://localhost:3001',
+    timeout: 5000
+  },
+  auth: {
+    nextAuthUrl: 'http://localhost:3001',
+    nextAuthSecret: 'test-secret',
+    jwtSecret: 'test-jwt-secret'
   },
   logging: {
     level: 'error',
     saveToFile: false
   },
-  testing: testingConfig
-}; 
+  cleanup: {
+    afterEach: true,
+    afterAll: true
+  },
+  defaultTimeout: 5000
+}
+
+export default testConfig 

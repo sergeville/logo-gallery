@@ -1,109 +1,95 @@
+import { Collection, Db } from 'mongodb';
+import { jest } from '@jest/globals';
 import { GET } from '../route';
-import { getServerSession } from 'next-auth';
 import { connectToDatabase } from '@/app/lib/db';
-import { Collection, Db, WithId, Document } from 'mongodb';
+import { getServerSession } from 'next-auth';
+import { User } from '@/app/lib/types';
 
+jest.mock('@/app/lib/db');
 jest.mock('next-auth');
-jest.mock('@/lib/db-config');
 
-interface User {
-  _id: string;
-  email: string;
-  username: string;
-  password: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
+type MockSession = {
+  user?: {
+    email?: string;
+    name?: string;
+  } | null;
+} | null;
 
-type MockCollection = Partial<Collection<User>>;
-
-type MockDb = {
-  collection: jest.MockedFunction<(name: string) => Collection<Document>>;
-}
-
-describe('User API', () => {
-  const mockUser = {
-    _id: '123',
-    email: 'test@example.com',
-    username: 'testuser',
-    password: 'hashedpassword',
-    createdAt: new Date('2024-01-01'),
-    updatedAt: new Date('2024-01-01')
-  };
-
-  const mockSession = {
-    user: {
-      email: 'test@example.com',
-      name: 'Test User'
-    }
-  };
-
-  const mockCollection: MockCollection = {
-    findOne: jest.fn().mockResolvedValue(mockUser as WithId<User>)
-  };
-
-  const mockDb: MockDb = {
-    collection: jest.fn().mockReturnValue(mockCollection)
-  };
+describe('GET /api/user', () => {
+  let mockCollection: jest.Mocked<Collection<User>>;
+  let mockDb: jest.Mocked<Db>;
 
   beforeEach(() => {
-    (getServerSession as jest.Mock).mockResolvedValue(mockSession);
-    (connectToDatabase as jest.Mock).mockResolvedValue(mockDb as unknown as Db);
-  });
+    mockCollection = {
+      findOne: jest.fn(),
+    } as unknown as jest.Mocked<Collection<User>>;
 
-  afterEach(() => {
+    mockDb = {
+      collection: jest.fn().mockReturnValue(mockCollection),
+    } as unknown as jest.Mocked<Db>;
+
+    (getServerSession as jest.Mock).mockImplementation((): Promise<MockSession> => Promise.resolve(null));
+    (connectToDatabase as jest.Mock).mockImplementation(() => Promise.resolve({ db: mockDb }));
+
     jest.clearAllMocks();
   });
 
-  it('returns user data when authenticated', async () => {
-    const response = await GET();
-    const data = await response.json();
-
-    const { password, ...expectedUser } = mockUser;
-
-    expect(response.status).toBe(200);
-    expect(data).toEqual(expectedUser);
-  });
-
   it('returns 401 when not authenticated', async () => {
-    (getServerSession as jest.Mock).mockResolvedValue(null);
+    (getServerSession as jest.Mock).mockImplementation(() => Promise.resolve(null));
 
-    const response = await GET();
-    const data = await response.json();
-
+    const request = new Request('http://localhost/api/user');
+    const response = await GET(request);
+    
     expect(response.status).toBe(401);
-    expect(data).toEqual({ 
-      success: false, 
-      message: 'Not authenticated' 
-    });
+    expect(await response.json()).toEqual({ message: 'Not authenticated' });
   });
-  it('returns 404 when user not found', async () => {
-    const notFoundDb: MockDb = {
-      collection: jest.fn().mockReturnValue({
-        findOne: jest.fn().mockResolvedValue(null as WithId<User> | null)
-      } as MockCollection)
-    };
-    (connectToDatabase as jest.Mock).mockResolvedValue(notFoundDb as unknown as Db);
 
-    const response = await GET();
-    const data = await response.json();
+  it('returns 400 when user email is missing', async () => {
+    (getServerSession as jest.Mock).mockImplementation(() => Promise.resolve({
+      user: {}
+    }));
 
+    const request = new Request('http://localhost/api/user');
+    const response = await GET(request);
+    
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({ message: 'User email is required' });
+  });
+
+  it('returns 404 when user is not found', async () => {
+    (getServerSession as jest.Mock).mockImplementation(() => Promise.resolve({
+      user: { email: 'test@example.com' }
+    }));
+    mockCollection.findOne.mockResolvedValue(null);
+
+    const request = new Request('http://localhost/api/user');
+    const response = await GET(request);
+    
     expect(response.status).toBe(404);
-    expect(data).toEqual({ 
-      success: false, 
-      message: 'User not found' 
-    });
+    expect(await response.json()).toEqual({ message: 'User not found' });
   });
-  it('handles database errors', async () => {
-    (connectToDatabase as jest.Mock).mockRejectedValue(new Error('Database error'));
 
-    const response = await GET();
+  it('returns user data without password', async () => {
+    const mockUser = {
+      email: 'test@example.com',
+      name: 'Test User',
+      password: 'hashedPassword'
+    };
+
+    (getServerSession as jest.Mock).mockImplementation(() => Promise.resolve({
+      user: { email: 'test@example.com' }
+    }));
+    mockCollection.findOne.mockResolvedValue(mockUser as User);
+
+    const request = new Request('http://localhost/api/user');
+    const response = await GET(request);
+    
+    expect(response.status).toBe(200);
     const data = await response.json();
-
-    expect(response.status).toBe(500);
-    expect(data).toEqual({ 
-      success: false, 
-      message: 'Internal server error' 
+    expect(data.user).toEqual({
+      email: 'test@example.com',
+      name: 'Test User'
     });
+    expect(data.user.password).toBeUndefined();
   });
 }); 

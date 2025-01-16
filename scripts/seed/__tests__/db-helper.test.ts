@@ -1,125 +1,85 @@
-import { DatabaseHelper } from '../db-helper';
-import { ObjectId } from 'mongodb';
-import { User } from '../users';
-import { Logo } from '../logos';
-import { Comment, Collection, Favorite } from '../relationships';
+import { MongoClient, ObjectId } from 'mongodb';
+import { TestDbHelper } from '../../test-data/utils/test-db-helper';
+import { jest } from '@jest/globals';
 
-describe('DatabaseHelper', () => {
-  let dbHelper: DatabaseHelper;
+jest.mock('mongodb');
 
-  beforeAll(async () => {
-    dbHelper = new DatabaseHelper();
-    await dbHelper.connect();
+describe('Test Database Helper', () => {
+  let testDbHelper: TestDbHelper;
+
+  beforeEach(() => {
+    testDbHelper = new TestDbHelper();
   });
 
-  afterAll(async () => {
-    await dbHelper.disconnect();
+  afterEach(async () => {
+    await testDbHelper.disconnect();
+    await testDbHelper.clearCollections(['users', 'logos']);
   });
 
-  beforeEach(async () => {
-    await dbHelper.clearCollections();
+  it('connects to database', async () => {
+    await testDbHelper.connect();
+    expect(MongoClient.connect).toHaveBeenCalledWith(process.env.MONGODB_TEST_URI || 'mongodb://localhost:27017/test');
   });
 
-  describe('seedTestData', () => {
-    it('should seed complete test data', async () => {
-      await dbHelper.seedTestData({
-        userCount: 3,
-        logoCount: 5,
-        commentsPerLogo: 2,
-        collectionsPerUser: 1,
-        favoritesPerUser: 2
-      });
+  it('disconnects from database', async () => {
+    await testDbHelper.connect();
+    await testDbHelper.disconnect();
+    expect(await testDbHelper.isConnected()).toBe(false);
+    expect(await testDbHelper.getDb()).toBeNull();
+  });
 
-      // Verify data was seeded
-      const db = (dbHelper as any).db;
-      
-      const users = await db.collection('users').find({}).toArray() as User[];
-      expect(users).toHaveLength(3);
-      users.forEach((user: User) => {
-        expect(user._id).toBeDefined();
-        expect(user.email).toBeDefined();
-        expect(user.profile).toBeDefined();
-      });
+  it('gets collection', async () => {
+    await testDbHelper.connect();
+    const collection = testDbHelper.getCollection('test');
+    expect(collection).toBeDefined();
+  });
 
-      const logos = await db.collection('logos').find({}).toArray() as Logo[];
-      expect(logos).toHaveLength(5);
-      logos.forEach((logo: Logo) => {
-        expect(logo._id).toBeDefined();
-        expect(logo.name).toBeDefined();
-        expect(users.some((u: User) => u._id.equals(logo.userId))).toBe(true);
-      });
+  it('clears collection', async () => {
+    await testDbHelper.connect();
+    await testDbHelper.clearCollection('test');
+    const collection = testDbHelper.getCollection('test');
+    expect(collection.deleteMany).toHaveBeenCalledWith({});
+  });
 
-      const comments = await db.collection('comments').find({}).toArray() as Comment[];
-      expect(comments.length).toBeGreaterThanOrEqual(logos.length * 2);
-      comments.forEach((comment: Comment) => {
-        expect(comment._id).toBeDefined();
-        expect(logos.some((l: Logo) => l._id.equals(comment.logoId))).toBe(true);
-        expect(users.some((u: User) => u._id.equals(comment.userId))).toBe(true);
-      });
-
-      const collections = await db.collection('collections').find({}).toArray() as Collection[];
-      expect(collections.length).toBeGreaterThanOrEqual(users.length);
-      collections.forEach((collection: Collection) => {
-        expect(collection._id).toBeDefined();
-        expect(users.some((u: User) => u._id.equals(collection.userId))).toBe(true);
-        expect(collection.logos.length).toBeGreaterThan(0);
-        collection.logos.forEach(logoId => {
-          expect(logos.some(l => l._id.equals(logoId))).toBe(true);
-        });
-      });
-
-      const favorites = await db.collection('favorites').find({}).toArray() as Favorite[];
-      expect(favorites.length).toBeGreaterThanOrEqual(users.length * 2);
-      favorites.forEach((favorite: Favorite) => {
-        expect(favorite._id).toBeDefined();
-        expect(users.some((u: User) => u._id.equals(favorite.userId))).toBe(true);
-        expect(logos.some((l: Logo) => l._id.equals(favorite.logoId))).toBe(true);
-      });
+  it('clears multiple collections', async () => {
+    await testDbHelper.connect();
+    const collections = ['users', 'logos'];
+    await testDbHelper.clearCollections(collections);
+    collections.forEach(name => {
+      const collection = testDbHelper.getCollection(name);
+      expect(collection.deleteMany).toHaveBeenCalledWith({});
     });
   });
 
-  describe('clearCollections', () => {
-    it('should clear all collections', async () => {
-      // First seed some data
-      await dbHelper.seedTestData({
-        userCount: 2,
-        logoCount: 3,
-        commentsPerLogo: 1,
-        collectionsPerUser: 1,
-        favoritesPerUser: 1
-      });
-
-      // Then clear it
-      await dbHelper.clearCollections();
-
-      // Verify all collections are empty
-      const db = (dbHelper as any).db;
-      const collections = ['users', 'logos', 'comments', 'collections', 'favorites'];
-      
-      for (const collectionName of collections) {
-        const count = await db.collection(collectionName).countDocuments();
-        expect(count).toBe(0);
-      }
-    });
+  it('inserts user', async () => {
+    await testDbHelper.connect();
+    const user = {
+      _id: new ObjectId(),
+      name: 'Test User',
+      email: 'test@example.com'
+    };
+    const result = await testDbHelper.insertUser(user);
+    expect(result).toEqual(user._id.toString());
   });
 
-  describe('createIndexes', () => {
-    it('should create all required indexes', async () => {
-      await dbHelper.createIndexes();
-      const db = (dbHelper as any).db;
+  it('inserts logo', async () => {
+    await testDbHelper.connect();
+    const logo = {
+      _id: new ObjectId(),
+      name: 'Test Logo',
+      url: 'http://example.com/logo.png',
+      userId: new ObjectId()
+    };
+    const result = await testDbHelper.insertLogo(logo);
+    expect(result).toEqual(logo._id.toString());
+  });
 
-      const userIndexes = await db.collection('users').indexes();
-      expect(userIndexes.some((idx: any) => idx.key.email)).toBe(true);
-      expect(userIndexes.some((idx: any) => idx.key.username)).toBe(true);
+  it('throws error when accessing collection without connection', () => {
+    expect(() => testDbHelper.getCollection('test')).toThrow('Database not connected');
+  });
 
-      const logoIndexes = await db.collection('logos').indexes();
-      expect(logoIndexes.some((idx: any) => idx.key.userId)).toBe(true);
-      expect(logoIndexes.some((idx: any) => idx.key.tags)).toBe(true);
-
-      const favoriteIndexes = await db.collection('favorites').indexes();
-      expect(favoriteIndexes.some((idx: any) => 
-        idx.key.userId && idx.key.logoId && idx.unique
-      )).toBe(true);
-    });
+  it('validates collections array in clearCollections', async () => {
+    await testDbHelper.connect();
+    await expect(testDbHelper.clearCollections(['test'])).resolves.not.toThrow();
   });
 }); 

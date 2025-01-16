@@ -6,7 +6,8 @@ export interface ILogo {
   description?: string;
   imageUrl: string;
   thumbnailUrl: string;
-  ownerId: ObjectId;
+  userId: ObjectId;
+  ownerName: string;
   category: string;
   tags: string[];
   dimensions: {
@@ -15,13 +16,11 @@ export interface ILogo {
   };
   fileSize: number;
   fileType: string;
-  metadata: {
-    version: string;
-    status: string;
-    createdAt: Date;
-    updatedAt: Date;
-  };
-  colors?: string[];
+  url: string;
+  totalVotes: number;
+  votes: any[];
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export function generateSpecificLogos(ownerId: ObjectId): ILogo[] {
@@ -32,22 +31,21 @@ export function generateSpecificLogos(ownerId: ObjectId): ILogo[] {
       description: 'Modern logo for a technology company',
       imageUrl: 'https://example.com/logos/tech-company.png',
       thumbnailUrl: 'https://example.com/logos/tech-company-thumb.png',
-      ownerId,
+      userId: ownerId,
+      ownerName: 'Test User',
       category: 'Technology',
       tags: ['tech', 'modern', 'professional'],
       dimensions: {
         width: 1024,
         height: 1024
       },
-      fileSize: 256 * 1024, // 256KB
+      fileSize: 256 * 1024,
       fileType: 'png',
-      metadata: {
-        version: '1.0.0',
-        status: 'active',
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      colors: ['#1E90FF', '#000000', '#FFFFFF']
+      url: 'https://example.com/logos/tech-company.png',
+      totalVotes: 0,
+      votes: [],
+      createdAt: new Date(),
+      updatedAt: new Date()
     },
     {
       _id: new ObjectId(),
@@ -55,22 +53,21 @@ export function generateSpecificLogos(ownerId: ObjectId): ILogo[] {
       description: 'Artistic logo for a creative agency',
       imageUrl: 'https://example.com/logos/creative-agency.png',
       thumbnailUrl: 'https://example.com/logos/creative-agency-thumb.png',
-      ownerId,
+      userId: ownerId,
+      ownerName: 'Test User',
       category: 'Creative',
       tags: ['creative', 'artistic', 'colorful'],
       dimensions: {
         width: 800,
         height: 600
       },
-      fileSize: 192 * 1024, // 192KB
+      fileSize: 192 * 1024,
       fileType: 'png',
-      metadata: {
-        version: '1.0.0',
-        status: 'active',
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      colors: ['#FF4500', '#FFD700', '#000000']
+      url: 'https://example.com/logos/creative-agency.png',
+      totalVotes: 0,
+      votes: [],
+      createdAt: new Date(),
+      updatedAt: new Date()
     }
   ];
 }
@@ -96,23 +93,18 @@ export function generateLogos(ownerIds: ObjectId[], count: number): ILogo[] {
       description: `Description for test logo ${index + 1}`,
       imageUrl: `https://example.com/logos/test-logo-${index + 1}.${randomFileType}`,
       thumbnailUrl: `https://example.com/logos/test-logo-${index + 1}-thumb.${randomFileType}`,
-      ownerId: randomOwner,
+      userId: randomOwner,
+      ownerName: 'Test User',
       category: randomCategory,
       tags: ['test', `tag${index + 1}`, randomCategory.toLowerCase()],
       dimensions: randomDimensions,
-      fileSize: Math.floor(Math.random() * 500 * 1024), // Random size up to 500KB
+      fileSize: Math.floor(Math.random() * 500 * 1024),
       fileType: randomFileType,
-      metadata: {
-        version: '1.0.0',
-        status: 'active',
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      colors: [
-        `#${Math.floor(Math.random()*16777215).toString(16).padStart(6, '0')}`,
-        `#${Math.floor(Math.random()*16777215).toString(16).padStart(6, '0')}`,
-        `#${Math.floor(Math.random()*16777215).toString(16).padStart(6, '0')}`
-      ]
+      url: `https://example.com/logos/test-logo-${index + 1}.${randomFileType}`,
+      totalVotes: 0,
+      votes: [],
+      createdAt: new Date(),
+      updatedAt: new Date()
     };
   });
 } 

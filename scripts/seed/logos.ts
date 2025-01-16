@@ -1,27 +1,5 @@
 import { ObjectId } from 'mongodb';
-
-interface LogoVote {
-  userId: ObjectId;
-  rating: number;
-  timestamp: Date;
-}
-
-export interface Logo {
-  _id: ObjectId;
-  name: string;
-  url: string;
-  description: string;
-  userId: ObjectId;
-  tags: string[];
-  averageRating: number;
-  votes: Array<{
-    userId: ObjectId;
-    rating: number;
-    timestamp: Date;
-  }>;
-  createdAt: Date;
-  updatedAt: Date;
-}
+import { Logo } from '@/app/types';
 
 interface LogoSeedOptions {
   count: number;
@@ -54,56 +32,27 @@ function generateTags(count: number = 3): string[] {
 /**
  * Generates a random logo description
  */
-function generateDescription(name: string, style: string, tags: string[]): string {
-  return `A ${style.toLowerCase()} logo design for ${name}. Features ${tags.join(', ')} elements.`;
-}
-
-/**
- * Generates random votes for a logo
- */
-function generateVotes(userIds: ObjectId[], min: number, max: number): LogoVote[] {
-  const voteCount = Math.floor(Math.random() * (max - min + 1)) + min;
-  const shuffledUsers = [...userIds].sort(() => 0.5 - Math.random());
-  const voters = shuffledUsers.slice(0, voteCount);
-
-  return voters.map(userId => ({
-    userId,
-    rating: Math.floor(Math.random() * 5) + 1, // 1-5 rating
-    timestamp: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000) // Random date within last 30 days
-  }));
-}
-
-/**
- * Calculates average rating from votes
- */
-function calculateAverageRating(votes: LogoVote[]): number {
-  if (votes.length === 0) return 0;
-  const sum = votes.reduce((acc, vote) => acc + vote.rating, 0);
-  return Number((sum / votes.length).toFixed(2));
+function generateDescription(style: string, tags: string[]): string {
+  return `A ${style.toLowerCase()} logo design featuring ${tags.join(', ')} elements.`;
 }
 
 /**
  * Generates a single logo
  */
 function generateLogo(index: number, userId: ObjectId, options: LogoSeedOptions): Logo {
-  const style = LOGO_STYLES[Math.floor(Math.random() * LOGO_STYLES.length)];
-  const name = `${style} Logo ${index + 1}`;
   const tags = generateTags();
-  const votes = options.withRatings 
-    ? generateVotes(options.userIds, options.minVotes || 0, options.maxVotes || 5)
-    : [];
+  const style = LOGO_STYLES[Math.floor(Math.random() * LOGO_STYLES.length)];
+  const now = new Date();
 
   return {
     _id: new ObjectId(),
-    name,
-    url: `https://logo-gallery.com/logos/${index + 1}.png`, // Placeholder URL
-    description: generateDescription(name, style, tags),
-    userId,
+    url: `https://example.com/logos/logo-${index}.png`,
+    description: generateDescription(style, tags),
+    ownerId: userId,
     tags,
-    votes,
-    averageRating: calculateAverageRating(votes),
-    createdAt: new Date(Date.now() - Math.random() * 90 * 24 * 60 * 60 * 1000), // Random date within last 90 days
-    updatedAt: new Date()
+    totalVotes: 0,
+    createdAt: now,
+    updatedAt: now
   };
 }
 
@@ -112,12 +61,13 @@ function generateLogo(index: number, userId: ObjectId, options: LogoSeedOptions)
  */
 export async function seedLogos(options: LogoSeedOptions): Promise<Logo[]> {
   const logos: Logo[] = [];
-  const { userIds, count, perUser = 1 } = options;
+  let index = 0;
 
-  for (let i = 0; i < count; i++) {
-    const userId = userIds[Math.floor(i / perUser) % userIds.length];
-    const logo = generateLogo(i, userId, options);
-    logos.push(logo);
+  for (const userId of options.userIds) {
+    const userLogoCount = options.perUser || Math.ceil(options.count / options.userIds.length);
+    for (let i = 0; i < userLogoCount && logos.length < options.count; i++) {
+      logos.push(generateLogo(index++, userId, options));
+    }
   }
 
   return logos;

@@ -3,7 +3,7 @@ export interface Logo {
   name: string;
   imageUrl: string;
   thumbnailUrl: string;
-  ownerId: string;
+  userId: string;
   tags: string[];
   category: string;
   dimensions: {

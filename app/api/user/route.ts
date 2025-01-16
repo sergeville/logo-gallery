@@ -1,41 +1,54 @@
+import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '../auth/[...nextauth]/route';
+import { authOptions } from '@/app/lib/auth';
 import { connectToDatabase } from '@/app/lib/db';
+import { User } from '@/app/lib/types';
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session?.user) {
-      return new Response(
-        JSON.stringify({ success: false, message: 'Not authenticated' }),
-        { status: 401, headers: { 'Content-Type': 'application/json' } }
-      );
+    if (!session) {
+      return NextResponse.json({
+        success: false,
+        message: 'Not authenticated'
+      }, { status: 401 });
     }
 
-    const db = await connectToDatabase();
-    const user = await db.collection('users').findOne({ email: session.user.email });
+    const { email } = session.user;
+
+    if (!email) {
+      return NextResponse.json({
+        success: false,
+        message: 'User email not found in session'
+      }, { status: 400 });
+    }
+
+    const { db } = await connectToDatabase();
+    const usersCollection = db.collection<User>('users');
+
+    const user = await usersCollection.findOne({ email });
 
     if (!user) {
-      return new Response(
-        JSON.stringify({ success: false, message: 'User not found' }),
-        { status: 404, headers: { 'Content-Type': 'application/json' } }
-      );
+      return NextResponse.json({
+        success: false,
+        message: 'User not found'
+      }, { status: 404 });
     }
 
-    // Remove sensitive data
-    const { password, ...userData } = user;
+    // Remove sensitive data before sending
+    const { password, ...userWithoutPassword } = user;
 
-    return new Response(
-      JSON.stringify(userData),
-      { status: 200, headers: { 'Content-Type': 'application/json' } }
-    );
+    return NextResponse.json({
+      success: true,
+      user: userWithoutPassword
+    });
 
   } catch (error) {
     console.error('Error fetching user:', error);
-    return new Response(
-      JSON.stringify({ success: false, message: 'Internal server error' }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
-    );
+    return NextResponse.json({
+      success: false,
+      message: 'Error fetching user'
+    }, { status: 500 });
   }
 } 

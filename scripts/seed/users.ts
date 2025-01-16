@@ -1,66 +1,26 @@
 import { ObjectId } from 'mongodb';
-import { hash } from 'bcrypt';
-
-interface UserProfile {
-  image?: string;
-  bio?: string;
-  location?: string;
-  website?: string;
-  company?: string;
-}
-
-export interface User {
-  _id: ObjectId;
-  username: string;
-  email: string;
-  password: string; // Will be hashed
-  profile: UserProfile;
-  role: 'user' | 'admin';
-  createdAt: Date;
-  lastLogin: Date;
-  isActive: boolean;
-}
+import { User } from '@/app/types';
 
 interface UserSeedOptions {
   count: number;
   withProfiles?: boolean;
   roles?: Array<'user' | 'admin'>;
-  passwordHash?: string;
-}
-
-const DEFAULT_PASSWORD = 'Test123!@#';
-const SALT_ROUNDS = 10;
-
-/**
- * Generates a random user profile
- */
-function generateProfile(): UserProfile {
-  return {
-    bio: `Test user bio ${Math.random().toString(36).substring(7)}`,
-    location: ['New York', 'London', 'Tokyo', 'Paris', 'Berlin'][Math.floor(Math.random() * 5)],
-    website: `https://example-${Math.random().toString(36).substring(7)}.com`,
-    company: `Company ${Math.random().toString(36).substring(7)}`,
-  };
 }
 
 /**
- * Generates a single user with optional profile
+ * Generates a single user
  */
 async function generateUser(index: number, options: UserSeedOptions): Promise<User> {
-  const username = `testuser${index}`;
-  const email = `${username}@example.com`;
-  const password = await hash(options.passwordHash || DEFAULT_PASSWORD, SALT_ROUNDS);
+  const email = `testuser${index}@example.com`;
   
   return {
     _id: new ObjectId(),
-    username,
     email,
-    password,
-    profile: options.withProfiles ? generateProfile() : {},
+    name: options.withProfiles ? `Test User ${index}` : undefined,
+    image: options.withProfiles ? `https://example.com/avatars/${index}.jpg` : undefined,
     role: options.roles ? options.roles[Math.floor(Math.random() * options.roles.length)] : 'user',
     createdAt: new Date(),
-    lastLogin: new Date(),
-    isActive: true,
+    updatedAt: new Date()
   };
 }
 

@@ -8,6 +8,8 @@ export interface User {
   role?: 'admin' | 'user';
   profile?: {
     bio?: string;
+    website?: string;
+    avatar?: string;
     location?: string;
     skills?: string[];
   };
@@ -17,13 +19,19 @@ export interface User {
 export interface Logo {
   _id: ObjectId;
   name: string;
+  imageUrl: string;
+  thumbnailUrl: string;
+  description?: string;
   userId: ObjectId;
   tags: string[];
-  description?: string;
-  votes?: { userId: ObjectId; rating: number }[];
-  averageRating?: number;
   rating?: number;
+  votes?: Array<{
+    userId: ObjectId;
+    rating: number;
+    timestamp: Date;
+  }>;
   createdAt: Date;
+  updatedAt?: Date;
 }
 
 export interface Comment {
@@ -57,6 +65,23 @@ export interface Favorite {
 }
 
 export interface Relationships {
+  comments: Comment[];
+  collections: Collection[];
+  favorites: Favorite[];
+}
+
+export interface TestDataOptions {
+  logoCount?: number;
+  commentsPerLogo?: number;
+  maxRepliesPerComment?: number;
+  collectionsPerUser?: number;
+  logosPerCollection?: number;
+  favoritesPerUser?: number;
+}
+
+export interface TestData {
+  users: User[];
+  logos: Logo[];
   comments: Comment[];
   collections: Collection[];
   favorites: Favorite[];

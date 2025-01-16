@@ -1,170 +1,95 @@
-import { NextRequest } from 'next/server'
+import { Collection, Db, DeleteResult } from 'mongodb'
+import { jest } from '@jest/globals'
 import { DELETE } from '../route'
-import { deleteUser, getUsers } from '@/app/lib/store'
-import { cookies } from 'next/headers'
-import bcrypt from 'bcryptjs'
+import { connectToDatabase } from '@/app/lib/db'
+import { getServerSession } from 'next-auth'
+import { User } from '@/app/lib/types'
 
-// Mock dependencies
-jest.mock('@/app/lib/store', () => ({
-  deleteUser: jest.fn(),
-  getUsers: jest.fn()
-}))
+jest.mock('@/app/lib/db')
+jest.mock('next-auth')
 
-jest.mock('next/headers', () => ({
-  cookies: jest.fn()
-}))
+type MockSession = {
+  user?: {
+    email?: string;
+    name?: string;
+  } | null;
+} | null;
 
-jest.mock('bcryptjs', () => ({
-  compare: jest.fn()
-}))
-
-describe('Account Deletion API', () => {
-  const mockUser = {
-    _id: '123',
-    username: 'testuser',
-    email: 'test@example.com',
-    password: 'hashedPassword123'
-  }
-
-  const mockCookies = {
-    get: jest.fn(),
-    set: jest.fn()
-  }
+describe('DELETE /api/user/delete', () => {
+  let mockCollection: jest.Mocked<Collection<User>>
+  let mockDb: jest.Mocked<Db>
 
   beforeEach(() => {
+    mockCollection = {
+      deleteOne: jest.fn(),
+      findOne: jest.fn(),
+    } as unknown as jest.Mocked<Collection<User>>
+
+    mockDb = {
+      collection: jest.fn().mockReturnValue(mockCollection),
+    } as unknown as jest.Mocked<Db>
+
+    (getServerSession as jest.Mock).mockImplementation((): Promise<MockSession> => Promise.resolve(null));
+    (connectToDatabase as jest.Mock).mockImplementation(() => Promise.resolve({ db: mockDb }));
+
     jest.clearAllMocks()
-    ;(cookies as jest.Mock).mockReturnValue(mockCookies)
-    mockCookies.get.mockReturnValue({ value: JSON.stringify(mockUser) })
-    ;(getUsers as jest.Mock).mockReturnValue([mockUser])
-    ;(bcrypt.compare as jest.Mock).mockResolvedValue(true)
-    ;(deleteUser as jest.Mock).mockReturnValue(true)
   })
 
-  describe('DELETE /api/user/delete', () => {
-    it('successfully deletes user account', async () => {
-      const request = new Request('http://localhost:3000/api/user/delete', {
-        method: 'DELETE',
-        body: JSON.stringify({ password: 'Password123!' })
-      })
+  it('returns 401 when not authenticated', async () => {
+    (getServerSession as jest.Mock).mockImplementation(() => Promise.resolve(null));
 
-      const response = await DELETE(request)
-      const data = await response.json()
+    const request = new Request('http://localhost/api/user/delete')
+    const response = await DELETE(request)
+    
+    expect(response.status).toBe(401)
+    expect(await response.json()).toEqual({ message: 'Not authenticated' })
+  })
 
-      expect(response.status).toBe(200)
-      expect(data).toEqual({
-        success: true,
-        message: 'Account successfully deleted'
-      })
-      expect(deleteUser).toHaveBeenCalledWith(mockUser._id)
-      expect(mockCookies.set).toHaveBeenCalledWith('user', '', { expires: expect.any(Date) })
-    })
+  it('returns 400 when user email is missing', async () => {
+    (getServerSession as jest.Mock).mockImplementation(() => Promise.resolve({
+      user: {}
+    }));
 
-    it('returns 401 when not authenticated', async () => {
-      mockCookies.get.mockReturnValue(null)
+    const request = new Request('http://localhost/api/user/delete')
+    const response = await DELETE(request)
+    
+    expect(response.status).toBe(400)
+    expect(await response.json()).toEqual({ message: 'User email is required' })
+  })
 
-      const request = new Request('http://localhost:3000/api/user/delete', {
-        method: 'DELETE',
-        body: JSON.stringify({ password: 'Password123!' })
-      })
+  it('returns 404 when user is not found', async () => {
+    (getServerSession as jest.Mock).mockImplementation(() => Promise.resolve({
+      user: { email: 'test@example.com' }
+    }));
+    mockCollection.findOne.mockResolvedValue(null)
 
-      const response = await DELETE(request)
-      const data = await response.json()
+    const request = new Request('http://localhost/api/user/delete')
+    const response = await DELETE(request)
+    
+    expect(response.status).toBe(404)
+    expect(await response.json()).toEqual({ message: 'User not found' })
+  })
 
-      expect(response.status).toBe(401)
-      expect(data).toEqual({
-        success: false,
-        message: 'Not authenticated'
-      })
-    })
+  it('deletes user successfully', async () => {
+    const mockUser = {
+      email: 'test@example.com',
+      name: 'Test User'
+    };
 
-    it('validates password requirement', async () => {
-      const request = new Request('http://localhost:3000/api/user/delete', {
-        method: 'DELETE',
-        body: JSON.stringify({})
-      })
+    (getServerSession as jest.Mock).mockImplementation(() => Promise.resolve({
+      user: { email: 'test@example.com' }
+    }));
+    mockCollection.findOne.mockResolvedValue(mockUser as User);
+    mockCollection.deleteOne.mockResolvedValue({
+      acknowledged: true,
+      deletedCount: 1
+    });
 
-      const response = await DELETE(request)
-      const data = await response.json()
-
-      expect(response.status).toBe(400)
-      expect(data).toEqual({
-        success: false,
-        message: 'Password is required to delete account'
-      })
-    })
-
-    it('verifies correct password', async () => {
-      ;(bcrypt.compare as jest.Mock).mockResolvedValue(false)
-
-      const request = new Request('http://localhost:3000/api/user/delete', {
-        method: 'DELETE',
-        body: JSON.stringify({ password: 'WrongPassword123!' })
-      })
-
-      const response = await DELETE(request)
-      const data = await response.json()
-
-      expect(response.status).toBe(401)
-      expect(data).toEqual({
-        success: false,
-        message: 'Invalid password'
-      })
-    })
-
-    it('handles non-existent user', async () => {
-      ;(getUsers as jest.Mock).mockReturnValue([])
-
-      const request = new Request('http://localhost:3000/api/user/delete', {
-        method: 'DELETE',
-        body: JSON.stringify({ password: 'Password123!' })
-      })
-
-      const response = await DELETE(request)
-      const data = await response.json()
-
-      expect(response.status).toBe(404)
-      expect(data).toEqual({
-        success: false,
-        message: 'User not found'
-      })
-    })
-
-    it('handles deletion failure', async () => {
-      ;(deleteUser as jest.Mock).mockReturnValue(false)
-
-      const request = new Request('http://localhost:3000/api/user/delete', {
-        method: 'DELETE',
-        body: JSON.stringify({ password: 'Password123!' })
-      })
-
-      const response = await DELETE(request)
-      const data = await response.json()
-
-      expect(response.status).toBe(500)
-      expect(data).toEqual({
-        success: false,
-        message: 'Failed to delete account'
-      })
-    })
-
-    it('handles unexpected errors', async () => {
-      ;(deleteUser as jest.Mock).mockImplementation(() => {
-        throw new Error('Unexpected error')
-      })
-
-      const request = new Request('http://localhost:3000/api/user/delete', {
-        method: 'DELETE',
-        body: JSON.stringify({ password: 'Password123!' })
-      })
-
-      const response = await DELETE(request)
-      const data = await response.json()
-
-      expect(response.status).toBe(500)
-      expect(data).toEqual({
-        success: false,
-        message: 'Failed to delete account'
-      })
-    })
+    const request = new Request('http://localhost/api/user/delete')
+    const response = await DELETE(request)
+    
+    expect(response.status).toBe(200)
+    expect(await response.json()).toEqual({ message: 'User deleted successfully' })
+    expect(mockCollection.deleteOne).toHaveBeenCalledWith({ email: 'test@example.com' })
   })
 }) 

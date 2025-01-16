@@ -1,53 +1,35 @@
-import { readdir, unlink } from 'fs/promises';
-import { join } from 'path';
-import { getLogos } from '../app/lib/store';
+import { connectToDatabase } from '../app/lib/db';
+import { Logo } from '../app/lib/types';
+import fs from 'fs/promises';
+import path from 'path';
 
 async function cleanupImages() {
   try {
-    // Get all logos from the store
-    const logos = getLogos();
-    const referencedImages = new Set(logos.map(logo => {
-      // Extract filename from URL
-      const url = logo.url;
-      return url.split('/').pop();
-    }));
+    const { db } = await connectToDatabase();
+    const logosCollection = db.collection<Logo>('logos');
+    const logos = await logosCollection.find().toArray();
 
-    // Get all files in the uploads directory
-    const uploadsDir = join(process.cwd(), 'uploads');
-    const files = await readdir(uploadsDir);
+    const referencedImages = new Set(logos.map((logo: Logo) => {
+      const imageUrl = logo.imageUrl?.split('/').pop();
+      const thumbnailUrl = logo.thumbnailUrl?.split('/').pop();
+      return [imageUrl, thumbnailUrl].filter(Boolean);
+    }).flat());
 
-    let deletedCount = 0;
-    let errorCount = 0;
+    const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
+    const files = await fs.readdir(uploadsDir);
 
-    // Find and delete unreferenced files
     for (const file of files) {
-      if (!referencedImages.has(file) && !file.startsWith('.')) {
-        try {
-          await unlink(join(uploadsDir, file));
-          console.log(`Deleted unreferenced file: ${file}`);
-          deletedCount++;
-        } catch (error) {
-          console.error(`Failed to delete file ${file}:`, error);
-          errorCount++;
-        }
+      if (!referencedImages.has(file)) {
+        await fs.unlink(path.join(uploadsDir, file));
+        console.log(`Deleted unreferenced file: ${file}`);
       }
     }
 
-    console.log(`
-Cleanup completed:
-- Total files checked: ${files.length}
-- Files deleted: ${deletedCount}
-- Errors encountered: ${errorCount}
-- Referenced images: ${referencedImages.size}
-`);
+    console.log('Image cleanup completed successfully');
   } catch (error) {
-    console.error('Cleanup error:', error);
+    console.error('Error during image cleanup:', error);
+    process.exit(1);
   }
 }
 
-// Run cleanup if this script is executed directly
-if (require.main === module) {
-  cleanupImages();
-}
-
-export default cleanupImages; 
+cleanupImages(); 

@@ -1,29 +1,20 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
-import jwt from 'jsonwebtoken';
-import { writeFile } from 'fs/promises';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { writeFile, unlink } from 'fs/promises';
 import { join } from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import { connectToDatabase } from '@/app/lib/db';
+import { ObjectId } from 'mongodb';
 
 export async function POST(request: Request) {
   try {
     // Verify authentication
-    const cookieStore = cookies();
-    const token = cookieStore.get('auth_token');
+    const session = await getServerSession(authOptions);
 
-    if (!token) {
+    if (!session) {
       return NextResponse.json(
         { success: false, message: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
-    try {
-      jwt.verify(token.value, process.env.JWT_SECRET || 'default_secret');
-    } catch (error) {
-      return NextResponse.json(
-        { success: false, message: 'Invalid token' },
         { status: 401 }
       );
     }
@@ -65,21 +56,23 @@ export async function POST(request: Request) {
     }
 
     // Save logo metadata to database
-    const db = await connectToDatabase();
+    const { db } = await connectToDatabase();
     const logoData = {
       name,
       filename,
       url: `/uploads/${filename}`,
       uploadedAt: new Date(),
-      ownerId: token.value, // You might want to decode the token to get the actual user ID
+      userId: new ObjectId(session.user.id),
       averageRating: 0,
       totalVotes: 0,
       dimensions: {
-        width: 0, // You might want to get actual image dimensions
+        width: 0,
         height: 0
       },
       fileSize: file.size,
-      fileType: file.type
+      fileType: file.type,
+      createdAt: new Date(),
+      updatedAt: new Date()
     };
 
     const result = await db.collection('logos').insertOne(logoData);

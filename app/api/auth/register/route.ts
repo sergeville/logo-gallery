@@ -1,87 +1,52 @@
+import { NextResponse } from 'next/server';
+import bcrypt from 'bcrypt';
 import { connectToDatabase } from '@/app/lib/db';
-import bcrypt from 'bcryptjs';
-import { Document } from 'mongodb';
-
-interface User extends Document {
-  email: string;
-  password: string;
-  name: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
+import { User } from '@/app/lib/types';
 
 export async function POST(request: Request) {
   try {
     const { email, password, name } = await request.json();
 
-    // Validate required fields
-    if (!email) {
-      return new Response(
-        JSON.stringify({ success: false, message: 'Email is required' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      );
-    }
-    if (!password) {
-      return new Response(
-        JSON.stringify({ success: false, message: 'Password is required' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      );
-    }
-    if (!name) {
-      return new Response(
-        JSON.stringify({ success: false, message: 'Name is required' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      );
+    if (!email || !password || !name) {
+      return NextResponse.json({
+        success: false,
+        message: 'Email, password, and name are required'
+      }, { status: 400 });
     }
 
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return new Response(
-        JSON.stringify({ success: false, message: 'Invalid email format' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      );
-    }
+    const { db } = await connectToDatabase();
+    const usersCollection = db.collection<User>('users');
 
-    const db = await connectToDatabase();
-    
-    // Check for existing user
-    const existingUser = await db.collection<User>('users').findOne({ email });
+    const existingUser = await usersCollection.findOne({ email });
     if (existingUser) {
-      return new Response(
-        JSON.stringify({ success: false, message: 'Email already registered' }),
-        { status: 409, headers: { 'Content-Type': 'application/json' } }
-      );
+      return NextResponse.json({
+        success: false,
+        message: 'Email already registered'
+      }, { status: 400 });
     }
 
-    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Create user
-    const newUser: Omit<User, '_id' | 'createdAt' | 'updatedAt'> = {
-      email,
-      password: hashedPassword,
-      name,
-    };
-
-    await db.collection<User>('users').insertOne({
+    const newUser: User = {
       email,
       password: hashedPassword,
       name,
       createdAt: new Date(),
       updatedAt: new Date()
-    });
+    };
 
-    return new Response(
-      JSON.stringify({ success: true, message: 'User registered successfully' }),
-      { status: 201, headers: { 'Content-Type': 'application/json' } }
-    );
+    const result = await usersCollection.insertOne(newUser);
+
+    return NextResponse.json({
+      success: true,
+      message: 'User registered successfully',
+      userId: result.insertedId
+    }, { status: 201 });
 
   } catch (error) {
     console.error('Registration error:', error);
-    return new Response(
-      JSON.stringify({ success: false, message: 'Failed to register user' }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
-    );
+    return NextResponse.json({
+      success: false,
+      message: 'Error registering user'
+    }, { status: 500 });
   }
 } 

@@ -1,92 +1,78 @@
-import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
-import { connectToDatabase } from '@/app/lib/db';
+import { NextRequest, NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 import { ObjectId } from 'mongodb';
+import { connectToDatabase } from '@/app/lib/db';
+import { validateUserProfile } from '@/app/lib/validation';
 
-export async function PUT(request: Request) {
+export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session?.user) {
-      return NextResponse.json(
-        { success: false, message: 'Not authenticated' },
-        { status: 401 }
-      );
+    const sessionCookie = cookies().get('session');
+    if (!sessionCookie?.value) {
+      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
 
-    const data = await request.json();
-    const { username, email, name, bio, avatarUrl, website, location, company } = data;
+    const { db } = await connectToDatabase();
+    const user = await db.collection('users').findOne({ _id: new ObjectId(sessionCookie.value) });
 
-    if (!username || !email || !name) {
-      return NextResponse.json(
-        { success: false, message: 'Required fields missing' },
-        { status: 400 }
-      );
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    const db = await connectToDatabase();
-    const usersCollection = db.collection('users');
+    // Remove sensitive data
+    const { password, ...userWithoutPassword } = user as { password?: string } & Record<string, unknown>;
+    return NextResponse.json(userWithoutPassword);
+  } catch (error) {
+    console.error('Error fetching user profile:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
 
-    // Check for existing username
-    const existingUsername = await usersCollection.findOne({
-      username,
-      _id: { $ne: new ObjectId(session.user.id) }
-    });
-
-    if (existingUsername) {
-      return NextResponse.json(
-        { success: false, message: 'Username already taken' },
-        { status: 409 }
-      );
+export async function PUT(request: NextRequest) {
+  try {
+    const sessionCookie = cookies().get('session');
+    if (!sessionCookie?.value) {
+      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
 
-    // Check for existing email
-    const existingEmail = await usersCollection.findOne({
-      email,
-      _id: { $ne: new ObjectId(session.user.id) }
-    });
+    const { db } = await connectToDatabase();
+    const updateData = await request.json();
 
-    if (existingEmail) {
-      return NextResponse.json(
-        { success: false, message: 'Email already registered' },
-        { status: 409 }
-      );
+    // Validate update data
+    const validationResult = validateUserProfile(updateData);
+    if (validationResult.errors.length > 0) {
+      return NextResponse.json({ 
+        error: 'Invalid data',
+        details: validationResult.errors 
+      }, { status: 400 });
     }
 
-    // Update user profile
-    const result = await usersCollection.updateOne(
-      { _id: new ObjectId(session.user.id) },
-      {
-        $set: {
-          username,
-          email,
-          name,
-          profile: {
-            bio,
-            avatarUrl,
-            website,
-            location,
-            company
-          },
-          updatedAt: new Date()
-        }
-      }
+    const user = await db.collection('users').findOne({ _id: new ObjectId(sessionCookie.value) });
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    // Remove fields that shouldn't be updated
+    const { password, role, _id, ...updateFields } = updateData;
+    updateFields.updatedAt = new Date();
+
+    const result = await db.collection('users').updateOne(
+      { _id: user._id },
+      { $set: updateFields }
     );
 
     if (result.modifiedCount === 0) {
-      return NextResponse.json(
-        { success: false, message: 'Failed to update profile' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'Failed to update user' }, { status: 500 });
     }
 
-    return NextResponse.json({ success: true, message: 'Profile updated successfully' });
+    const updatedUser = await db.collection('users').findOne({ _id: user._id });
+    if (!updatedUser) {
+      return NextResponse.json({ error: 'Failed to fetch updated user' }, { status: 500 });
+    }
+
+    const { password: _, ...userWithoutPassword } = updatedUser as { password?: string } & Record<string, unknown>;
+    return NextResponse.json(userWithoutPassword);
   } catch (error) {
-    console.error('Profile update error:', error);
-    return NextResponse.json(
-      { success: false, message: 'Failed to update profile' },
-      { status: 500 }
-    );
+    console.error('Error updating user profile:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 } 

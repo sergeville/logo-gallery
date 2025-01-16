@@ -1,100 +1,63 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext } from 'react';
+import { useSession, signIn, signOut } from 'next-auth/react';
 
 interface User {
+  id: string;
   email: string;
-  name?: string;
+  name: string | null;
+  image: string | null;
 }
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string, password: string) => Promise<boolean>;
-  logout: () => void;
+  loading: boolean;
+  error: Error | null;
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+  const { data: session, status } = useSession();
+  const loading = status === 'loading';
+  const error = null;
 
-  useEffect(() => {
-    // Check if user is already logged in
-    const checkAuth = async () => {
-      try {
-        const response = await fetch('/api/auth/me', {
-          credentials: 'include'
-        });
-        if (response.ok) {
-          const data = await response.json();
-          if (data.user) {
-            setUser(data.user);
-          }
-        }
-      } catch (error) {
-        console.error('Error checking auth status:', error);
-      }
-    };
-
-    checkAuth();
-  }, []);
+  const user = session?.user ? {
+    id: session.user.id as string,
+    email: session.user.email as string,
+    name: session.user.name ?? null,
+    image: session.user.image ?? null,
+  } : null;
 
   const login = async (email: string, password: string) => {
-    try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-        credentials: 'include'
-      });
+    const result = await signIn('credentials', {
+      redirect: false,
+      email,
+      password,
+    });
 
-      const data = await response.json();
-      console.log('Login response:', data);
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Login failed');
-      }
-
-      if (data.user) {
-        setUser(data.user);
-      } else {
-        console.error('No user data in response');
-        throw new Error('Invalid response format');
-      }
-
-      return true;
-    } catch (error) {
-      console.error('Login error:', error);
-      throw error;
+    if (result?.error) {
+      throw new Error(result.error);
     }
   };
 
   const logout = async () => {
-    try {
-      await fetch('/api/auth/logout', {
-        method: 'POST',
-        credentials: 'include'
-      });
-    } catch (error) {
-      console.error('Error during logout:', error);
-    } finally {
-      setUser(null);
-      document.cookie = 'auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT';
-    }
+    await signOut({ redirect: false });
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ user, loading, error, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
-}
+};
 
 export function useAuth() {
   const context = useContext(AuthContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;

@@ -1,62 +1,44 @@
 // Learn more: https://github.com/testing-library/jest-dom
 import '@testing-library/jest-dom'
-import fetch, { Request, Response, Headers } from 'node-fetch'
-
-// Mock fetch globally
-global.fetch = fetch
-global.Request = Request
-global.Response = Response
-global.Headers = Headers
-
-// Mock NextResponse
-global.NextResponse = {
-  json: (data, init) => {
-    return new Response(JSON.stringify(data), {
-      ...init,
-      headers: {
-        'Content-Type': 'application/json',
-        ...(init?.headers || {})
-      }
-    });
-  }
-};
-
-// Mock next/headers
-jest.mock('next/headers', () => ({
-  cookies: () => ({
-    get: jest.fn(),
-    set: jest.fn(),
-    delete: jest.fn()
-  }),
-  headers: () => ({
-    get: jest.fn(),
-    set: jest.fn(),
-    delete: jest.fn()
-  })
-}));
 
 // Mock next/navigation
 jest.mock('next/navigation', () => ({
-  useRouter: () => ({
-    push: jest.fn(),
-    replace: jest.fn(),
-    refresh: jest.fn()
-  }),
-  useSearchParams: () => ({
-    get: jest.fn(),
-    set: jest.fn()
-  })
-}));
-
-// Mock crypto for NextRequest
-global.crypto = {
-  getRandomValues: function(buffer) {
-    return require('crypto').randomFillSync(buffer)
+  useRouter() {
+    return {
+      push: jest.fn(),
+      replace: jest.fn(),
+      prefetch: jest.fn(),
+      back: jest.fn(),
+    }
   },
-  subtle: {}
-}
+  useSearchParams() {
+    return {
+      get: jest.fn(),
+    }
+  },
+}))
 
-// Mock TextEncoder/TextDecoder
-const { TextEncoder, TextDecoder } = require('util');
-global.TextEncoder = TextEncoder;
-global.TextDecoder = TextDecoder; 
+// Mock next-auth
+jest.mock('next-auth/next', () => ({
+  getServerSession: jest.fn(() => null),
+}))
+
+// Mock MongoDB client
+jest.mock('@/lib/db', () => ({
+  connectToDatabase: jest.fn(() => Promise.resolve({
+    db: jest.fn(() => ({
+      collection: jest.fn(() => ({
+        find: jest.fn(),
+        findOne: jest.fn(),
+        insertOne: jest.fn(),
+        updateOne: jest.fn(),
+        deleteOne: jest.fn(),
+      })),
+    })),
+  })),
+}))
+
+// Mock environment variables
+process.env.MONGODB_URI = 'mongodb://localhost:27017/test'
+process.env.NEXTAUTH_SECRET = 'test-secret'
+process.env.NEXTAUTH_URL = 'http://localhost:3000' 

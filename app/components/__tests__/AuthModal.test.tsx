@@ -1,177 +1,93 @@
-import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { act } from 'react-dom/test-utils';
-import AuthModal from '../AuthModal';
-import { AuthProvider } from '../../context/AuthContext';
+import { render, screen, fireEvent } from '@testing-library/react';
+import { AuthModal } from '../AuthModal';
+import { signIn } from 'next-auth/react';
 
-const mockLogin = jest.fn();
-const mockRegister = jest.fn();
-
-// Mock the auth context
-jest.mock('../../context/AuthContext', () => {
-  const actual = jest.requireActual('../../context/AuthContext');
-  return {
-    ...actual,
-    useAuth: jest.fn(() => ({
-      login: mockLogin,
-      register: mockRegister,
-    })),
-    AuthProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-  };
-});
+jest.mock('next-auth/react');
 
 describe('AuthModal', () => {
   const mockOnClose = jest.fn();
+  const mockOnLoginSuccess = jest.fn();
 
   beforeEach(() => {
-    mockOnClose.mockClear();
-    mockLogin.mockClear();
-    mockRegister.mockClear();
-    // Reset mock implementations
-    mockLogin.mockResolvedValue(undefined);
-    mockRegister.mockResolvedValue(undefined);
+    jest.clearAllMocks();
   });
 
   it('renders login form by default', () => {
     render(
-      <AuthProvider>
-        <AuthModal isOpen={true} onClose={mockOnClose} />
-      </AuthProvider>
+      <AuthModal
+        onClose={mockOnClose}
+        onLoginSuccess={mockOnLoginSuccess}
+      />
     );
 
-    expect(screen.getByTestId('auth-modal')).toBeInTheDocument();
-    expect(screen.getByTestId('auth-form')).toBeInTheDocument();
-    expect(screen.getByTestId('email-input')).toBeInTheDocument();
-    expect(screen.getByTestId('password-input')).toBeInTheDocument();
-    expect(screen.getByTestId('submit-button')).toHaveTextContent('Sign In');
-    expect(screen.getByTestId('toggle-auth-mode')).toHaveTextContent('Create an account');
+    expect(screen.getByText('Sign In')).toBeInTheDocument();
+    expect(screen.getByLabelText('Email')).toBeInTheDocument();
+    expect(screen.getByLabelText('Password')).toBeInTheDocument();
   });
 
-  it('switches between login and registration modes', async () => {
+  it('handles successful login', async () => {
+    (signIn as jest.Mock).mockResolvedValue({ error: null });
+
     render(
-      <AuthProvider>
-        <AuthModal isOpen={true} onClose={mockOnClose} />
-      </AuthProvider>
+      <AuthModal
+        onClose={mockOnClose}
+        onLoginSuccess={mockOnLoginSuccess}
+      />
     );
 
-    const toggleButton = screen.getByTestId('toggle-auth-mode');
-    
-    // Switch to registration mode
-    await act(async () => {
-      fireEvent.click(toggleButton);
+    fireEvent.change(screen.getByLabelText('Email'), {
+      target: { value: 'test@example.com' }
     });
-
-    expect(screen.getByTestId('submit-button')).toHaveTextContent('Create Account');
-    expect(toggleButton).toHaveTextContent('Sign in instead');
-
-    // Switch back to login mode
-    await act(async () => {
-      fireEvent.click(toggleButton);
+    fireEvent.change(screen.getByLabelText('Password'), {
+      target: { value: 'password123' }
     });
+    fireEvent.click(screen.getByText('Sign In'));
 
-    expect(screen.getByTestId('submit-button')).toHaveTextContent('Sign In');
-    expect(toggleButton).toHaveTextContent('Create an account');
+    await screen.findByText('Sign In');
+
+    expect(signIn).toHaveBeenCalledWith('credentials', {
+      redirect: false,
+      email: 'test@example.com',
+      password: 'password123'
+    });
+    expect(mockOnLoginSuccess).toHaveBeenCalled();
   });
 
-  it('handles form submission for login', async () => {
-    mockLogin.mockResolvedValueOnce(undefined);
+  it('handles login error', async () => {
+    (signIn as jest.Mock).mockResolvedValue({ error: 'Invalid credentials' });
 
     render(
-      <AuthProvider>
-        <AuthModal isOpen={true} onClose={mockOnClose} />
-      </AuthProvider>
+      <AuthModal
+        onClose={mockOnClose}
+        onLoginSuccess={mockOnLoginSuccess}
+      />
     );
 
-    await act(async () => {
-      fireEvent.change(screen.getByTestId('email-input'), {
-        target: { value: 'test@example.com' },
-      });
-      fireEvent.change(screen.getByTestId('password-input'), {
-        target: { value: 'password123' },
-      });
-      fireEvent.submit(screen.getByTestId('auth-form'));
+    fireEvent.change(screen.getByLabelText('Email'), {
+      target: { value: 'test@example.com' }
     });
+    fireEvent.change(screen.getByLabelText('Password'), {
+      target: { value: 'wrongpassword' }
+    });
+    fireEvent.click(screen.getByText('Sign In'));
 
-    expect(mockLogin).toHaveBeenCalledWith('test@example.com', 'password123');
-    await waitFor(() => {
-      expect(mockOnClose).toHaveBeenCalled();
-    });
+    await screen.findByText('Invalid credentials');
+
+    expect(mockOnLoginSuccess).not.toHaveBeenCalled();
   });
 
-  it('handles form submission for registration', async () => {
-    mockRegister.mockResolvedValueOnce(undefined);
-
+  it('toggles between login and register forms', () => {
     render(
-      <AuthProvider>
-        <AuthModal isOpen={true} onClose={mockOnClose} />
-      </AuthProvider>
+      <AuthModal
+        onClose={mockOnClose}
+        onLoginSuccess={mockOnLoginSuccess}
+      />
     );
 
-    // Switch to registration mode
-    await act(async () => {
-      fireEvent.click(screen.getByTestId('toggle-auth-mode'));
-    });
+    fireEvent.click(screen.getByText('Need an account? Sign up'));
+    expect(screen.getByText('Create Account')).toBeInTheDocument();
 
-    await act(async () => {
-      fireEvent.change(screen.getByTestId('email-input'), {
-        target: { value: 'test@example.com' },
-      });
-      fireEvent.change(screen.getByTestId('password-input'), {
-        target: { value: 'password123' },
-      });
-      fireEvent.submit(screen.getByTestId('auth-form'));
-    });
-
-    expect(mockRegister).toHaveBeenCalledWith('test@example.com', 'password123');
-    await waitFor(() => {
-      expect(mockOnClose).toHaveBeenCalled();
-    });
-  });
-
-  it('displays error message on authentication failure', async () => {
-    mockLogin.mockRejectedValueOnce(new Error('Invalid credentials'));
-
-    render(
-      <AuthProvider>
-        <AuthModal isOpen={true} onClose={mockOnClose} />
-      </AuthProvider>
-    );
-
-    await act(async () => {
-      fireEvent.change(screen.getByTestId('email-input'), {
-        target: { value: 'test@example.com' },
-      });
-      fireEvent.change(screen.getByTestId('password-input'), {
-        target: { value: 'password123' },
-      });
-      fireEvent.submit(screen.getByTestId('auth-form'));
-    });
-
-    expect(await screen.findByTestId('error-message')).toHaveTextContent('Invalid credentials');
-    expect(mockOnClose).not.toHaveBeenCalled();
-  });
-
-  it('disables submit button while loading', async () => {
-    // Create a promise that never resolves to simulate loading state
-    mockLogin.mockImplementationOnce(() => new Promise(() => {}));
-
-    render(
-      <AuthProvider>
-        <AuthModal isOpen={true} onClose={mockOnClose} />
-      </AuthProvider>
-    );
-
-    await act(async () => {
-      fireEvent.change(screen.getByTestId('email-input'), {
-        target: { value: 'test@example.com' },
-      });
-      fireEvent.change(screen.getByTestId('password-input'), {
-        target: { value: 'password123' },
-      });
-      fireEvent.submit(screen.getByTestId('auth-form'));
-    });
-
-    expect(screen.getByTestId('submit-button')).toBeDisabled();
-    expect(screen.getByTestId('submit-button')).toHaveTextContent('Loading...');
+    fireEvent.click(screen.getByText('Already have an account? Sign in'));
+    expect(screen.getByText('Sign In')).toBeInTheDocument();
   });
 }); 

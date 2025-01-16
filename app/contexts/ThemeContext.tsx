@@ -4,10 +4,13 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 
 interface ThemeContextType {
   isDarkMode: boolean;
-  toggleDarkMode: () => void;
+  toggleTheme: () => void;
 }
 
-const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+const ThemeContext = createContext<ThemeContextType>({
+  isDarkMode: false,
+  toggleTheme: () => {}
+});
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -23,7 +26,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const toggleDarkMode = () => {
+  const toggleTheme = () => {
     setIsDarkMode((prev) => {
       const newMode = !prev;
       if (newMode) {
@@ -38,7 +41,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <ThemeContext.Provider value={{ isDarkMode, toggleDarkMode }}>
+    <ThemeContext.Provider value={{ isDarkMode, toggleTheme }}>
       {children}
     </ThemeContext.Provider>
   );

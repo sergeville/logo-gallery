@@ -1,3 +1,4 @@
+import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/app/lib/db';
 import bcrypt from 'bcryptjs';
 
@@ -6,28 +7,25 @@ export async function POST(request: Request) {
     const { token, newPassword } = await request.json();
 
     if (!token || !newPassword) {
-      return new Response(
-        JSON.stringify({ 
+      return NextResponse.json(
+        { 
           success: false, 
           message: !token ? 'Reset token is required' : 'New password is required' 
-        }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
+        },
+        { status: 400 }
       );
     }
 
-    const db = await connectToDatabase();
+    const { db } = await connectToDatabase();
     const user = await db.collection('users').findOne({
       'resetToken.token': token,
       'resetToken.expires': { $gt: new Date() }
     });
 
     if (!user) {
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          message: 'Invalid or expired reset token' 
-        }),
-        { status: 401, headers: { 'Content-Type': 'application/json' } }
+      return NextResponse.json(
+        { success: false, message: 'Invalid or expired reset token' },
+        { status: 401 }
       );
     }
 
@@ -44,31 +42,22 @@ export async function POST(request: Request) {
     );
 
     if (result.modifiedCount === 0) {
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          message: 'Failed to update password' 
-        }),
-        { status: 500, headers: { 'Content-Type': 'application/json' } }
+      return NextResponse.json(
+        { success: false, message: 'Failed to update password' },
+        { status: 500 }
       );
     }
 
-    return new Response(
-      JSON.stringify({ 
-        success: true, 
-        message: 'Password successfully reset' 
-      }),
-      { status: 200, headers: { 'Content-Type': 'application/json' } }
+    return NextResponse.json(
+      { success: true, message: 'Password successfully reset' },
+      { status: 200 }
     );
 
   } catch (error) {
     console.error('Password reset error:', error);
-    return new Response(
-      JSON.stringify({ 
-        success: false, 
-        message: 'Failed to reset password' 
-      }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    return NextResponse.json(
+      { success: false, message: 'Failed to reset password' },
+      { status: 500 }
     );
   }
 } 

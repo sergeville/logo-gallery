@@ -109,12 +109,12 @@ export class TestData {
     }
   }
 
-  async uploadTestLogo(): Promise<TestLogo> {
+  async uploadTestLogo(logo?: Partial<TestLogo>): Promise<TestLogo> {
     const testLogo: TestLogo = {
-      name: `Test Logo ${Date.now()}`,
-      description: 'A test logo for e2e testing',
-      tags: ['test', 'e2e'],
-      imagePath: path.join(__dirname, '..', 'fixtures', 'test-logo.png')
+      name: logo?.name || `Test Logo ${Date.now()}`,
+      description: logo?.description || 'A test logo for e2e testing',
+      tags: logo?.tags || ['test', 'e2e'],
+      imagePath: logo?.imagePath || path.join(__dirname, '..', 'fixtures', 'test-logo.png')
     }
 
     try {

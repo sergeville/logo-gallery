@@ -18,11 +18,12 @@ export function validateDatabaseName(dbName: string, env: string): void {
   const expectedPrefix = 'LogoGallery';
   const expectedSuffix = 'DB';
   const envCapitalized = env.charAt(0).toUpperCase() + env.slice(1).toLowerCase();
-  const expectedName = `${expectedPrefix}${envCapitalized}${expectedSuffix}`;
+  const pascalCaseName = `${expectedPrefix}${envCapitalized}${expectedSuffix}`;
+  const kebabCaseName = `logo-gallery-${env.toLowerCase()}`;
 
-  if (dbName !== expectedName) {
+  if (dbName !== pascalCaseName && dbName !== kebabCaseName) {
     throw new ConfigurationError(
-      `Invalid database name: ${dbName}. Expected format: ${expectedName}`
+      `Invalid database name: ${dbName}. Expected one of: ${pascalCaseName}, ${kebabCaseName}`
     );
   }
 }

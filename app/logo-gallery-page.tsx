@@ -9,6 +9,20 @@ interface Logo {
   rating: number;
 }
 
+/**
+ * Logo Gallery Page Component
+ * Displays a responsive grid of logo cards with interactive features.
+ * Includes logo display, rating system, and action buttons.
+ */
+
+/**
+ * Main logo gallery component
+ * Features:
+ * - Responsive grid layout (1-3 columns based on screen size)
+ * - Logo cards with image display and error handling
+ * - Rating display and voting functionality
+ * - Action buttons for voting and details
+ */
 const LogoGallery = () => {
   const [darkMode, setDarkMode] = useState(false);
   
@@ -57,12 +71,14 @@ const LogoGallery = () => {
       {/* Main Content */}
       <main className="pt-24 px-4 pb-8">
         <div className="max-w-7xl mx-auto">
+          {/* Responsive grid layout */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {logos.map((logo) => (
               <div
                 key={logo.id}
                 className="bg-white dark:bg-[#1C1C1E] rounded-xl shadow-sm hover:shadow-md transition-shadow p-4"
               >
+                {/* Logo image container with error handling */}
                 <div className="relative h-[320px] mb-4 bg-gray-100 dark:bg-gray-700 rounded-lg">
                   <Image
                     src={logo.url}
@@ -73,6 +89,7 @@ const LogoGallery = () => {
                   />
                 </div>
                 
+                {/* Logo information and rating section */}
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-medium dark:text-white">{logo.name}</h3>
                   <div className="flex items-center gap-2">
@@ -83,6 +100,7 @@ const LogoGallery = () => {
                   </div>
                 </div>
                 
+                {/* Action buttons */}
                 <div className="mt-4 flex gap-2">
                   <button className="flex-1 bg-[#007AFF] text-white py-2 rounded-lg hover:opacity-90">
                     Vote

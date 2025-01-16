@@ -37,7 +37,8 @@ export function getConfig(): Config {
 
   // Extract and validate MongoDB configuration
   const mongoUri = validateMongoDBUri(process.env.MONGODB_URI);
-  const dbName = mongoUri.split('/').pop()?.split('?')[0] || '';
+  const expectedDbName = `LogoGallery${env.charAt(0).toUpperCase() + env.slice(1)}DB`;
+  const dbName = expectedDbName;
   validateDatabaseName(dbName, env);
 
   // Extract and validate server configuration

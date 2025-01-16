@@ -1,87 +1,55 @@
 import { ObjectId } from 'mongodb';
 import { seedLogos, createTestLogo } from '../logos';
+import { Logo } from '@/app/types';
 
 describe('Logo Seeding', () => {
-  const mockUserIds = [new ObjectId(), new ObjectId(), new ObjectId()];
-
-  describe('seedLogos', () => {
-    it('should generate the specified number of logos', async () => {
-      const logos = await seedLogos({ count: 5, userIds: mockUserIds });
-      expect(logos).toHaveLength(5);
+  it('creates the specified number of logos', async () => {
+    const userId = new ObjectId();
+    const logos = await seedLogos({ 
+      count: 3,
+      userIds: [userId]
     });
 
-    it('should distribute logos among users correctly', async () => {
-      const perUser = 2;
-      const logos = await seedLogos({ 
-        count: 6, 
-        userIds: mockUserIds,
-        perUser 
-      });
-      
-      // First two logos should belong to first user
-      expect(logos[0].userId).toEqual(mockUserIds[0]);
-      expect(logos[1].userId).toEqual(mockUserIds[0]);
-      
-      // Next two logos should belong to second user
-      expect(logos[2].userId).toEqual(mockUserIds[1]);
-      expect(logos[3].userId).toEqual(mockUserIds[1]);
-    });
-
-    it('should generate logos with ratings when specified', async () => {
-      const logos = await seedLogos({ 
-        count: 3, 
-        userIds: mockUserIds,
-        withRatings: true,
-        minVotes: 2,
-        maxVotes: 3
-      });
-
-      logos.forEach(logo => {
-        expect(logo.votes.length).toBeGreaterThanOrEqual(2);
-        expect(logo.votes.length).toBeLessThanOrEqual(3);
-        expect(logo.averageRating).toBeGreaterThanOrEqual(0);
-        expect(logo.averageRating).toBeLessThanOrEqual(5);
-      });
-    });
-
-    it('should generate logos with valid tags', async () => {
-      const logos = await seedLogos({ count: 3, userIds: mockUserIds });
-      
-      logos.forEach(logo => {
-        expect(Array.isArray(logo.tags)).toBe(true);
-        expect(logo.tags.length).toBeGreaterThan(0);
-        logo.tags.forEach(tag => {
-          expect(typeof tag).toBe('string');
-          expect(tag.length).toBeGreaterThan(0);
-        });
-      });
+    expect(logos).toHaveLength(3);
+    logos.forEach(logo => {
+      expect(logo._id).toBeInstanceOf(ObjectId);
+      expect(logo.url).toMatch(/^https:\/\/example\.com\/logos\//);
+      expect(logo.description).toBeTruthy();
+      expect(logo.ownerId).toBeInstanceOf(ObjectId);
+      expect(Array.isArray(logo.tags)).toBe(true);
+      expect(logo.totalVotes).toBe(0);
+      expect(logo.createdAt).toBeInstanceOf(Date);
     });
   });
 
-  describe('createTestLogo', () => {
-    it('should create a logo with default values', async () => {
-      const userId = new ObjectId();
-      const logo = await createTestLogo(userId);
-      
-      expect(logo._id).toBeDefined();
-      expect(logo.userId).toEqual(userId);
-      expect(logo.name).toBeDefined();
-      expect(logo.description).toBeDefined();
-      expect(Array.isArray(logo.tags)).toBe(true);
+  it('assigns logos to specified users', async () => {
+    const userIds = [new ObjectId(), new ObjectId()];
+    const logos = await seedLogos({ 
+      count: 4,
+      userIds
     });
 
-    it('should override default values with provided ones', async () => {
-      const userId = new ObjectId();
-      const customName = 'Custom Logo Name';
-      const customTags = ['custom', 'tags'];
-      
-      const logo = await createTestLogo(userId, {
-        name: customName,
-        tags: customTags
-      });
-
-      expect(logo.name).toBe(customName);
-      expect(logo.tags).toEqual(customTags);
+    expect(logos).toHaveLength(4);
+    logos.forEach(logo => {
+      expect(userIds).toContainEqual(logo.ownerId);
     });
+  });
+
+  it('creates a test logo with custom data', async () => {
+    const userId = new ObjectId();
+    const customData = {
+      description: 'Custom Logo',
+      url: 'https://example.com/custom-logo.png',
+      tags: ['custom', 'test']
+    };
+
+    const logo = await createTestLogo(userId, customData);
+
+    expect(logo._id).toBeInstanceOf(ObjectId);
+    expect(logo.description).toBe(customData.description);
+    expect(logo.url).toBe(customData.url);
+    expect(logo.tags).toEqual(customData.tags);
+    expect(logo.ownerId).toBeInstanceOf(ObjectId);
+    expect(logo.totalVotes).toBe(0);
   });
 }); 

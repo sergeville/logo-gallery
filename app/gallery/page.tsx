@@ -1,122 +1,91 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext';
-import LogoCard from '../components/LogoCard';
-import AuthModal from '../components/AuthModal';
-import Header from '../components/Header';
-import { Logo } from '../models/Logo';
+import { useAuth } from '@/app/hooks/useAuth';
+import { AuthModal } from '@/app/components/AuthModal';
+import { LogoCard } from '@/app/components/LogoCard';
+import { ClientLogo } from '@/app/lib/types';
+
+interface PaginatedResponse {
+  logos: ClientLogo[];
+  pagination: {
+    current: number;
+    total: number;
+    hasMore: boolean;
+  };
+}
 
 export default function GalleryPage() {
-  const [logos, setLogos] = useState<Logo[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const { user, loading } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const { user } = useAuth();
+  const [logos, setLogos] = useState<ClientLogo[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
 
-  useEffect(() => {
-    let mounted = true;
-
-    const loadLogos = async () => {
-      try {
-        const response = await fetch('/api/logos');
-        const data = await response.json();
-        if (mounted) {
-          setLogos(Array.isArray(data.logos) ? data.logos : []);
-          setLoading(false);
-        }
-      } catch (error) {
-        console.error('Error fetching logos:', error);
-        if (mounted) {
-          setLoading(false);
-          setError('Failed to load logos');
-        }
-      }
-    };
-
-    loadLogos();
-    return () => {
-      mounted = false;
-    };
-  }, []);
-
-  const handleVote = async (logoId: string, rating: number) => {
-    if (!user) {
-      setShowAuthModal(true);
-      return;
-    }
-
+  const fetchLogos = async () => {
     try {
-      const response = await fetch(`/api/logos/${logoId}/vote`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ rating }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to submit vote');
-      }
-
-      const updatedLogo = await response.json();
-      setLogos(logos.map(logo => 
-        logo._id === logoId ? { ...logo, ...updatedLogo } : logo
-      ));
-    } catch (error) {
-      console.error('Error voting:', error);
-      setError('Failed to submit vote');
+      setError(null);
+      const response = await fetch(`/api/logos?page=${currentPage}`);
+      if (!response.ok) throw new Error('Failed to fetch logos');
+      const data: PaginatedResponse = await response.json();
+      setLogos(prevLogos => currentPage === 1 ? data.logos : [...prevLogos, ...data.logos]);
+      setHasMore(data.pagination.hasMore);
+    } catch (err) {
+      console.error('Error fetching logos:', err);
+      setError('Failed to load logos. Please try again later.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-100">
-        <Header onLoginClick={() => setShowAuthModal(true)} />
-        <div className="flex h-[calc(100vh-4rem)] items-center justify-center" role="status" aria-label="Loading">
-          <div className="text-xl">Loading...</div>
-        </div>
-      </div>
-    );
+  useEffect(() => {
+    fetchLogos();
+  }, [currentPage]);
+
+  const handleLoadMore = () => {
+    setCurrentPage(prev => prev + 1);
+  };
+
+  if (isLoading && currentPage === 1) {
+    return <div>Loading...</div>;
   }
 
   return (
-    <div className="min-h-screen bg-gray-100" data-testid="gallery-container">
-      <Header onLoginClick={() => setShowAuthModal(true)} />
-
-      <main className="container mx-auto p-4" data-testid="gallery-main">
-        {error ? (
-          <div className="mb-4 text-red-500" data-testid="error-message">
-            {error}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" data-testid="logo-grid">
-            {logos.map((logo) => (
-              <LogoCard
-                key={logo._id}
-                logo={{
-                  ...logo,
-                  thumbnailUrl: logo.thumbnailUrl ?? '',
-                  ownerId: logo.ownerId ?? '',
-                  tags: logo.tags ?? [],
-                  category: logo.category ?? '',
-                  createdAt: logo.createdAt instanceof Date ? logo.createdAt : new Date(logo.createdAt || Date.now()),
-                  updatedAt: logo.updatedAt || new Date(),
-                  averageRating: logo.averageRating || 0,
-                  totalVotes: logo.totalVotes || 0
-                }}
-                onVote={(rating: number) => handleVote(logo._id.toString(), rating)}
-                onAuthRequired={() => setShowAuthModal(true)}
-              />
-            ))}
-          </div>
-        )}
-      </main>
-
-      <AuthModal
-        isOpen={showAuthModal}
-        onClose={() => setShowAuthModal(false)}
-      />
+    <div className="container mx-auto px-4 py-8">
+      <h1 className="text-3xl font-bold mb-8">Logo Gallery</h1>
+      {error && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+          {error}
+        </div>
+      )}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {logos.map(logo => (
+          <LogoCard
+            key={logo.id}
+            logo={logo}
+            onVote={() => !user && setShowAuthModal(true)}
+          />
+        ))}
+      </div>
+      {hasMore && (
+        <div className="mt-8 text-center">
+          <button
+            onClick={handleLoadMore}
+            className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
+            disabled={isLoading}
+          >
+            {isLoading ? 'Loading...' : 'Load More'}
+          </button>
+        </div>
+      )}
+      {showAuthModal && (
+        <AuthModal
+          onClose={() => setShowAuthModal(false)}
+          onLoginSuccess={() => setShowAuthModal(false)}
+        />
+      )}
     </div>
   );
 } 

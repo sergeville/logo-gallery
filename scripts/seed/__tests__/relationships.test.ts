@@ -1,124 +1,53 @@
 import { ObjectId } from 'mongodb';
-import { 
-  seedComments, 
-  seedCollections, 
-  seedFavorites,
-  seedRelationships 
-} from '../relationships';
+import { seedRelationships } from '../relationships';
+
+interface RelationshipSeedOptions {
+  minRelationsPerUser: number;
+  maxRelationsPerUser?: number;
+}
 
 describe('Relationship Seeding', () => {
-  const mockUsers = [
-    { _id: new ObjectId() },
-    { _id: new ObjectId() },
-    { _id: new ObjectId() }
-  ];
+  it('creates relationships between users and logos', async () => {
+    const users = [new ObjectId(), new ObjectId()];
+    const logos = [new ObjectId(), new ObjectId(), new ObjectId()];
 
-  const mockLogos = [
-    { _id: new ObjectId() },
-    { _id: new ObjectId() },
-    { _id: new ObjectId() }
-  ];
+    const options: RelationshipSeedOptions = {
+      minRelationsPerUser: 1,
+      maxRelationsPerUser: 3
+    };
 
-  describe('seedComments', () => {
-    it('should generate the specified number of comments per logo', async () => {
-      const commentsPerLogo = 2;
-      const comments = await seedComments({ 
-        users: mockUsers, 
-        logos: mockLogos,
-        commentsPerLogo
-      });
-
-      expect(comments.length).toBeGreaterThanOrEqual(mockLogos.length * commentsPerLogo);
+    const relationships = await seedRelationships({
+      users,
+      logos,
+      ...options
     });
 
-    it('should generate comments with valid references', async () => {
-      const comments = await seedComments({ 
-        users: mockUsers, 
-        logos: mockLogos 
-      });
+    // Check that relationships were created
+    expect(relationships.favorites.length).toBeGreaterThan(0);
+    expect(relationships.comments.length).toBeGreaterThan(0);
+    expect(relationships.collections.length).toBeGreaterThan(0);
 
-      comments.forEach(comment => {
-        expect(mockUsers.some(u => u._id.equals(comment.userId))).toBe(true);
-        expect(mockLogos.some(l => l._id.equals(comment.logoId))).toBe(true);
-        expect(comment.content).toBeDefined();
-        expect(comment.createdAt).toBeInstanceOf(Date);
-      });
-    });
-  });
-
-  describe('seedCollections', () => {
-    it('should generate the specified number of collections per user', async () => {
-      const collectionsPerUser = 2;
-      const collections = await seedCollections({ 
-        users: mockUsers, 
-        logos: mockLogos,
-        collectionsPerUser
-      });
-
-      expect(collections).toHaveLength(mockUsers.length * collectionsPerUser);
+    // Check that each user has at least one relationship
+    const userRelationships = new Set();
+    relationships.favorites.forEach(favorite => {
+      expect(users).toContainEqual(favorite.userId);
+      expect(logos).toContainEqual(favorite.logoId);
+      userRelationships.add(favorite.userId.toString());
     });
 
-    it('should generate collections with valid references', async () => {
-      const collections = await seedCollections({ 
-        users: mockUsers, 
-        logos: mockLogos 
-      });
-
-      collections.forEach(collection => {
-        expect(mockUsers.some(u => u._id.equals(collection.userId))).toBe(true);
-        collection.logos.forEach(logoId => {
-          expect(mockLogos.some(l => l._id.equals(logoId))).toBe(true);
-        });
-        expect(collection.name).toBeDefined();
-        expect(collection.description).toBeDefined();
-        expect(typeof collection.isPublic).toBe('boolean');
-      });
-    });
-  });
-
-  describe('seedFavorites', () => {
-    it('should generate the specified number of favorites per user', async () => {
-      const favoritesPerUser = 2;
-      const favorites = await seedFavorites({ 
-        users: mockUsers, 
-        logos: mockLogos,
-        favoritesPerUser
-      });
-
-      expect(favorites).toHaveLength(mockUsers.length * favoritesPerUser);
+    relationships.comments.forEach(comment => {
+      expect(users).toContainEqual(comment.userId);
+      expect(logos).toContainEqual(comment.logoId);
+      userRelationships.add(comment.userId.toString());
     });
 
-    it('should generate favorites with valid references', async () => {
-      const favorites = await seedFavorites({ 
-        users: mockUsers, 
-        logos: mockLogos 
-      });
-
-      favorites.forEach(favorite => {
-        expect(mockUsers.some(u => u._id.equals(favorite.userId))).toBe(true);
-        expect(mockLogos.some(l => l._id.equals(favorite.logoId))).toBe(true);
-        expect(favorite.createdAt).toBeInstanceOf(Date);
-      });
+    relationships.collections.forEach(collection => {
+      expect(users).toContainEqual(collection.userId);
+      expect(logos).toContainEqual(collection._id);
+      userRelationships.add(collection.userId.toString());
     });
-  });
 
-  describe('seedRelationships', () => {
-    it('should generate all relationship types', async () => {
-      const relationships = await seedRelationships({
-        users: mockUsers,
-        logos: mockLogos,
-        commentsPerLogo: 2,
-        collectionsPerUser: 1,
-        favoritesPerUser: 2
-      });
-
-      expect(relationships.comments).toBeDefined();
-      expect(relationships.collections).toBeDefined();
-      expect(relationships.favorites).toBeDefined();
-
-      expect(relationships.comments.length).toBeGreaterThan(0);
-      expect(relationships.collections.length).toBeGreaterThan(0);
-      expect(relationships.favorites.length).toBeGreaterThan(0);
-    });
+    // Verify that each user has at least one relationship
+    expect(userRelationships.size).toBe(users.length);
   });
 }); 

@@ -2,6 +2,10 @@ export interface User {
   _id: string;
   username: string;
   email: string;
+  profile?: {
+    avatarUrl?: string;
+    bio?: string;
+  };
   createdAt: string;
   updatedAt: string;
 }

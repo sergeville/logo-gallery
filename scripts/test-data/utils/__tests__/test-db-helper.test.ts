@@ -1,117 +1,76 @@
-import { TestDbHelper } from '../test-db-helper';
-import { MongoClient } from 'mongodb';
+import { MongoClient } from 'mongodb'
+import { TestDbHelper } from '../test-db-helper'
 
-jest.mock('mongodb');
+jest.mock('mongodb')
 
 describe('Test Database Helper', () => {
-  let testDbHelper: TestDbHelper;
-  const mockClient = {
-    db: jest.fn(),
-    close: jest.fn(),
-    startSession: jest.fn(),
-  };
-  const mockDb = {
-    collection: jest.fn(),
-  };
-  const mockCollection = {
-    insertOne: jest.fn(),
-    findOne: jest.fn(),
-    findOneAndUpdate: jest.fn(),
-    deleteMany: jest.fn(),
-    createIndex: jest.fn(),
-  };
-  const mockSession = {
-    startTransaction: jest.fn(),
-    commitTransaction: jest.fn(),
-    abortTransaction: jest.fn(),
-    endSession: jest.fn(),
-  };
+  let testDbHelper: TestDbHelper
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    (MongoClient.connect as jest.Mock).mockResolvedValue(mockClient);
-    mockClient.db.mockReturnValue(mockDb);
-    mockDb.collection.mockReturnValue(mockCollection);
-    mockClient.startSession.mockReturnValue(mockSession);
-    testDbHelper = new TestDbHelper('mongodb://localhost:27017/test');
-  });
+    testDbHelper = new TestDbHelper()
+  })
 
-  describe('Connection Management', () => {
-    it('connects to database', async () => {
-      await testDbHelper.connect();
-      expect(MongoClient.connect).toHaveBeenCalledWith('mongodb://localhost:27017/test');
-    });
+  afterEach(async () => {
+    await testDbHelper.disconnect()
+  })
 
-    it('disconnects from database', async () => {
-      await testDbHelper.connect();
-      await testDbHelper.disconnect();
-      expect(mockClient.close).toHaveBeenCalled();
-    });
-  });
+  it('connects to database', async () => {
+    await testDbHelper.connect()
+    expect(MongoClient.connect).toHaveBeenCalledWith(process.env.MONGODB_TEST_URI || 'mongodb://localhost:27017/test')
+  })
 
-  describe('User Operations', () => {
-    const testUser = {
-      email: 'test@example.com',
-      name: 'Test User',
-      password: 'password123'
-    };
+  it('disconnects from database', async () => {
+    await testDbHelper.connect()
+    await testDbHelper.disconnect()
+    expect(await testDbHelper.isConnected()).toBe(false);
+    expect(await testDbHelper.getDb()).toBeNull();
+  })
 
-    it('inserts a user', async () => {
-      const insertedId = 'mockId123';
-      mockCollection.insertOne.mockResolvedValue({ insertedId });
+  it('gets collection', async () => {
+    await testDbHelper.connect()
+    const collection = testDbHelper.getCollection('test')
+    expect(collection).toBeDefined()
+  })
 
-      const insertedUser = await testDbHelper.insertUser(testUser);
-      expect(insertedUser).toEqual({ ...testUser, _id: insertedId });
-    });
+  it('clears collection', async () => {
+    await testDbHelper.connect()
+    await testDbHelper.clearCollection('test')
+    const collection = testDbHelper.getCollection('test')
+    expect(collection.deleteMany).toHaveBeenCalledWith({})
+  })
 
-    it('updates a user', async () => {
-      const update = { name: 'Updated Name' };
-      const updatedUser = { ...testUser, ...update };
-      mockCollection.findOneAndUpdate.mockResolvedValue({ value: updatedUser });
+  it('clears multiple collections', async () => {
+    await testDbHelper.connect()
+    const collections = ['users', 'logos']
+    await testDbHelper.clearCollections(collections)
+    collections.forEach(name => {
+      const collection = testDbHelper.getCollection(name)
+      expect(collection.deleteMany).toHaveBeenCalledWith({})
+    })
+  })
 
-      const result = await testDbHelper.updateUser('123', update);
-      expect(result).toEqual(updatedUser);
-    });
+  it('inserts user', async () => {
+    await testDbHelper.connect()
+    const user = { name: 'Test User', email: 'test@example.com' }
+    const result = await testDbHelper.insertUser(user)
+    expect(result).toEqual({ ...user, _id: expect.any(String) })
+  })
 
-    it('finds a user', async () => {
-      mockCollection.findOne.mockResolvedValue(testUser);
+  it('inserts logo', async () => {
+    await testDbHelper.connect()
+    const logo = { name: 'Test Logo', url: 'http://example.com/logo.png' }
+    const result = await testDbHelper.insertLogo(logo)
+    expect(result).toEqual({ ...logo, _id: expect.any(String) })
+  })
 
-      const foundUser = await testDbHelper.findUser({ email: testUser.email });
-      expect(foundUser).toEqual(testUser);
-    });
-  });
+  it('throws error when accessing collection without connection', () => {
+    expect(() => testDbHelper.getCollection('test')).toThrow('Database not connected')
+  })
 
-  describe('Transaction Operations', () => {
-    it('starts transaction', async () => {
-      await testDbHelper.startTransaction();
-      expect(mockClient.startSession).toHaveBeenCalled();
-      expect(mockSession.startTransaction).toHaveBeenCalled();
-    });
-
-    it('commits transaction', async () => {
-      await testDbHelper.startTransaction();
-      await testDbHelper.commitTransaction();
-      expect(mockSession.commitTransaction).toHaveBeenCalled();
-      expect(mockSession.endSession).toHaveBeenCalled();
-    });
-
-    it('rolls back transaction', async () => {
-      await testDbHelper.startTransaction();
-      await testDbHelper.rollbackTransaction();
-      expect(mockSession.abortTransaction).toHaveBeenCalled();
-      expect(mockSession.endSession).toHaveBeenCalled();
-    });
-  });
-
-  describe('Collection Operations', () => {
-    it('clears collection', async () => {
-      await testDbHelper.clearCollection('users');
-      expect(mockCollection.deleteMany).toHaveBeenCalledWith({}, { session: undefined });
-    });
-
-    it('creates indexes', async () => {
-      await testDbHelper.createIndexes();
-      expect(mockCollection.createIndex).toHaveBeenCalledWith({ email: 1 }, { unique: true });
-    });
-  });
-}); 
+  it('validates collections array in clearCollections', async () => {
+    await testDbHelper.connect()
+    await expect(testDbHelper.clearCollections(null as any)).rejects.toThrow('Collections must be an array of strings')
+    await expect(testDbHelper.clearCollections(undefined as any)).rejects.toThrow('Collections must be an array of strings')
+    await expect(testDbHelper.clearCollections([null] as any)).resolves.not.toThrow()
+  })
+}) 

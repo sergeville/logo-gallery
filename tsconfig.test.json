@@ -1,28 +1,31 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
+    "jsx": "react-jsx",
     "module": "commonjs",
-    "moduleResolution": "node",
-    "target": "es2017",
-    "lib": ["es2017", "dom"],
-    "sourceMap": true,
-    "outDir": "./dist",
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["./src/*"]
-    },
+    "target": "es2018",
     "esModuleInterop": true,
     "allowJs": true,
     "resolveJsonModule": true,
-    "types": ["node", "jest"]
+    "moduleResolution": "node",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./*"]
+    },
+    "types": ["jest", "node"]
   },
   "include": [
-    "scripts/**/*.ts",
-    "test/**/*.ts",
-    "src/**/*.ts",
-    "src/**/*.tsx"
+    "**/*.ts",
+    "**/*.tsx",
+    "**/*.js",
+    "**/*.jsx",
+    "jest.config.js",
+    "jest.setup.js"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    ".next",
+    "out",
+    "e2e"
   ]
 } 

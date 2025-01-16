@@ -2,96 +2,74 @@ import { ObjectId } from 'mongodb';
 
 export interface TestUser {
   _id?: ObjectId;
-  email: string;
   username: string;
-  name: string;
+  email: string;
   password: string;
-  profile: {
-    website?: string;
-    avatarUrl?: string;
-    bio?: string;
-    location?: string;
-  };
-  role: string;
-  status: string;
-  lastLogin: Date;
+  bio?: string;
+  avatarUrl?: string;
+  website?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export interface TestLogo {
   _id?: ObjectId;
   name: string;
-  description?: string;
-  imageUrl: string;
-  thumbnailUrl: string;
+  url: string;
+  description: string;
   ownerId: ObjectId;
-  category: string;
-  tags: string[];
-  dimensions: {
+  tags?: string[];
+  rating?: number;
+  votes?: number;
+  colors?: string[];
+  dimensions?: {
     width: number;
     height: number;
   };
-  fileSize: number;
-  fileType: string;
-  metadata: {
+  fileType?: string;
+  metadata?: {
     version: string;
     status: string;
-    createdAt: Date;
-    updatedAt: Date;
   };
-  colors?: string[];
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
-export function generateTestUser(overrides: Partial<TestUser> = {}): TestUser {
+export function generateTestUser(overrides = {}): TestUser {
   return {
-    _id: new ObjectId(),
-    email: `test${Math.random().toString(36).substring(7)}@test.com`,
-    username: `testuser${Math.random().toString(36).substring(7)}`,
-    name: 'Test User',
-    password: 'TestPassword123!',
-    profile: {
-      website: 'https://test.com',
-      avatarUrl: 'https://test.com/avatar.jpg',
-      bio: 'Test bio',
-      location: 'Test City'
-    },
-    role: 'user',
-    status: 'active',
-    lastLogin: new Date(),
+    username: 'testuser',
+    email: 'test@example.com',
+    password: 'password123',
+    bio: 'Test user bio',
+    avatarUrl: 'https://example.com/avatar.png',
+    website: 'https://example.com',
+    createdAt: new Date(),
+    updatedAt: new Date(),
     ...overrides
   };
 }
 
-export function generateTestLogo(ownerId: ObjectId, overrides: Partial<TestLogo> = {}): TestLogo {
+export function generateTestLogo(ownerId?: ObjectId, overrides = {}): TestLogo {
   return {
-    _id: new ObjectId(),
-    name: `Test Logo ${Math.random().toString(36).substring(7)}`,
-    description: 'Test logo description',
-    imageUrl: 'https://test.com/logo.png',
-    thumbnailUrl: 'https://test.com/logo-thumb.png',
-    ownerId,
-    category: 'Technology',
-    tags: ['logo', 'test'],
+    name: 'Test Logo',
+    url: 'https://example.com/logo.png',
+    description: 'A test logo',
+    ownerId: ownerId || new ObjectId(),
+    tags: ['minimal', 'modern'],
+    rating: 4,
+    votes: 10,
+    colors: ['#000000', '#FFFFFF'],
     dimensions: {
-      width: 800,
-      height: 600
+      width: 100,
+      height: 100
     },
-    fileSize: 250 * 1024,
     fileType: 'png',
     metadata: {
-      version: '1.0.0',
-      status: 'active',
-      createdAt: new Date(),
-      updatedAt: new Date()
+      version: '1.0',
+      status: 'active'
     },
-    colors: ['#FF0000', '#00FF00', '#0000FF'],
+    createdAt: new Date(),
+    updatedAt: new Date(),
     ...overrides
   };
-}
-
-export function generateTestUsers(count: number, overrides: Partial<TestUser> = {}): TestUser[] {
-  return Array.from({ length: count }, () => generateTestUser(overrides));
-}
-
-export function generateTestLogos(count: number, ownerId: ObjectId, overrides: Partial<TestLogo> = {}): TestLogo[] {
-  return Array.from({ length: count }, () => generateTestLogo(ownerId, overrides));
 } 

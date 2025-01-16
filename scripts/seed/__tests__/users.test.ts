@@ -1,45 +1,57 @@
-import { seedUsers, seedAdmins, createTestUser } from '../users';
+import { ObjectId } from 'mongodb';
+import { seedUsers, createTestUser } from '../users';
+import { User } from '@/app/types';
 
 describe('User Seeding', () => {
   describe('seedUsers', () => {
     it('should generate the specified number of users', async () => {
-      const users = await seedUsers({ count: 5 });
-      expect(users).toHaveLength(5);
+      const users = await seedUsers({ count: 3 });
+      expect(users).toHaveLength(3);
+      users.forEach(user => {
+        expect(user).toHaveProperty('_id');
+        expect(user).toHaveProperty('email');
+        expect(user).toHaveProperty('role');
+        expect(user.role).toMatch(/^(user|admin)$/);
+      });
     });
 
-    it('should generate users with profiles when specified', async () => {
-      const users = await seedUsers({ count: 3, withProfiles: true });
-      expect(users[0].profile).toBeDefined();
-      expect(users[0].profile.bio).toBeDefined();
-      expect(users[0].profile.location).toBeDefined();
+    it('should generate users with optional fields when specified', async () => {
+      const users = await seedUsers({ count: 2, withProfiles: true });
+      expect(users).toHaveLength(2);
+      users.forEach(user => {
+        expect(user).toHaveProperty('name');
+        expect(user).toHaveProperty('image');
+      });
     });
 
-    it('should assign specified roles correctly', async () => {
-      const users = await seedUsers({ count: 5, roles: ['admin'] });
-      expect(users.every(user => user.role === 'admin')).toBe(true);
-    });
-  });
-
-  describe('seedAdmins', () => {
-    it('should generate admin users', async () => {
-      const admins = await seedAdmins(3);
-      expect(admins).toHaveLength(3);
-      expect(admins.every(admin => admin.role === 'admin')).toBe(true);
+    it('should assign admin role correctly', async () => {
+      const users = await seedUsers({ count: 2, roles: ['admin'] });
+      expect(users).toHaveLength(2);
+      users.forEach(user => {
+        expect(user.role).toBe('admin');
+      });
     });
   });
 
   describe('createTestUser', () => {
     it('should create a user with default values', async () => {
       const user = await createTestUser();
-      expect(user.username).toBeDefined();
-      expect(user.email).toBeDefined();
-      expect(user.password).toBeDefined();
+      expect(user).toHaveProperty('_id');
+      expect(user).toHaveProperty('email');
+      expect(user).toHaveProperty('role');
+      expect(user.role).toBe('user');
     });
 
     it('should override default values with provided ones', async () => {
-      const customEmail = 'custom@test.com';
-      const user = await createTestUser({ email: customEmail });
-      expect(user.email).toBe(customEmail);
+      const customData = {
+        email: 'custom@test.com',
+        name: 'Custom User',
+        role: 'admin' as const
+      };
+      const user = await createTestUser(customData);
+      expect(user.email).toBe(customData.email);
+      expect(user.name).toBe(customData.name);
+      expect(user.role).toBe(customData.role);
     });
   });
 }); 

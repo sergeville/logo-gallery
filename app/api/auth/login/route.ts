@@ -1,15 +1,14 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import jwt from 'jsonwebtoken';
-import { getUserByEmail, validatePassword, createUser } from '@/app/lib/store';
+import bcrypt from 'bcrypt';
+import { connectToDatabase } from '@/app/lib/db';
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    console.log('Login attempt:', body);
+    const { email, password } = await request.json();
 
-    const { email, password } = body;
-
+    // Check both email and password together
     if (!email || !password) {
       return NextResponse.json(
         { success: false, message: 'Email and password are required' },
@@ -17,12 +16,8 @@ export async function POST(request: Request) {
       );
     }
 
-    let user = await getUserByEmail(email);
-    
-    // For development: create a test user if it doesn't exist
-    if (!user && email === 'test@example.com' && password === 'test123') {
-      user = await createUser(email, password);
-    }
+    const { db } = await connectToDatabase();
+    const user = await db.collection('users').findOne({ email });
 
     if (!user) {
       return NextResponse.json(
@@ -31,40 +26,22 @@ export async function POST(request: Request) {
       );
     }
 
-    const { isValid } = await validatePassword(email, password);
-    console.log('Password validation:', { isValid });
+    const isPasswordValid = await bcrypt.compare(password, user.password);
 
-    if (!isValid) {
+    if (!isPasswordValid) {
       return NextResponse.json(
         { success: false, message: 'Invalid credentials' },
         { status: 401 }
       );
     }
 
-    // Generate JWT token
-    const token = jwt.sign(
-      { email: user.email },
-      process.env.JWT_SECRET || 'default_secret',
-      { expiresIn: '1d' }
-    );
+    // Remove sensitive data before sending
+    const { password: _, ...userWithoutPassword } = user;
 
-    // Set cookie
-    const response = NextResponse.json(
-      { success: true, message: 'Login successful', user: { email: user.email } },
+    return NextResponse.json(
+      { success: true, user: userWithoutPassword },
       { status: 200 }
     );
-
-    response.cookies.set('auth_token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      path: '/',
-      maxAge: 60 * 60 * 24 // 1 day
-    });
-
-    console.log('Login successful, token set');
-    return response;
-
   } catch (error) {
     console.error('Login error:', error);
     return NextResponse.json(

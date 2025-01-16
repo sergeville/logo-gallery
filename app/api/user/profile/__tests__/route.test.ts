@@ -1,189 +1,195 @@
-import { NextRequest } from 'next/server'
-import { PUT } from '../route'
-import { updateUser, getUsers } from '@/app/lib/store'
-import { cookies } from 'next/headers'
+import { jest } from '@jest/globals';
+import { Collection, Db, MongoClient, ObjectId } from 'mongodb';
+import { connectToDatabase } from '@/app/lib/db';
+import { NextRequest } from 'next/server';
+import { cookies } from 'next/headers';
+import { GET, PUT } from '../route';
 
-// Mock dependencies
-jest.mock('@/app/lib/store', () => ({
-  updateUser: jest.fn(),
-  getUsers: jest.fn()
-}))
+jest.mock('@/app/lib/db');
+jest.mock('next/headers');
 
-jest.mock('next/headers', () => ({
-  cookies: jest.fn()
-}))
+interface MockUser {
+  _id: ObjectId;
+  name: string;
+  email: string;
+}
 
-describe('Profile Update API', () => {
-  const mockUser = {
-    _id: '123',
-    username: 'testuser',
-    email: 'test@example.com',
-    profileImage: 'https://placehold.co/50x50'
+type JsonFn = () => Promise<any>;
+
+interface MockRequest extends Omit<NextRequest, 'json'> {
+  json: JsonFn;
+}
+
+// Custom matcher for ObjectId
+expect.extend({
+  toEqualObjectId(received: ObjectId, expected: ObjectId) {
+    const pass = received.toString() === expected.toString();
+    return {
+      pass,
+      message: () => `expected ${received} ${pass ? 'not ' : ''}to equal ${expected}`,
+    };
+  },
+});
+
+declare global {
+  namespace jest {
+    interface Matchers<R> {
+      toEqualObjectId(expected: ObjectId): R;
+    }
   }
+}
 
-  const mockCookies = {
-    get: jest.fn(),
-    set: jest.fn()
-  }
+describe('User Profile API', () => {
+  let mockDb: jest.Mocked<Db>;
+  let mockCollection: jest.Mocked<Collection>;
+  let mockRequest: MockRequest;
+  let mockUserId: ObjectId;
 
   beforeEach(() => {
-    jest.clearAllMocks()
-    ;(cookies as jest.Mock).mockReturnValue(mockCookies)
-    mockCookies.get.mockReturnValue({ value: JSON.stringify(mockUser) })
-    ;(getUsers as jest.Mock).mockReturnValue([mockUser])
-    ;(updateUser as jest.Mock).mockImplementation((id, updates) => ({
-      ...mockUser,
-      ...updates
-    }))
-  })
+    mockUserId = new ObjectId();
+    
+    mockCollection = {
+      findOne: jest.fn(),
+      updateOne: jest.fn()
+    } as unknown as jest.Mocked<Collection>;
 
-  describe('PUT /api/user/profile', () => {
-    it('successfully updates user profile', async () => {
-      const updates = {
-        username: 'newusername',
-        email: 'newemail@example.com',
-        profileImage: 'https://placehold.co/100x100'
+    mockDb = {
+      collection: jest.fn().mockReturnValue(mockCollection)
+    } as unknown as jest.Mocked<Db>;
+
+    const mockConnectToDatabase = connectToDatabase as jest.MockedFunction<typeof connectToDatabase>;
+    mockConnectToDatabase.mockResolvedValue({
+      client: {} as MongoClient,
+      db: mockDb
+    });
+
+    mockRequest = {
+      json: jest.fn().mockImplementation(async () => ({})) as unknown as JsonFn
+    } as MockRequest;
+
+    (cookies as jest.Mock).mockReturnValue({
+      get: jest.fn().mockReturnValue({ value: mockUserId.toString() })
+    });
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  describe('Profile API', () => {
+    it('returns user profile when found', async () => {
+      const mockUser: MockUser = {
+        _id: mockUserId,
+        name: 'Test User',
+        email: 'test@example.com'
+      };
+
+      mockCollection.findOne.mockResolvedValueOnce(mockUser);
+
+      const response = await GET(mockRequest as NextRequest);
+      const data = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(data._id).toEqualObjectId(mockUserId);
+      expect(data.name).toBe('Test User');
+      expect(data.email).toBe('test@example.com');
+      expect(mockDb.collection).toHaveBeenCalledWith('users');
+      
+      // Verify findOne was called
+      expect(mockCollection.findOne).toHaveBeenCalled();
+      const findOneCall = mockCollection.findOne.mock.calls[0][0];
+      if (!findOneCall?._id) {
+        throw new Error('findOne was not called with _id');
       }
+      expect(findOneCall._id.toString()).toBe(mockUserId.toString());
+    });
 
-      const request = new Request('http://localhost:3000/api/user/profile', {
-        method: 'PUT',
-        body: JSON.stringify(updates)
-      })
+    it('returns 404 when user not found', async () => {
+      mockCollection.findOne.mockResolvedValueOnce(null);
 
-      const response = await PUT(request)
-      const data = await response.json()
+      const response = await GET(mockRequest as NextRequest);
+      const data = await response.json();
 
-      expect(response.status).toBe(200)
-      expect(data).toEqual({
-        success: true,
-        user: {
-          _id: mockUser._id,
-          ...updates
-        }
-      })
-      expect(updateUser).toHaveBeenCalledWith(mockUser._id, updates)
-      expect(mockCookies.set).toHaveBeenCalled()
-    })
+      expect(response.status).toBe(404);
+      expect(data).toEqual({ error: 'User not found' });
+    });
 
-    it('returns 401 when not authenticated', async () => {
-      mockCookies.get.mockReturnValue(null)
+    it('updates user profile successfully', async () => {
+      const mockUser: MockUser = {
+        _id: mockUserId,
+        name: 'Updated Name',
+        email: 'updated@example.com'
+      };
 
-      const request = new Request('http://localhost:3000/api/user/profile', {
-        method: 'PUT',
-        body: JSON.stringify({ username: 'newname' })
-      })
+      mockRequest.json = jest.fn().mockImplementation(async () => ({
+        name: 'Updated Name',
+        email: 'updated@example.com'
+      })) as unknown as JsonFn;
 
-      const response = await PUT(request)
-      const data = await response.json()
+      mockCollection.findOne.mockResolvedValueOnce(mockUser);
+      mockCollection.updateOne.mockResolvedValueOnce({
+        modifiedCount: 1
+      } as any);
+      mockCollection.findOne.mockResolvedValueOnce(mockUser);
 
-      expect(response.status).toBe(401)
-      expect(data).toEqual({
-        success: false,
-        message: 'Not authenticated'
-      })
-    })
+      const response = await PUT(mockRequest as NextRequest);
+      const data = await response.json();
 
-    it('validates update fields', async () => {
-      const request = new Request('http://localhost:3000/api/user/profile', {
-        method: 'PUT',
-        body: JSON.stringify({})
-      })
+      expect(response.status).toBe(200);
+      expect(data._id).toEqualObjectId(mockUserId);
+      expect(data.name).toBe('Updated Name');
+      expect(data.email).toBe('updated@example.com');
 
-      const response = await PUT(request)
-      const data = await response.json()
-
-      expect(response.status).toBe(400)
-      expect(data).toEqual({
-        success: false,
-        message: 'No update fields provided'
-      })
-    })
-
-    it('prevents duplicate username', async () => {
-      ;(getUsers as jest.Mock).mockReturnValue([
-        mockUser,
-        { _id: '456', username: 'existinguser', email: 'other@example.com' }
-      ])
-
-      const request = new Request('http://localhost:3000/api/user/profile', {
-        method: 'PUT',
-        body: JSON.stringify({ username: 'existinguser' })
-      })
-
-      const response = await PUT(request)
-      const data = await response.json()
-
-      expect(response.status).toBe(409)
-      expect(data).toEqual({
-        success: false,
-        message: 'Username already exists'
-      })
-    })
-
-    it('prevents duplicate email', async () => {
-      ;(getUsers as jest.Mock).mockReturnValue([
-        mockUser,
-        { _id: '456', username: 'otheruser', email: 'existing@example.com' }
-      ])
-
-      const request = new Request('http://localhost:3000/api/user/profile', {
-        method: 'PUT',
-        body: JSON.stringify({ email: 'existing@example.com' })
-      })
-
-      const response = await PUT(request)
-      const data = await response.json()
-
-      expect(response.status).toBe(409)
-      expect(data).toEqual({
-        success: false,
-        message: 'Email already exists'
-      })
-    })
-
-    it('handles partial updates', async () => {
-      const updates = {
-        username: 'newusername'
+      const updateOneCall = mockCollection.updateOne.mock.calls[0];
+      if (!updateOneCall?.[0]?._id) {
+        throw new Error('updateOne was not called with _id');
       }
+      expect(updateOneCall[0]._id.toString()).toBe(mockUserId.toString());
+      
+      const updateFilter = updateOneCall[1] as { $set: Record<string, unknown> };
+      expect(updateFilter.$set).toEqual(expect.objectContaining({
+        name: 'Updated Name',
+        email: 'updated@example.com',
+        updatedAt: expect.any(Date)
+      }));
+    });
 
-      const request = new Request('http://localhost:3000/api/user/profile', {
-        method: 'PUT',
-        body: JSON.stringify(updates)
-      })
+    it('returns 404 when user not found for update', async () => {
+      mockRequest.json = jest.fn().mockImplementation(async () => ({ name: 'Test' })) as unknown as JsonFn;
+      mockCollection.findOne.mockResolvedValueOnce(null);
 
-      const response = await PUT(request)
-      const data = await response.json()
+      const response = await PUT(mockRequest as NextRequest);
+      const data = await response.json();
 
-      expect(response.status).toBe(200)
-      expect(data.user).toEqual({
-        ...mockUser,
-        username: 'newusername'
-      })
-      expect(updateUser).toHaveBeenCalledWith(mockUser._id, {
-        username: 'newusername',
-        email: mockUser.email,
-        profileImage: mockUser.profileImage
-      })
-    })
+      expect(response.status).toBe(404);
+      expect(data).toEqual({ error: 'User not found' });
+    });
 
-    it('handles database errors gracefully', async () => {
-      ;(updateUser as jest.Mock).mockImplementation(() => {
-        throw new Error('Database error')
-      })
+    it('returns 400 for invalid update data', async () => {
+      const invalidUser = {
+        name: '', // Invalid - too short
+        email: 'invalid-email' // Invalid format
+      };
 
-      const request = new Request('http://localhost:3000/api/user/profile', {
-        method: 'PUT',
-        body: JSON.stringify({ username: 'newname' })
-      })
+      mockRequest.json = jest.fn().mockImplementation(async () => invalidUser) as unknown as JsonFn;
 
-      const response = await PUT(request)
-      const data = await response.json()
+      const response = await PUT(mockRequest as NextRequest);
+      const data = await response.json();
 
-      expect(response.status).toBe(500)
-      expect(data).toEqual({
-        success: false,
-        message: 'Failed to update profile'
-      })
-    })
-  })
-}) 
+      expect(response.status).toBe(400);
+      expect(data.error).toBe('Invalid data');
+      expect(data.details).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            field: 'name',
+            code: 'INVALID_NAME_LENGTH'
+          }),
+          expect.objectContaining({
+            field: 'email',
+            code: 'INVALID_EMAIL_FORMAT'
+          })
+        ])
+      );
+    });
+  });
+}); 

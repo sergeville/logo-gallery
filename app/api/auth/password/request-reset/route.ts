@@ -1,3 +1,4 @@
+import { NextResponse } from 'next/server';
 import { connectToDatabase } from '../../../../lib/db-config';
 import { sendEmail } from '../../../../lib/email';
 import crypto from 'crypto';
@@ -7,26 +8,20 @@ export async function POST(request: Request) {
     const { email } = await request.json();
 
     if (!email) {
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          message: 'Email is required' 
-        }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
+      return NextResponse.json(
+        { success: false, message: 'Email is required' },
+        { status: 400 }
       );
     }
 
-    const db = await connectToDatabase();
+    const { db } = await connectToDatabase();
     const user = await db.collection('users').findOne({ email });
 
     if (!user) {
       // Return success even if user not found for security
-      return new Response(
-        JSON.stringify({ 
-          success: true, 
-          message: 'Password reset instructions sent' 
-        }),
-        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      return NextResponse.json(
+        { success: true, message: 'Password reset instructions sent' },
+        { status: 200 }
       );
     }
 
@@ -55,22 +50,16 @@ export async function POST(request: Request) {
       html: `<p>Please click <a href="${resetUrl}">here</a> to reset your password.</p>`
     });
 
-    return new Response(
-      JSON.stringify({ 
-        success: true, 
-        message: 'Password reset instructions sent' 
-      }),
-      { status: 200, headers: { 'Content-Type': 'application/json' } }
+    return NextResponse.json(
+      { success: true, message: 'Password reset instructions sent' },
+      { status: 200 }
     );
 
   } catch (error) {
     console.error('Password reset request error:', error);
-    return new Response(
-      JSON.stringify({ 
-        success: false, 
-        message: 'Failed to process password reset request' 
-      }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    return NextResponse.json(
+      { success: false, message: 'Failed to process password reset request' },
+      { status: 500 }
     );
   }
 } 

@@ -1,30 +1,49 @@
-import './globals.css';
-import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
-import { AuthProvider } from './contexts/AuthContext';
-import { ThemeProvider } from './contexts/ThemeContext';
+/**
+ * Root Layout Component
+ * Provides the base structure and configuration for the entire application.
+ * Includes global providers, metadata, and common layout elements.
+ */
 
-const inter = Inter({ subsets: ['latin'] });
+import { Providers } from './providers'
+import Header from './components/Header'
+import './globals.css'
+import type { Metadata } from 'next'
 
+/**
+ * Application metadata configuration
+ * Defines SEO-related information and favicon settings
+ */
 export const metadata: Metadata = {
   title: 'Logo Gallery',
-  description: 'A gallery for sharing and discovering logos',
-};
+  description: 'A beautiful gallery of logos with rating and collection features',
+  icons: {
+    icon: '/favicon.ico',
+  },
+}
 
+/**
+ * Root layout component that wraps all pages
+ * Provides:
+ * - HTML structure with language setting
+ * - Hydration warnings suppression
+ * - Global providers for theme, auth, etc.
+ * - Common layout elements (header)
+ */
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode;
+  children: React.ReactNode
 }) {
   return (
-    <html lang="en">
-      <body className={inter.className}>
-        <ThemeProvider>
-          <AuthProvider>
+    <html lang="en" suppressHydrationWarning>
+      <body suppressHydrationWarning>
+        <Providers>
+          <div suppressHydrationWarning>
+            <Header />
             {children}
-          </AuthProvider>
-        </ThemeProvider>
+          </div>
+        </Providers>
       </body>
     </html>
-  );
+  )
 }

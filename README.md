@@ -4,21 +4,25 @@ A modern web application for managing and sharing logo designs with comprehensiv
 
 ## Features
 
-- User management with profile support
+- User authentication with NextAuth.js
+- User profile management
 - Logo upload and management
-- Rating system
-- Comments with mentions
-- Collections with sharing capabilities
-- Favorites system
+- Voting system with persistent tracking
+- Responsive image handling with fallbacks
+- Modern UI with horizontal navigation
 - Comprehensive validation
+- MongoDB integration
 - Extensive test coverage
 
 ## Tech Stack
 
+- Next.js 14
 - TypeScript
-- MongoDB
+- MongoDB with Mongoose
+- NextAuth.js for authentication
+- Tailwind CSS for styling
 - Jest for testing
-- Faker.js for test data generation
+- Image optimization with next/image
 
 ## Getting Started
 

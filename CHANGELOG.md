@@ -1,5 +1,30 @@
 # Changelog
 
+## [1.1.0] - 2024-01-17
+
+### Added
+- Implemented logo voting system with persistent vote tracking
+- Created new API endpoints for user signup and voting
+- Added vote page with radio-style selection
+- Added default avatar and logo images
+- Created user profile display functionality
+- Implemented MongoDB models for users and logos
+
+### Improvements
+- Enhanced UI with horizontal navigation menu
+- Updated LogoCard component with improved image handling
+- Added proper error handling for image loading
+- Implemented session-based authentication
+- Added proper MongoDB connection handling
+- Enhanced type safety across components
+
+### Technical Details
+- Added validation types and rules for user input
+- Implemented proper file upload handling
+- Enhanced error handling for API routes
+- Added proper TypeScript interfaces for all models
+- Improved MongoDB schema definitions
+
 ## [1.0.0] - 2024-01-07
 
 ### Added
@@ -60,9 +85,15 @@
 - Test observer coverage could be improved
 
 ### Future Improvements
-- Add more comprehensive error messages
-- Implement data migration utilities
-- Add performance monitoring
-- Improve test coverage for edge cases
-- Add input sanitization for security
-- Implement rate limiting for database operations 
+- Implement proper file storage solution (e.g., AWS S3 or similar)
+- Add logo search functionality with filters
+- Add user dashboard with statistics
+- Implement logo categories and tags system
+- Add social sharing features
+- Add email notifications for votes
+- Add admin panel for content moderation
+- Implement rate limiting for API endpoints
+- Add performance monitoring and analytics
+- Add input sanitization for enhanced security
+- Add data export functionality
+- Improve test coverage for new features 

@@ -68,9 +68,29 @@ logo-gallery/
 │   ├── components/         # React components
 │   ├── lib/                # Utility functions
 │   └── types/              # TypeScript types
+├── docs/                   # Documentation
+│   ├── database.md        # Database schema and structure
+│   ├── DESIGN.md          # Application design and architecture
+│   ├── mongodb-setup.md   # MongoDB setup guide
+│   ├── test-data.md       # Test data documentation
+│   ├── database-testing.md # Database testing guide
+│   ├── VALIDATION_CHECKLIST.md # Input validation rules
+│   └── TODO.md            # Development roadmap
 ├── public/                 # Static assets
 └── README.md              # This file
 ```
+
+## Documentation
+
+The project includes comprehensive documentation in the `docs` directory:
+
+- **[Database Schema](docs/database.md)**: Database structure, relationships, and validation rules
+- **[Design Document](docs/DESIGN.md)**: Application architecture, design decisions, and patterns
+- **[MongoDB Setup](docs/mongodb-setup.md)**: Step-by-step guide for setting up MongoDB
+- **[Test Data](docs/test-data.md)**: Documentation for test data generation and usage
+- **[Database Testing](docs/database-testing.md)**: Guide for database testing procedures
+- **[Validation Checklist](docs/VALIDATION_CHECKLIST.md)**: Complete list of input validation rules
+- **[Development Roadmap](docs/TODO.md)**: Planned features and improvements
 
 ## Testing
 

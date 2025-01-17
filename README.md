@@ -36,7 +36,7 @@ A modern web application for managing and sharing logo designs with comprehensiv
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/logo-gallery.git
+git clone https://github.com/sergeville/logo-gallery.git
 cd logo-gallery
 ```
 
@@ -63,17 +63,13 @@ npm run test:seed
 
 ```
 logo-gallery/
-├── scripts/
-│   ├── seed/
-│   │   ├── __tests__/        # Test files
-│   │   ├── types.ts          # TypeScript interfaces
-│   │   ├── db-helper.ts      # Database operations
-│   │   ├── seed-utils.ts     # Seeding utilities
-│   │   └── test-observer.ts  # Test reporting
-│   └── migrations/           # Database migrations
-├── docs/                     # Documentation
-├── CHANGELOG.md             # Change history
-└── README.md               # This file
+├── app/                     # Next.js app directory
+│   ├── api/                # API routes
+│   ├── components/         # React components
+│   ├── lib/                # Utility functions
+│   └── types/              # TypeScript types
+├── public/                 # Static assets
+└── README.md              # This file
 ```
 
 ## Testing
@@ -127,4 +123,4 @@ Current test coverage:
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License.

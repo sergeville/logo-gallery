@@ -40,7 +40,9 @@ export interface Logo {
   ownerName: string;
   tags: string[];
   totalVotes: number;
+  averageRating: number;
   votes: Vote[];
   createdAt: Date;
   updatedAt: Date;
+  uploadedAt?: Date;
 }

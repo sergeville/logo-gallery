@@ -15,34 +15,67 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = request.nextUrl;
     const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '20');
+    const limit = parseInt(searchParams.get('limit') || '12');
+    const sortBy = searchParams.get('sortBy') || 'date';
+    const sortOrder = searchParams.get('sortOrder') || 'desc';
+    const tag = searchParams.get('tag');
+    const search = searchParams.get('search');
+
     const skip = (page - 1) * limit;
 
     await connectDB();
 
+    // Build query
+    let query: any = {};
+
+    // Add tag filter
+    if (tag) {
+      query.tags = tag;
+    }
+
+    // Add search filter
+    if (search) {
+      query.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } },
+        { tags: { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    // Build sort options
+    const sortOptions: any = {};
+    if (sortBy === 'date') {
+      sortOptions.uploadedAt = sortOrder === 'asc' ? 1 : -1;
+    } else if (sortBy === 'rating') {
+      sortOptions.averageRating = sortOrder === 'asc' ? 1 : -1;
+    }
+
+    // Execute query with pagination
     const [logos, total] = await Promise.all([
-      Logo.find()
-        .sort({ uploadedAt: -1 })
+      Logo.find(query)
+        .sort(sortOptions)
         .skip(skip)
         .limit(limit)
         .lean(),
-      Logo.countDocuments()
+      Logo.countDocuments(query)
     ]);
 
-    const hasMore = total > skip + logos.length;
+    // Calculate pagination info
+    const totalPages = Math.ceil(total / limit);
+    const hasMore = page < totalPages;
 
     return NextResponse.json({
       logos,
       pagination: {
         current: page,
-        total: Math.ceil(total / limit),
+        total: totalPages,
         hasMore
       }
     });
   } catch (error) {
     console.error('Error fetching logos:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Failed to fetch logos' },
       { status: 500 }
     );
   }

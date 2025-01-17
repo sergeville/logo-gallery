@@ -45,6 +45,9 @@ next-env.d.ts
 .vscode
 *.swp
 *.swo
+.history/
+*.code-workspace
+.settings/
 
 # OS generated files
 .DS_Store
@@ -58,6 +61,10 @@ Thumbs.db
 # Logs
 logs
 *.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
 
 # Runtime data
 pids
@@ -74,3 +81,39 @@ pids
 .env.development
 .env.test
 .env.production
+
+# Cache directories
+.cache/
+.npm/
+.eslintcache
+.stylelintcache
+.prettiercache
+
+# Test coverage
+coverage/
+.nyc_output/
+junit.xml
+test-results/
+
+# Build outputs
+dist/
+build/
+out/
+*.min.js
+*.min.css
+
+# Temporary files
+*.tmp
+*.temp
+.tmp/
+temp/
+tmp/
+
+# Large media files
+*.mp4
+*.tiff
+*.avi
+*.flv
+*.mov
+*.wmv
+*.pdf

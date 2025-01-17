@@ -35,17 +35,28 @@ userSchema.pre('save', async function(next) {
     return next();
   }
   try {
+    console.log('Hashing password for user:', this.email);
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
     next();
   } catch (error) {
+    console.error('Error hashing password:', error);
     next(error as Error);
   }
 });
 
 // Method to compare password for login
 userSchema.methods.comparePassword = async function(candidatePassword: string) {
-  return bcrypt.compare(candidatePassword, this.password);
+  console.log('Comparing passwords for user:', this.email);
+  try {
+    const isMatch = await bcrypt.compare(candidatePassword, this.password);
+    console.log('Password match:', isMatch);
+    return isMatch;
+  } catch (error) {
+    console.error('Error comparing passwords:', error);
+    return false;
+  }
 };
 
+// Only create the model if it doesn't exist
 export const User = mongoose.models.User || mongoose.model('User', userSchema); 

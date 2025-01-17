@@ -77,7 +77,6 @@ export async function POST(request: NextRequest) {
     const logo = new Logo({
       name,
       description,
-      url: `/uploads/${filename}`,
       imageUrl: `/uploads/${filename}`,
       thumbnailUrl: `/uploads/${thumbnailFilename}`,
       ownerId: session.user.id,

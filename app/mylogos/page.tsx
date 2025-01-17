@@ -18,9 +18,10 @@ interface Logo {
   averageRating: number;
   totalVotes: number;
   ownerName: string;
+  ownerId: string;
 }
 
-export default function GalleryPage() {
+export default function MyLogosPage() {
   const router = useRouter();
   const { data: session, status } = useSession();
   const [logos, setLogos] = useState<Logo[]>([]);
@@ -53,6 +54,7 @@ export default function GalleryPage() {
         sortOrder,
         page: currentPage.toString(),
         limit: ITEMS_PER_PAGE.toString(),
+        userId: session.user.id,
         ...(selectedTag && { tag: selectedTag }),
         ...(searchTerm && { search: searchTerm })
       });
@@ -72,12 +74,14 @@ export default function GalleryPage() {
         throw new Error(data.error);
       }
       
-      setLogos(prev => resetPage ? data.logos : [...prev, ...data.logos]);
+      // Filter logos to only show the current user's logos
+      const userLogos = data.logos.filter((logo: Logo) => logo.ownerId === session.user.id);
+      setLogos(prev => resetPage ? userLogos : [...prev, ...userLogos]);
       setHasMore(data.pagination.hasMore);
       
       // Extract unique tags only on first load
-      if (currentPage === 1 && data.logos.length > 0) {
-        const allTags = data.logos.flatMap((logo: Logo) => logo.tags || []);
+      if (currentPage === 1 && userLogos.length > 0) {
+        const allTags = userLogos.flatMap((logo: Logo) => logo.tags || []);
         setTags(Array.from(new Set(allTags.filter(Boolean))));
       }
     } catch (error) {
@@ -141,20 +145,18 @@ export default function GalleryPage() {
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
-              Logo Gallery
+              My Logos
             </h1>
             <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-              Discover and share beautiful logos from around the world
+              Manage and organize your uploaded logos
             </p>
           </div>
-          {session?.user && (
-            <button
-              onClick={() => router.push('/upload')}
-              className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-blue hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-blue"
-            >
-              Upload Logo
-            </button>
-          )}
+          <button
+            onClick={() => router.push('/upload')}
+            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-blue hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-blue"
+          >
+            Upload Logo
+          </button>
         </div>
 
         <div className="mb-8 space-y-4">
@@ -163,7 +165,7 @@ export default function GalleryPage() {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
               <input
                 type="text"
-                placeholder="Search logos..."
+                placeholder="Search your logos..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-primary-blue focus:border-primary-blue"
@@ -175,8 +177,8 @@ export default function GalleryPage() {
                 onChange={(e) => setSortBy(e.target.value as 'date' | 'rating')}
                 className="rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white py-2 pl-3 pr-10"
               >
-                <option key="date" value="date">Date</option>
-                <option key="rating" value="rating">Rating</option>
+                <option value="date">Date</option>
+                <option value="rating">Rating</option>
               </select>
               <button
                 type="button"
@@ -226,7 +228,7 @@ export default function GalleryPage() {
 
         {logos.length === 0 && !loading ? (
           <div className="text-center text-gray-500 dark:text-gray-400 py-8">
-            No logos found. {session?.user ? 'Upload your first logo!' : 'Sign in to upload logos!'}
+            You haven't uploaded any logos yet. Click the Upload Logo button to get started!
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

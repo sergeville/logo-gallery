@@ -20,6 +20,7 @@ export async function GET(request: NextRequest) {
     const sortOrder = searchParams.get('sortOrder') || 'desc';
     const tag = searchParams.get('tag');
     const search = searchParams.get('search');
+    const userId = searchParams.get('userId');
 
     const skip = (page - 1) * limit;
 
@@ -28,6 +29,11 @@ export async function GET(request: NextRequest) {
     // Build query
     let query: any = {};
 
+    // Add user filter if userId is provided
+    if (userId) {
+      query.ownerId = userId;
+    }
+
     // Add tag filter
     if (tag) {
       query.tags = tag;
@@ -35,11 +41,16 @@ export async function GET(request: NextRequest) {
 
     // Add search filter
     if (search) {
-      query.$or = [
+      const searchQuery = [
         { name: { $regex: search, $options: 'i' } },
         { description: { $regex: search, $options: 'i' } },
-        { tags: { $regex: search, $options: 'i' } }
+        { tags: { $regex: search, $options: 'i' } },
+        { ownerName: { $regex: search, $options: 'i' } }
       ];
+
+      query = userId 
+        ? { $and: [{ ownerId: userId }, { $or: searchQuery }] }
+        : { $or: searchQuery };
     }
 
     // Build sort options
@@ -115,7 +126,7 @@ export async function POST(request: NextRequest) {
       fileType,
       category,
       tags,
-      userId: session.user.id,
+      ownerId: session.user.id,
       ownerName: session.user.name,
       uploadedAt: new Date(),
       totalVotes: 0,

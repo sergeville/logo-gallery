@@ -17,7 +17,7 @@ const inter = Inter({ subsets: ['latin'] })
  */
 export const metadata: Metadata = {
   title: 'Logo Gallery',
-  description: 'Discover and share beautiful logos from around the world',
+  description: 'A gallery of logos from around the world',
 }
 
 /**

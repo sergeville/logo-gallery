@@ -1,25 +1,34 @@
-'use client'
+'use client';
 
-import { useSearchParams } from 'next/navigation'
-import { signIn } from 'next-auth/react'
-import Link from 'next/link'
+import { useSearchParams } from 'next/navigation';
+import { signIn } from 'next-auth/react';
+import Link from 'next/link';
+import { useEffect } from 'react';
 
-export default function SignIn() {
-  const searchParams = useSearchParams()
-  const callbackUrl = searchParams?.get('callbackUrl') ?? '/'
+export default function SignInModal() {
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams?.get('callbackUrl') ?? '/';
+
+  // Prevent scrolling of the background when modal is open
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    const formData = new FormData(e.currentTarget)
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
     await signIn('credentials', {
       email: formData.get('email') as string,
       password: formData.get('password') as string,
       callbackUrl
-    })
-  }
+    });
+  };
 
   return (
-    <div className="fixed inset-0 bg-[#0f1524]/50 backdrop-blur-md flex items-center justify-center">
+    <div className="fixed inset-0 bg-[#0f1524]/50 backdrop-blur-md flex items-center justify-center z-50">
       <div className="bg-[#1a1f36]/50 rounded-lg p-8 w-full max-w-md mx-4 shadow-xl">
         <h1 className="text-2xl font-semibold text-white mb-6 text-center">
           Sign in to your account
@@ -70,5 +79,5 @@ export default function SignIn() {
         </p>
       </div>
     </div>
-  )
+  );
 } 

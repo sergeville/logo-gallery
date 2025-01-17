@@ -6,13 +6,13 @@ const logoSchema = new mongoose.Schema({
     required: true,
   },
   description: String,
-  url: {
+  imageUrl: {
     type: String,
     required: true,
   },
   thumbnailUrl: {
     type: String,
-    required: true,
+    required: false,
   },
   ownerId: {
     type: mongoose.Schema.Types.ObjectId,

@@ -1,43 +1,47 @@
-'use client';
+import { Suspense } from 'react';
+import { getServerSession } from 'next-auth';
+import Navbar from './components/Navbar';
+import LogoCard from './components/LogoCard';
+import { Logo } from './lib/models/logo';
+import connectDB from './lib/db';
 
-import { useState, useEffect } from 'react';
-import { useTheme } from './hooks/useTheme';
-import { useAuth } from './hooks/useAuth';
-import { AuthModal } from './components/AuthModal';
+async function getLogos() {
+  await connectDB();
+  return Logo.find().sort({ uploadedAt: -1 }).limit(12);
+}
 
-export default function HomePage() {
-  const [showAuthModal, setShowAuthModal] = useState(false);
-  const { theme, toggleTheme } = useTheme();
-  const { user, loading } = useAuth();
-
-  useEffect(() => {
-    if (user) {
-      setShowAuthModal(false);
-    }
-  }, [user]);
+export default async function Home() {
+  const session = await getServerSession();
+  const logos = await getLogos();
 
   return (
-    <main className={`min-h-screen ${theme === 'dark' ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'}`}>
-      <div className="container mx-auto px-4 py-8">
-        <h1 className="text-4xl font-bold mb-8">Welcome to Logo Gallery</h1>
-        <p className="text-lg mb-8">
-          A curated collection of beautiful logos. Browse, vote, and share your favorites.
-        </p>
-        {!loading && !user && (
-          <button
-            onClick={() => setShowAuthModal(true)}
-            className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
-          >
-            Sign In to Vote
-          </button>
-        )}
-      </div>
-      {showAuthModal && (
-        <AuthModal
-          onClose={() => setShowAuthModal(false)}
-          onLoginSuccess={() => setShowAuthModal(false)}
-        />
-      )}
-    </main>
+    <div className="min-h-screen bg-gray-50">
+      <Navbar />
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-heading-1 font-bold text-gray-900">
+            Your Logo Gallery
+          </h1>
+          <p className="text-gray-600">
+            Welcome back, {session?.user?.email || 'Guest'}! Here are your logos.
+          </p>
+        </div>
+
+        <Suspense fallback={<div>Loading logos...</div>}>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {logos.map((logo) => (
+              <LogoCard
+                key={logo._id.toString()}
+                name={logo.name}
+                imageUrl={logo.imageUrl}
+                uploadedAt={logo.uploadedAt}
+                rating={logo.averageRating}
+                totalVotes={logo.totalVotes}
+              />
+            ))}
+          </div>
+        </Suspense>
+      </main>
+    </div>
   );
 }

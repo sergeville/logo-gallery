@@ -1,75 +1,47 @@
 import { NextResponse } from 'next/server';
-import bcrypt from 'bcrypt';
-import { connectToDatabase } from '@/app/lib/db';
-import { 
-  ValidationError, 
-  AuthenticationError, 
-  DatabaseError,
-  createErrorResponse,
-  createValidationError,
-  createDatabaseError
-} from '@/app/lib/errors';
+import connectDB from '@/app/lib/db';
+import { User } from '@/app/lib/models/user';
+import bcrypt from 'bcryptjs';
 
-export async function POST(request: Request) {
+export async function POST(req: Request) {
   try {
-    const body = await request.json();
-    const { email, password } = body;
+    const { email, password } = await req.json();
 
-    // Validate required fields
     if (!email || !password) {
-      throw createValidationError(
-        !email ? 'email' : 'password',
-        'Email and password are required',
-        { email: !!email, password: !!password }
+      return NextResponse.json(
+        { message: 'Missing required fields' },
+        { status: 400 }
       );
     }
 
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      throw createValidationError('email', 'Invalid email format', { email });
-    }
+    await connectDB();
 
-    try {
-      const { db } = await connectToDatabase();
-      const user = await db.collection('users').findOne({ email: email.toLowerCase() });
-
-      if (!user) {
-        // Use generic message for security
-        throw new AuthenticationError('Invalid credentials');
-      }
-
-      const isPasswordValid = await bcrypt.compare(password, user.password);
-
-      if (!isPasswordValid) {
-        // Use generic message for security
-        throw new AuthenticationError('Invalid credentials');
-      }
-
-      // Remove sensitive data before sending
-      const { password: _, ...userWithoutPassword } = user;
-
-      return new Response(
-        JSON.stringify({ 
-          success: true, 
-          user: userWithoutPassword,
-          timestamp: new Date().toISOString()
-        }), 
-        { 
-          status: 200,
-          headers: { 
-            'Content-Type': 'application/json',
-            'X-Last-Login': new Date().toISOString()
-          }
-        }
+    const user = await User.findOne({ email });
+    if (!user) {
+      return NextResponse.json(
+        { message: 'User not found' },
+        { status: 404 }
       );
-    } catch (error) {
-      if (error instanceof AuthenticationError) {
-        throw error;
-      }
-      throw createDatabaseError('user authentication', error);
     }
+
+    const isValid = await user.comparePassword(password);
+    if (!isValid) {
+      return NextResponse.json(
+        { message: 'Invalid password' },
+        { status: 401 }
+      );
+    }
+
+    return NextResponse.json({
+      id: user._id,
+      email: user.email,
+      name: user.name,
+    });
   } catch (error) {
-    return createErrorResponse(error);
+    console.error('Login error:', error);
+    return NextResponse.json(
+      { message: 'Internal server error' },
+      { status: 500 }
+    );
   }
 } 

@@ -1,64 +1,94 @@
 'use client'
 
+import { useState } from 'react'
 import Image from 'next/image'
-import { ClientLogo } from '@/app/lib/types'
+import { formatDistanceToNow } from 'date-fns'
 
 interface LogoCardProps {
-  logo: ClientLogo
+  name: string
+  imageUrl: string
+  uploadedAt: string | Date
+  totalVotes: number
+  rating: number
+  isVoted?: boolean
   onVote?: () => void
+  isRadioStyle?: boolean
 }
 
-export function LogoCard({ logo, onVote }: LogoCardProps) {
-  const handleImageError = (event: React.SyntheticEvent<HTMLImageElement>) => {
-    event.currentTarget.src = 'https://placehold.co/400x380/666666/FFFFFF?text=Image+Not+Found';
+export default function LogoCard({ 
+  name, 
+  imageUrl, 
+  uploadedAt, 
+  totalVotes, 
+  rating,
+  isVoted = false,
+  onVote,
+  isRadioStyle = false
+}: LogoCardProps) {
+  const [imageError, setImageError] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+  
+  const finalImageUrl = imageError || !imageUrl 
+    ? '/images/default-logo.png'
+    : imageUrl.startsWith('http') 
+      ? imageUrl 
+      : imageUrl.startsWith('/') 
+        ? imageUrl 
+        : `/${imageUrl}`
+
+  const handleVote = () => {
+    if (onVote) {
+      onVote();
+    }
+  };
+
+  const getUploadedDate = () => {
+    if (!uploadedAt) return new Date();
+    return typeof uploadedAt === 'string' ? new Date(uploadedAt) : uploadedAt;
   };
 
   return (
-    <div className="bg-[#1C1C1E] rounded-xl shadow-sm hover:shadow-md transition-shadow p-4">
-      <div className="relative h-[320px] mb-4 bg-gray-700 rounded-lg">
-        <Image
-          src={logo.imageUrl || logo.url}
-          alt={logo.name}
-          fill
-          className="object-contain p-4"
-          onError={handleImageError}
-        />
-      </div>
-      
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-medium text-white">{logo.name}</h3>
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-300">
-              {logo.totalVotes || 0} votes
-            </span>
-            {onVote && (
-              <button 
-                onClick={onVote}
-                className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded"
-              >
-                Vote
-              </button>
-            )}
-          </div>
-        </div>
-        
-        <div className="text-sm text-gray-400">
-          by {logo.ownerName || 'Unknown User'}
-        </div>
-        
-        {logo.tags && logo.tags.length > 0 && (
-          <div className="flex flex-wrap gap-2 mt-2">
-            {logo.tags.map((tag, index) => (
-              <span 
-                key={index}
-                className="text-xs bg-gray-700 text-gray-300 px-2 py-1 rounded"
-              >
-                {tag}
-              </span>
-            ))}
+    <div className="bg-white rounded-lg shadow-md overflow-hidden">
+      <div className="relative h-48 bg-gray-100">
+        {isLoading && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
           </div>
         )}
+        <Image
+          src={finalImageUrl}
+          alt={name}
+          fill
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          className="object-contain p-2"
+          onError={() => {
+            setImageError(true)
+            setIsLoading(false)
+          }}
+          onLoadingComplete={() => setIsLoading(false)}
+          priority
+        />
+      </div>
+      <div className="p-4">
+        <h3 className="text-lg font-semibold mb-2">{name}</h3>
+        <p className="text-sm text-gray-500 mb-2">
+          Uploaded {formatDistanceToNow(getUploadedDate())} ago
+        </p>
+        <div className="flex justify-between items-center">
+          <label className="flex items-center space-x-2 cursor-pointer">
+            <input
+              type={isRadioStyle ? "radio" : "checkbox"}
+              checked={isVoted}
+              onChange={handleVote}
+              name={isRadioStyle ? "logo-vote" : undefined}
+              className={`h-5 w-5 text-blue-600 border-gray-300 focus:ring-blue-500 ${
+                isRadioStyle ? 'rounded-full' : 'rounded'
+              }`}
+            />
+            <span className="text-sm text-gray-600">Vote for this logo</span>
+          </label>
+          <span className="text-sm text-gray-500">{totalVotes} votes</span>
+        </div>
       </div>
     </div>
   )

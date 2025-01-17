@@ -4,10 +4,12 @@
  * Includes global providers, metadata, and common layout elements.
  */
 
-import { Providers } from './providers'
-import Header from './components/Header'
 import './globals.css'
 import type { Metadata } from 'next'
+import { Inter } from 'next/font/google'
+import { Providers } from './providers'
+
+const inter = Inter({ subsets: ['latin'] })
 
 /**
  * Application metadata configuration
@@ -15,10 +17,7 @@ import type { Metadata } from 'next'
  */
 export const metadata: Metadata = {
   title: 'Logo Gallery',
-  description: 'A beautiful gallery of logos with rating and collection features',
-  icons: {
-    icon: '/favicon.ico',
-  },
+  description: 'Discover and share beautiful logos from around the world',
 }
 
 /**
@@ -35,14 +34,9 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body suppressHydrationWarning>
-        <Providers>
-          <div suppressHydrationWarning>
-            <Header />
-            {children}
-          </div>
-        </Providers>
+    <html lang="en">
+      <body className={inter.className}>
+        <Providers>{children}</Providers>
       </body>
     </html>
   )

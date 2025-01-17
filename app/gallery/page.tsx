@@ -1,91 +1,76 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useAuth } from '@/app/hooks/useAuth';
-import { AuthModal } from '@/app/components/AuthModal';
-import { LogoCard } from '@/app/components/LogoCard';
-import { ClientLogo } from '@/app/lib/types';
+import { useEffect, useState } from 'react';
+import { useSession } from 'next-auth/react';
+import Navbar from '../components/Navbar';
+import LogoCard from '../components/LogoCard';
 
-interface PaginatedResponse {
-  logos: ClientLogo[];
-  pagination: {
-    current: number;
-    total: number;
-    hasMore: boolean;
-  };
+interface Logo {
+  _id: string;
+  name: string;
+  imageUrl: string;
+  createdAt: string;
+  averageRating: number;
+  totalVotes: number;
 }
 
-export default function GalleryPage() {
-  const { user, loading } = useAuth();
-  const [showAuthModal, setShowAuthModal] = useState(false);
-  const [logos, setLogos] = useState<ClientLogo[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [hasMore, setHasMore] = useState(false);
-
-  const fetchLogos = async () => {
-    try {
-      setError(null);
-      const response = await fetch(`/api/logos?page=${currentPage}`);
-      if (!response.ok) throw new Error('Failed to fetch logos');
-      const data: PaginatedResponse = await response.json();
-      setLogos(prevLogos => currentPage === 1 ? data.logos : [...prevLogos, ...data.logos]);
-      setHasMore(data.pagination.hasMore);
-    } catch (err) {
-      console.error('Error fetching logos:', err);
-      setError('Failed to load logos. Please try again later.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+export default function Gallery() {
+  const { data: session } = useSession();
+  const [logos, setLogos] = useState<Logo[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    async function fetchLogos() {
+      try {
+        const response = await fetch('/api/logos');
+        const data = await response.json();
+        setLogos(data.logos);
+      } catch (error) {
+        console.error('Error fetching logos:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
     fetchLogos();
-  }, [currentPage]);
-
-  const handleLoadMore = () => {
-    setCurrentPage(prev => prev + 1);
-  };
-
-  if (isLoading && currentPage === 1) {
-    return <div>Loading...</div>;
-  }
+  }, []);
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8">Logo Gallery</h1>
-      {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-          {error}
+    <div className="min-h-screen bg-gray-100">
+      <Navbar />
+      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <div className="px-4 sm:px-0">
+          <h1 className="text-2xl font-semibold text-gray-900">Logo Gallery</h1>
+          {session?.user && (
+            <p className="mt-2 text-sm text-gray-600">
+              Welcome back, {session.user.name}! Browse through our collection of logos.
+            </p>
+          )}
         </div>
-      )}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {logos.map(logo => (
-          <LogoCard
-            key={logo.id}
-            logo={logo}
-            onVote={() => !user && setShowAuthModal(true)}
-          />
-        ))}
-      </div>
-      {hasMore && (
-        <div className="mt-8 text-center">
-          <button
-            onClick={handleLoadMore}
-            className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
-            disabled={isLoading}
-          >
-            {isLoading ? 'Loading...' : 'Load More'}
-          </button>
+
+        <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {loading ? (
+            <div className="col-span-full text-center py-12">
+              <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent"></div>
+            </div>
+          ) : logos.length > 0 ? (
+            logos.map((logo) => (
+              <LogoCard
+                key={logo._id}
+                name={logo.name}
+                imageUrl={logo.imageUrl}
+                uploadedAt={logo.uploadedAt || logo.createdAt}
+                rating={logo.averageRating || 0}
+                totalVotes={logo.totalVotes || 0}
+              />
+            ))
+          ) : (
+            <p className="col-span-full text-center text-gray-500 py-12">
+              No logos have been uploaded yet. Be the first to share your logo!
+            </p>
+          )}
         </div>
-      )}
-      {showAuthModal && (
-        <AuthModal
-          onClose={() => setShowAuthModal(false)}
-          onLoginSuccess={() => setShowAuthModal(false)}
-        />
-      )}
+      </main>
     </div>
   );
 } 

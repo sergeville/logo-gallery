@@ -1,67 +1,95 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/app/lib/auth'
+import { authOptions } from '../auth/[...nextauth]/options'
+import connectDB from '@/app/lib/db'
+import { Logo } from '@/app/lib/models/logo'
+import mongoose from 'mongoose'
 import { writeFile } from 'fs/promises'
 import { join } from 'path'
-import crypto from 'crypto'
+import { v4 as uuidv4 } from 'uuid'
+import sharp from 'sharp'
 
 export async function POST(request: NextRequest) {
   try {
-    // Check authentication
     const session = await getServerSession(authOptions)
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    
+    if (!session?.user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      )
     }
 
     const formData = await request.formData()
-    const file = formData.get('file') as File | null
+    const name = formData.get('name') as string
+    const description = formData.get('description') as string || ''
+    const tags = (formData.get('tags') as string || '').split(',').map(tag => tag.trim()).filter(Boolean)
+    const file = formData.get('file') as File
 
-    if (!file) {
-      return NextResponse.json({ error: 'No file uploaded' }, { status: 400 })
+    if (!name || !file) {
+      return NextResponse.json(
+        { error: 'Name and file are required' },
+        { status: 400 }
+      )
     }
 
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      return NextResponse.json({ error: 'File must be an image' }, { status: 400 })
-    }
-
-    // Validate file size (5MB limit)
-    if (file.size > 5 * 1024 * 1024) {
-      return NextResponse.json({ error: 'File size must be less than 5MB' }, { status: 400 })
-    }
-
-    // Generate a unique filename
-    const buffer = await file.arrayBuffer()
-    const fileExt = file.type.split('/')[1]
-    const hash = crypto.createHash('sha256')
-    hash.update(Buffer.from(buffer))
-    hash.update(new Date().toISOString())
-    const filename = `${hash.digest('hex').slice(0, 12)}.${fileExt}`
-
-    // Create uploads directory if it doesn't exist
+    // Generate unique filename
+    const ext = file.name.split('.').pop()
+    const filename = `${uuidv4()}.${ext}`
     const uploadDir = join(process.cwd(), 'public', 'uploads')
+
+    // Save file and get dimensions
     try {
-      await writeFile(join(uploadDir, '.keep'), '')
+      const bytes = await file.arrayBuffer()
+      const buffer = Buffer.from(bytes)
+      
+      // Get image dimensions using sharp
+      const metadata = await sharp(buffer).metadata()
+      const dimensions = {
+        width: metadata.width || 0,
+        height: metadata.height || 0
+      }
+      
+      // Save the file
+      await writeFile(join(uploadDir, filename), buffer)
+
+      await connectDB()
+
+      const logo = new Logo({
+        name,
+        description,
+        imageUrl: `/uploads/${filename}`,
+        thumbnailUrl: `/uploads/${filename}`, // In production, you'd generate a real thumbnail
+        ownerId: session.user.id,
+        ownerName: session.user.name || 'Anonymous',
+        category: 'uncategorized', // Default category
+        tags,
+        dimensions,
+        fileSize: buffer.length,
+        fileType: ext,
+        uploadedAt: new Date(),
+        totalVotes: 0,
+        averageRating: 0,
+        votes: []
+      })
+
+      await logo.save()
+
+      return NextResponse.json(
+        { message: 'Logo uploaded successfully', logo },
+        { status: 201 }
+      )
     } catch (error) {
-      // Directory already exists
+      console.error('Error saving file:', error)
+      return NextResponse.json(
+        { error: 'Error saving file' },
+        { status: 500 }
+      )
     }
-
-    // Save the file
-    await writeFile(
-      join(uploadDir, filename),
-      Buffer.from(await file.arrayBuffer())
-    )
-
-    // Return the URL and user ID
-    return NextResponse.json({ 
-      imageUrl: `/uploads/${filename}`,
-      userId: session.user.id // Include the user ID in the response
-    })
-
   } catch (error) {
-    console.error('Error handling file upload:', error)
+    console.error('Error uploading logo:', error)
     return NextResponse.json(
-      { error: 'Failed to upload file' },
+      { error: 'Internal server error' },
       { status: 500 }
     )
   }

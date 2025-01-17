@@ -1,52 +1,48 @@
-import { MongoClient, Db } from 'mongodb'
+import mongoose from 'mongoose';
 
-let client: MongoClient | null = null;
-let db: Db | null = null;
+const MONGODB_URI = process.env.MONGODB_URI;
 
-export async function connectToDatabase(): Promise<{ client: MongoClient; db: Db }> {
-  if (client && db) {
-    return { client, db };
+if (!MONGODB_URI) {
+  throw new Error('Please define the MONGODB_URI environment variable inside .env.local');
+}
+
+interface CachedConnection {
+  conn: typeof mongoose | null;
+  promise: Promise<typeof mongoose> | null;
+}
+
+let cached: CachedConnection = {
+  conn: null,
+  promise: null,
+};
+
+const opts = {
+  bufferCommands: true,
+};
+
+export default async function connectDB(): Promise<typeof mongoose> {
+  if (cached.conn) {
+    return cached.conn;
   }
 
-  const uri = process.env.MONGODB_URI || 'mongodb://localhost:27017';
-  let dbName: string;
-
-  switch (process.env.NODE_ENV) {
-    case 'development':
-      dbName = 'LogoGalleryDevelopmentDB';
-      break;
-    case 'test':
-      dbName = 'LogoGalleryTestDB';
-      break;
-    case 'production':
-      dbName = 'LogoGalleryDB';
-      break;
-    default:
-      dbName = 'LogoGalleryDevelopmentDB';
+  if (!cached.promise) {
+    cached.promise = mongoose.connect(MONGODB_URI as string, opts);
   }
 
   try {
-    client = await MongoClient.connect(uri);
-    db = client.db(dbName);
-    return { client, db };
-  } catch (error) {
-    console.error('Failed to connect to database:', error);
-    throw error;
+    cached.conn = await cached.promise;
+  } catch (e) {
+    cached.promise = null;
+    throw e;
   }
+
+  return cached.conn;
 }
 
-export async function disconnectFromDatabase(): Promise<void> {
-  if (client) {
-    await client.close();
-    client = null;
-    db = null;
+export async function disconnectDB(): Promise<void> {
+  if (cached.conn) {
+    await cached.conn.disconnect();
+    cached.conn = null;
+    cached.promise = null;
   }
-}
-
-export function getDb(): Db | null {
-  return db;
-}
-
-export function getClient(): MongoClient | null {
-  return client;
 }

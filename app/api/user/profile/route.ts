@@ -1,29 +1,72 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { ObjectId } from 'mongodb';
-import { connectToDatabase } from '@/app/lib/db';
+import connectDB from '@/app/lib/db';
 import { validateUserProfile } from '@/app/lib/validation';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '../../auth/[...nextauth]/options';
+import { User } from '@/app/lib/models/user';
+import { Logo } from '@/app/lib/models/logo';
 
 export async function GET(request: NextRequest) {
   try {
-    const sessionCookie = cookies().get('session');
-    if (!sessionCookie?.value) {
-      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
     }
 
-    const { db } = await connectToDatabase();
-    const user = await db.collection('users').findOne({ _id: new ObjectId(sessionCookie.value) });
+    await connectDB();
 
+    // Get user data
+    const user = await User.findById(session.user.id).select('-password');
+    
     if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+      return NextResponse.json(
+        { error: 'User not found' },
+        { status: 404 }
+      );
     }
 
-    // Remove sensitive data
-    const { password, ...userWithoutPassword } = user as { password?: string } & Record<string, unknown>;
-    return NextResponse.json(userWithoutPassword);
+    // Get user's logos stats
+    const [totalLogos, logosWithVotes] = await Promise.all([
+      Logo.countDocuments({ ownerId: user._id }),
+      Logo.find({ ownerId: user._id }).select('votes')
+    ]);
+
+    // Calculate total votes and average rating
+    let totalVotes = 0;
+    let totalRating = 0;
+
+    logosWithVotes.forEach(logo => {
+      totalVotes += logo.votes.length;
+      logo.votes.forEach((vote: { rating: number }) => {
+        totalRating += vote.rating;
+      });
+    });
+
+    const averageRating = totalVotes > 0 ? totalRating / totalVotes : 0;
+
+    return NextResponse.json({
+      name: user.name,
+      email: user.email,
+      bio: user.bio,
+      location: user.location,
+      website: user.website,
+      joinedDate: user.createdAt,
+      totalLogos,
+      totalVotes,
+      averageRating
+    });
   } catch (error) {
     console.error('Error fetching user profile:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }
 
@@ -34,7 +77,7 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
 
-    const { db } = await connectToDatabase();
+    await connectDB();
     const updateData = await request.json();
 
     // Validate update data
@@ -46,7 +89,7 @@ export async function PUT(request: NextRequest) {
       }, { status: 400 });
     }
 
-    const user = await db.collection('users').findOne({ _id: new ObjectId(sessionCookie.value) });
+    const user = await User.findById(sessionCookie.value);
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
@@ -55,22 +98,17 @@ export async function PUT(request: NextRequest) {
     const { password, role, _id, ...updateFields } = updateData;
     updateFields.updatedAt = new Date();
 
-    const result = await db.collection('users').updateOne(
-      { _id: user._id },
-      { $set: updateFields }
-    );
+    const result = await User.findByIdAndUpdate(
+      user._id,
+      { $set: updateFields },
+      { new: true }
+    ).select('-password');
 
-    if (result.modifiedCount === 0) {
+    if (!result) {
       return NextResponse.json({ error: 'Failed to update user' }, { status: 500 });
     }
 
-    const updatedUser = await db.collection('users').findOne({ _id: user._id });
-    if (!updatedUser) {
-      return NextResponse.json({ error: 'Failed to fetch updated user' }, { status: 500 });
-    }
-
-    const { password: _, ...userWithoutPassword } = updatedUser as { password?: string } & Record<string, unknown>;
-    return NextResponse.json(userWithoutPassword);
+    return NextResponse.json(result);
   } catch (error) {
     console.error('Error updating user profile:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

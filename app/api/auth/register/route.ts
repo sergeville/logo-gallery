@@ -1,87 +1,53 @@
 import { NextResponse } from 'next/server';
-import bcrypt from 'bcrypt';
-import { connectToDatabase } from '@/app/lib/db';
-import { User } from '@/app/lib/types';
-import { 
-  ValidationError, 
-  ConflictError, 
-  DatabaseError,
-  createErrorResponse,
-  createValidationError,
-  createDatabaseError
-} from '@/app/lib/errors';
+import bcrypt from 'bcryptjs';
+import connectDB from '@/app/lib/db';
+import { User } from '@/app/lib/models/user';
+import mongoose from 'mongoose';
 
 export async function POST(request: Request) {
   try {
     const { email, password, name } = await request.json();
 
-    // Validate required fields
     if (!email || !password || !name) {
-      throw createValidationError(
-        !email ? 'email' : !password ? 'password' : 'name',
-        'Email, password, and name are required',
-        { email: !!email, password: !!password, name: !!name }
+      return NextResponse.json(
+        { error: 'Missing required fields' },
+        { status: 400 }
       );
     }
 
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      throw createValidationError('email', 'Invalid email format', { email });
-    }
+    await connectDB();
 
-    // Validate password strength
-    if (password.length < 8) {
-      throw createValidationError('password', 'Password must be at least 8 characters long');
-    }
+    const existingUser = await User.findOne({ email });
 
-    // Validate name length
-    if (name.length < 2 || name.length > 50) {
-      throw createValidationError('name', 'Name must be between 2 and 50 characters', { length: name.length });
-    }
-
-    try {
-      const { db } = await connectToDatabase();
-      const usersCollection = db.collection<User>('users');
-
-      const existingUser = await usersCollection.findOne({ email: email.toLowerCase() });
-      if (existingUser) {
-        throw new ConflictError('Email already registered');
-      }
-
-      const hashedPassword = await bcrypt.hash(password, 10);
-      const newUser: User = {
-        email: email.toLowerCase(),
-        password: hashedPassword,
-        name,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      };
-
-      const result = await usersCollection.insertOne(newUser);
-
-      return new Response(
-        JSON.stringify({
-          success: true,
-          message: 'User registered successfully',
-          userId: result.insertedId,
-          timestamp: new Date().toISOString()
-        }),
-        { 
-          status: 201,
-          headers: { 
-            'Content-Type': 'application/json',
-            'Location': `/api/users/${result.insertedId}`
-          }
-        }
+    if (existingUser) {
+      return NextResponse.json(
+        { error: 'Email already registered' },
+        { status: 400 }
       );
-    } catch (error) {
-      if (error instanceof ConflictError) {
-        throw error;
-      }
-      throw createDatabaseError('user registration', error);
     }
+
+    const hashedPassword = await bcrypt.hash(password, 12);
+
+    const newUser = new User({
+      _id: new mongoose.Types.ObjectId(),
+      email,
+      password: hashedPassword,
+      name,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    });
+
+    await newUser.save();
+
+    return NextResponse.json(
+      { message: 'User created successfully' },
+      { status: 201 }
+    );
   } catch (error) {
-    return createErrorResponse(error);
+    console.error('Registration error:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 } 

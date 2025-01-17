@@ -1,64 +1,29 @@
-import type { AuthOptions } from 'next-auth';
-import CredentialsProvider from 'next-auth/providers/credentials';
-import { connectToDatabase } from './db';
-import { verifyPassword } from '@/app/lib/auth-utils';
+import bcrypt from 'bcryptjs';
+import connectDB from './db';
+import { User } from './models/user';
 
-export const authOptions: AuthOptions = {
-  providers: [
-    CredentialsProvider({
-      name: 'Credentials',
-      credentials: {
-        email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" }
-      },
-      async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
-          throw new Error('Email and password are required');
-        }
+export async function hashPassword(password: string): Promise<string> {
+  return bcrypt.hash(password, 12);
+}
 
-        const { db } = await connectToDatabase();
-        const user = await db.collection('users').findOne({ 
-          email: credentials.email.toLowerCase() 
-        });
+export async function verifyPassword(password: string, hashedPassword: string): Promise<boolean> {
+  return bcrypt.compare(password, hashedPassword);
+}
 
-        if (!user) {
-          throw new Error('Invalid email or password');
-        }
+export async function findUserByEmail(email: string) {
+  await connectDB();
+  return User.findOne({ email });
+}
 
-        const isValid = await verifyPassword(credentials.password, user.password);
-
-        if (!isValid) {
-          throw new Error('Invalid email or password');
-        }
-
-        return {
-          id: user._id.toString(),
-          email: user.email,
-          name: user.name
-        };
-      }
-    })
-  ],
-  session: {
-    strategy: 'jwt'
-  },
-  pages: {
-    signIn: '/auth/signin',
-    signOut: '/auth/signout',
-    error: '/auth/error'
-  },
-  callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        token.id = user.id;
-      }
-      return token;
-    },
-    async session({ session, token }) {
-      if (session.user) {
-        session.user.id = token.id as string;
-      }
-      return session;
-    }
-  }
-}; 
+export async function createUser(email: string, password: string, name: string) {
+  await connectDB();
+  const hashedPassword = await hashPassword(password);
+  const user = new User({
+    email,
+    password: hashedPassword,
+    name,
+    createdAt: new Date(),
+    updatedAt: new Date()
+  });
+  return user.save();
+} 

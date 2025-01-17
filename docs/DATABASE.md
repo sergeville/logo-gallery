@@ -1,206 +1,101 @@
-# Configuration Guide
+# Database Documentation
 
 ## Overview
-The Logo Gallery application uses a modular configuration system with separate settings for each environment:
-- Development (`config/dev/`)
-- Testing (`config/test/`)
-- Production (`config/prod/`)
+The Logo Gallery application uses MongoDB as its primary database. This document outlines the database schema, relationships, and validation rules.
 
-## Configuration Structure
+## Collections
 
-```
-config/
-├── index.ts                # Main configuration entry point
-├── dev/                    # Development environment
-│   ├── index.ts           # Development config aggregator
-│   ├── database.ts        # Database settings
-│   ├── storage.ts         # Storage settings
-│   └── api.ts             # API settings
-├── test/                   # Test environment
-│   ├── index.ts           # Test config aggregator
-│   ├── database.ts        # Test database settings
-│   ├── storage.ts         # Test storage settings
-│   └── testing.ts         # Test-specific settings
-└── prod/                   # Production environment
-    ├── index.ts           # Production config aggregator
-    ├── database.ts        # Production database settings
-    ├── storage.ts         # Production storage settings
-    └── security.ts        # Production security settings
-```
-
-## Environment-Specific Configurations
-
-### Development Environment
-Located in `config/dev/`:
+### Users Collection
 ```typescript
-// database.ts
-export const databaseConfig = {
-  uri: process.env.MONGODB_URI || 'mongodb://localhost:27017/LogoGalleryDevelopmentDB',
-  dbName: 'LogoGalleryDevelopmentDB',
-  options: {
-    retryWrites: true,
-    w: 'majority',
-  }
-};
-
-// storage.ts
-export const storageConfig = {
-  uploadDir: 'uploads/development',
-  maxFileSize: 5 * 1024 * 1024, // 5MB
-  allowedFormats: ['image/png', 'image/jpeg', 'image/svg+xml']
-};
-```
-
-### Test Environment
-Located in `config/test/`:
-```typescript
-// database.ts
-export const databaseConfig = {
-  uri: process.env.MONGODB_URI || 'mongodb://localhost:27017/LogoGalleryTestDB',
-  dbName: 'LogoGalleryTestDB',
-  options: {
-    retryWrites: true,
-    w: 'majority',
-  }
-};
-
-// testing.ts
-export const testingConfig = {
-  cleanupAfterEach: true,
-  seedDataPath: 'test/seed-data',
-  defaultTimeout: 5000
-};
-```
-
-### Production Environment
-Located in `config/prod/`:
-```typescript
-// database.ts
-export const databaseConfig = {
-  uri: process.env.MONGODB_URI,
-  dbName: 'LogoGalleryProductionDB',
-  options: {
-    ssl: true,
-    authSource: 'admin',
-    maxPoolSize: 50
-  }
-};
-
-// security.ts
-export const securityConfig = {
-  rateLimit: {
-    windowMs: 15 * 60 * 1000,
-    max: 100
-  },
-  cors: {
-    origin: process.env.ALLOWED_ORIGINS?.split(',') || [],
-    credentials: true
-  }
-};
-```
-
-## Usage
-
-### Accessing Configuration
-```typescript
-import { getConfig } from '../config';
-
-// Get configuration for current environment
-const config = getConfig();
-
-// Access database configuration
-const db = await MongoClient.connect(config.mongodb.uri, config.mongodb.options);
-```
-
-### Environment Variables
-Each environment has its own `.env` file:
-
-1. Development (`.env.development`):
-```env
-MONGODB_URI=mongodb://localhost:27017/LogoGalleryDevelopmentDB
-NODE_ENV=development
-```
-
-2. Testing (`.env.test`):
-```env
-MONGODB_URI=mongodb://localhost:27017/LogoGalleryTestDB
-NODE_ENV=test
-```
-
-3. Production (`.env.production`):
-```env
-MONGODB_URI=mongodb://your-production-uri/LogoGalleryProductionDB
-NODE_ENV=production
-```
-
-## Best Practices
-
-1. **Configuration Management**
-   - Keep sensitive data in environment variables
-   - Use type-safe configuration objects
-   - Maintain separate configurations per environment
-   - Document all configuration options
-
-2. **Environment Isolation**
-   - Never mix configurations between environments
-   - Use environment-specific settings
-   - Keep production credentials secure
-   - Test with environment-specific data
-
-3. **Development Workflow**
-   - Use development config for local work
-   - Use test config for automated testing
-   - Never use production config locally
-   - Keep environment files in version control
-
-4. **Security**
-   - Never commit real credentials
-   - Use templates for sensitive files
-   - Maintain separate secrets per environment
-   - Document security requirements
-
-## Adding New Configuration
-
-1. Create configuration file in appropriate environment directory:
-```typescript
-// config/dev/newfeature.ts
-export const newFeatureConfig = {
-  // ... configuration options
-};
-```
-
-2. Import and add to environment index:
-```typescript
-// config/dev/index.ts
-import { newFeatureConfig } from './newfeature';
-
-export const developmentConfig = {
-  // ... existing config
-  newFeature: newFeatureConfig
-};
-```
-
-3. Update types if necessary:
-```typescript
-// config/types.ts
-export interface NewFeatureConfig {
-  // ... type definitions
+{
+  _id: ObjectId,
+  name: string,          // Display name
+  email: string,         // Unique email address
+  image: string?,        // Profile image URL
+  emailVerified: Date?,  // Email verification timestamp
+  createdAt: Date,      // Account creation date
+  updatedAt: Date       // Last update timestamp
 }
 ```
 
-## Troubleshooting
+### Logos Collection
+```typescript
+{
+  _id: ObjectId,
+  name: string,          // Logo name (3-100 chars)
+  description: string,   // Logo description (max 1000 chars)
+  imageUrl: string,      // Original image URL
+  thumbnailUrl: string,  // Thumbnail image URL
+  tags: string[],        // Array of tags (1-50 tags)
+  ownerId: ObjectId,     // Reference to Users collection
+  votes: number,         // Total number of votes
+  rating: number,        // Average rating (0-5)
+  dimensions: {
+    width: number,
+    height: number
+  },
+  createdAt: Date,
+  updatedAt: Date
+}
+```
 
-1. **Configuration Loading**
-   - Verify correct environment is set
-   - Check .env file exists and is loaded
-   - Validate configuration structure
+### Votes Collection
+```typescript
+{
+  _id: ObjectId,
+  logoId: ObjectId,      // Reference to Logos collection
+  userId: ObjectId,      // Reference to Users collection
+  rating: number,        // Rating value (0-5)
+  createdAt: Date,
+  updatedAt: Date
+}
+```
 
-2. **Environment Issues**
-   - Confirm NODE_ENV is set correctly
-   - Verify environment-specific settings
-   - Check file permissions
+## Indexes
 
-3. **Type Errors**
-   - Ensure all configs match interface
-   - Check for missing properties
-   - Validate configuration values 
+### Users Collection
+- `email`: Unique index
+- `createdAt`: Index for sorting
+
+### Logos Collection
+- `ownerId`: Index for querying user's logos
+- `tags`: Index for tag-based searches
+- `createdAt`: Index for sorting
+- `rating`: Index for sorting
+- Compound index on `[tags, rating]` for filtered sorting
+
+### Votes Collection
+- Compound unique index on `[logoId, userId]` to prevent duplicate votes
+- `createdAt`: Index for sorting
+
+## Relationships
+- One-to-Many: User -> Logos (one user can have many logos)
+- Many-to-Many: Users <-> Logos through Votes (users can vote on multiple logos)
+
+## Validation Rules
+
+### Users
+- Email must be unique and follow standard email format
+- Name must be 3-50 characters long
+- Profile image URL must be a valid URL
+
+### Logos
+- Name: 3-100 characters, alphanumeric with spaces/dash/underscore
+- Description: Maximum 1000 characters
+- Tags: 1-50 tags, each 2-30 characters
+- Rating must be between 0 and 5
+- Image URLs must be valid URLs
+- Dimensions must be positive numbers
+
+### Votes
+- Rating must be between 0 and 5
+- One vote per user per logo
+
+## Performance Considerations
+- Indexes are optimized for common queries like:
+  - Fetching logos by tags
+  - Sorting by rating or date
+  - Looking up user's logos
+  - Checking for existing votes
+- Compound indexes support efficient filtering and sorting operations
+- Regular archiving of old votes may be necessary for performance 

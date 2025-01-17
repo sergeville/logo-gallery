@@ -161,22 +161,62 @@ logo-gallery/
 
 ## 🖼 Gallery Implementation
 
-1. **Logo Display**
+1. **Main Gallery**
+   - Displays all logos from all users
+   - Shows owner name for each logo
    - Responsive grid layout
+   - Infinite scroll pagination
+   - Search and filter capabilities
+   - Sort by date or rating
+
+2. **Personal Gallery (My Logos)**
+   - Route: `/mylogos`
+   - Shows only logged-in user's logos
+   - Identical layout to main gallery
+   - Personal upload management
+   - Protected route (requires authentication)
+
+3. **Common Features**
    - Lazy loading images
    - Skeleton loading states
    - Error boundaries
+   - 12 items per page
+   - Maintains filters and sort state
+   - Search across name/description/tags
 
-2. **Filtering & Search**
+4. **Filtering & Search**
    - By category
    - By tag
-   - By user
+   - By owner name
    - Full-text search
+   - Date range
+   - Rating range
 
-3. **Pagination**
-   - Server-side
-   - 12 items per page
-   - Maintains filters
+## 🎯 Navigation Structure
+
+1. **Main Navigation**
+   - Logo Gallery (Home)
+   - Gallery (All logos)
+   - My Logos (Authenticated users only)
+   - Upload Logo (Authenticated users only)
+
+2. **User Menu**
+   - Username display
+   - Sign Out button
+   - Sign In link (unauthenticated users)
+
+3. **Styling**
+   - Background: #0f1524 (dark navy)
+   - Height: h-12
+   - Text color: text-gray-300
+   - Hover: text-white
+   - Font size: text-sm
+   - Spacing: space-x-6
+
+4. **Responsive Behavior**
+   - Collapses to hamburger menu on mobile
+   - Maintains visibility of key actions
+   - Preserves authentication state
 
 ## 🎯 Performance Optimizations
 
@@ -413,3 +453,203 @@ logo-gallery/
 6. Use consistent spacing
 7. Implement smooth transitions
 8. Follow established color patterns 
+
+## 📸 UI Reference Screenshots
+
+### Gallery View
+![Gallery Page](screenshots/gallery-view.png)
+
+#### Layout Components
+1. **Navigation Bar** (Top)
+   - Dark navy background (`bg-[#0f1524]`)
+   - Height: `h-12`
+   - Left section: Logo Gallery, Gallery, My Logos
+   - Right section: Upload Logo, Username, Sign Out
+   - Text color: `text-gray-300` with `hover:text-white`
+
+2. **Page Header**
+   - Title: "Logo Gallery"
+   - Subtitle: "Discover and share beautiful logos from around the world"
+   - Upload Logo button (Primary blue)
+
+3. **Search & Filter Bar**
+   - Full-width search input with icon
+   - Sort options: Date/Rating
+   - Sort direction toggle
+
+4. **Logo Grid**
+   - 3-column responsive grid
+   - Logo cards with:
+     - Image preview
+     - Logo name
+     - Owner name
+     - Rating display
+     - Upload timestamp
+   - Infinite scroll pagination
+   - 12 items per page
+
+#### States Displayed
+- Authenticated user view
+- Loaded content state
+- Grid layout with proper spacing
+- Consistent card sizing
+- Clear visual hierarchy
+
+#### Interactive Elements
+- Search input for filtering logos
+- Date/Rating sort dropdown
+- Sort direction toggle
+- Upload Logo button
+- Individual logo cards
+- Navigation menu items
+
+To capture additional screenshots:
+1. Sign-in modal with blur
+2. Upload form view
+3. My Logos personal gallery
+4. Mobile responsive layout
+5. Empty state views
+6. Error states 
+
+### Upload Form View
+![Upload Form](screenshots/upload-form.png)
+
+#### Layout Components
+1. **Navigation Bar** (Top)
+   - Dark navy background (`bg-[#0f1524]`)
+   - Height: `h-12`
+   - Left section: Logo Gallery, Gallery, My Logos
+   - Right section: Upload Logo, Username, Sign Out
+   - Text color: `text-gray-300` with `hover:text-white`
+
+2. **Page Header**
+   - Title: "Upload Your Logo"
+   - Clean, centered layout
+   - Font size: `text-2xl`
+   - Margin bottom: `mb-8`
+
+3. **Upload Form**
+   - Form fields:
+     - Logo Name (text input)
+     - Description (textarea)
+     - Tags (comma separated text input)
+     - Logo File (file upload dropzone)
+   - Input styling:
+     - White background
+     - Rounded corners (`rounded-md`)
+     - Consistent padding (`px-3 py-2`)
+     - Light border
+   - File Upload Area:
+     - Dashed border (`border-dashed`)
+     - Center-aligned content
+     - Upload icon
+     - "Upload a file or drag and drop" text
+     - File type hint: "PNG, JPG, SVG up to 5MB"
+
+4. **Submit Button**
+   - Primary blue background (`bg-blue-600`)
+   - Full width (`w-full`)
+   - White text
+   - Rounded corners
+   - Hover effect (`hover:bg-blue-700`)
+
+#### States
+- Empty form (initial state)
+- File hover/drag state
+- File selected state
+- Uploading state
+- Success/Error states
+
+#### Responsive Behavior
+- Form maintains readable width on all screens
+- Max width container for larger screens
+- Consistent padding and spacing
+- Vertical layout on mobile
+
+### My Logos View
+![My Logos Page](screenshots/my-logos-view.png)
+
+#### Layout Components
+1. **Navigation Bar** (Top)
+   - Dark navy background (`bg-[#0f1524]`)
+   - Height: `h-12`
+   - Left section: Logo Gallery, Gallery, My Logos
+   - Right section: Upload Logo, Test User, Sign Out
+   - Text color: `text-gray-300` with `hover:text-white`
+
+2. **Page Header**
+   - Title: "My Logos"
+   - Subtitle: "Manage and organize your uploaded logos"
+   - Upload Logo button (Primary blue, `bg-blue-600`)
+   - Margin bottom: `mb-8`
+
+3. **Search & Filter Bar**
+   - Full-width search input with placeholder "Search your logos..."
+   - Sort options dropdown (Date)
+   - Filter icon button
+   - Consistent spacing between elements
+
+4. **Logo Grid**
+   - 3-column responsive grid
+   - Logo cards with:
+     - Image preview (aspect ratio preserved)
+     - Logo name
+     - Owner name (Test User)
+     - Rating display (0.0)
+     - Upload timestamp (e.g., "less than a minute ago")
+   - Gap between cards: `gap-6`
+   - Responsive breakpoints for different screen sizes
+
+#### States Displayed
+- Authenticated user view
+- Loaded content state with multiple logos
+- Active search/filter interface
+- Clear visual hierarchy
+
+#### Interactive Elements
+- Search input for filtering personal logos
+- Date sort dropdown
+- Filter toggle
+- Upload Logo button
+- Individual logo cards
+- Navigation menu items
+
+### Home/Logo Gallery View
+![Home Page](screenshots/home-view.png)
+
+#### Layout Components
+1. **Navigation Bar** (Top)
+   - Dark navy background (`bg-[#0f1524]`)
+   - Height: `h-12`
+   - Left section: Logo Gallery, Gallery, My Logos
+   - Right section: Upload Logo, Test User, Sign Out
+   - Text color: `text-gray-300` with `hover:text-white`
+
+2. **Welcome Section**
+   - Title: "Welcome to Logo Gallery"
+   - Subtitle: "Discover and share beautiful logos from around the world"
+   - Center-aligned text
+   - Margin bottom: `mb-8`
+
+3. **Latest Uploads Section**
+   - Title: "Latest Uploads"
+   - Personalized welcome message: "Welcome back, Test User!"
+   - Clean typography with proper spacing
+   - Centered layout with responsive width
+
+4. **Empty State**
+   - Large empty area below latest uploads section
+   - White background (`bg-white`)
+   - Full viewport height (`min-h-screen`)
+
+#### States Displayed
+- Authenticated user view
+- Welcome state with personalized message
+- Clean, minimal layout
+- Clear visual hierarchy
+
+#### Interactive Elements
+- Navigation menu items
+- User profile section
+- Sign out button
+- Upload Logo button

@@ -1,5 +1,6 @@
 import { Suspense } from 'react';
 import { getServerSession } from 'next-auth';
+import { authOptions } from './api/auth/[...nextauth]/options';
 import Navbar from './components/Navbar';
 import LogoCard from './components/LogoCard';
 import { Logo } from './lib/models/logo';
@@ -11,20 +12,35 @@ async function getLogos() {
 }
 
 export default async function Home() {
-  const session = await getServerSession();
+  const session = await getServerSession(authOptions);
   const logos = await getLogos();
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <Navbar />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-heading-1 font-bold text-gray-900">
-            Your Logo Gallery
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
+            Welcome to Logo Gallery
           </h1>
-          <p className="text-gray-600">
-            Welcome back, {session?.user?.email || 'Guest'}! Here are your logos.
+          <p className="text-lg text-gray-600 dark:text-gray-300">
+            Discover and share beautiful logos from around the world
           </p>
+        </div>
+
+        <div className="flex justify-between items-center mb-8">
+          <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">
+            Latest Uploads
+          </h2>
+          {session?.user ? (
+            <p className="text-gray-600 dark:text-gray-300">
+              Welcome back, {session.user.name || 'User'}!
+            </p>
+          ) : (
+            <p className="text-gray-600 dark:text-gray-300">
+              Sign in to upload and vote on logos
+            </p>
+          )}
         </div>
 
         <Suspense fallback={<div>Loading logos...</div>}>

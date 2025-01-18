@@ -1,35 +1,23 @@
 # Logo Gallery
 
-A modern web application for managing and sharing logo designs with comprehensive validation, testing, and database integration.
+A modern web application for discovering and sharing beautiful logos. Built with Next.js, TypeScript, and Tailwind CSS.
 
 ## Features
 
-- User authentication with NextAuth.js
-- User profile management
-- Logo upload and management
-- Voting system with persistent tracking
-- Responsive image handling with fallbacks
-- Modern UI with horizontal navigation
-- Comprehensive validation
-- MongoDB integration
-- Extensive test coverage
-
-## Tech Stack
-
-- Next.js 14
-- TypeScript
-- MongoDB with Mongoose
-- NextAuth.js for authentication
-- Tailwind CSS for styling
-- Jest for testing
-- Image optimization with next/image
+- 🔐 Secure authentication with NextAuth.js
+- 🌙 Dark mode support
+- 📤 Logo upload and management
+- ⭐ Rating system
+- 🔍 Search and filter capabilities
+- 🏷️ Tag-based organization
+- ∞ Infinite scroll gallery
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js (v14 or higher)
-- MongoDB (v4.4 or higher)
+- Node.js 18+ 
+- MongoDB database
 - npm or yarn
 
 ### Installation
@@ -45,101 +33,51 @@ cd logo-gallery
 npm install
 ```
 
-3. Set up environment variables:
-```bash
-cp .env.example .env
-```
-Edit `.env` and set your MongoDB connection string:
-```
-MONGODB_TEST_URI=mongodb://localhost:27017/LogoGalleryTest
+3. Create a `.env.local` file with your environment variables:
+```env
+MONGODB_URI=your_mongodb_connection_string
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=your_nextauth_secret
 ```
 
-4. Run tests:
+4. Run the development server:
 ```bash
-npm run test:seed
+npm run dev
 ```
+
+5. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ## Project Structure
 
 ```
 logo-gallery/
-├── app/                     # Next.js app directory
-│   ├── api/                # API routes
-│   ├── components/         # React components
-│   ├── lib/                # Utility functions
-│   └── types/              # TypeScript types
-├── docs/                   # Documentation
-│   ├── DATABASE.md        # Database schema and structure
-│   ├── DESIGN.md          # Application design and architecture
-│   ├── mongodb-setup.md   # MongoDB setup guide
-│   ├── test-data.md       # Test data documentation
-│   ├── database-testing.md # Database testing guide
-│   ├── VALIDATION_CHECKLIST.md # Input validation rules
-│   └── TODO.md            # Development roadmap
-├── public/                 # Static assets
-└── README.md              # This file
+├── app/                    # Next.js 13+ app directory
+│   ├── api/               # API routes
+│   ├── auth/              # Authentication pages
+│   ├── components/        # Reusable components
+│   ├── gallery/           # Gallery pages
+│   └── upload/           # Upload functionality
+├── public/                # Static files
+└── types/                # TypeScript type definitions
 ```
 
-## Documentation
+## Available Scripts
 
-The project includes comprehensive documentation in the `docs` directory:
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm start` - Start production server
 
-- **[Database Schema](docs/DATABASE.md)**: Database structure, relationships, and validation rules
-- **[Design Document](docs/DESIGN.md)**: Application architecture, design decisions, and patterns
-- **[MongoDB Setup](docs/mongodb-setup.md)**: Step-by-step guide for setting up MongoDB
-- **[Test Data](docs/test-data.md)**: Documentation for test data generation and usage
-- **[Database Testing](docs/database-testing.md)**: Guide for database testing procedures
-- **[Validation Checklist](docs/VALIDATION_CHECKLIST.md)**: Complete list of input validation rules
-- **[Development Roadmap](docs/TODO.md)**: Planned features and improvements
+## Git Tags
 
-## Testing
-
-The project includes comprehensive tests covering:
-- Input validation
-- Data relationships
-- Edge cases
-- Error conditions
-- Performance with large datasets
-
-Run tests with:
-```bash
-npm run test:seed
-```
-
-Current test coverage:
-- Statements: 94.71%
-- Branches: 84.71%
-- Functions: 94.48%
-- Lines: 94.52%
-
-## Validation Rules
-
-### Users
-- Username: 3-50 chars, alphanumeric with dash/underscore
-- Email: Standard email format
-- Profile:
-  - Bio: Max 500 chars
-  - Location: Max 100 chars
-  - Skills: Max 20 items
-
-### Logos
-- Name: 3-100 chars, alphanumeric with spaces/dash/underscore
-- Tags: 1-50 tags, each 2-30 chars
-- Rating: 0-5 range
-- Description: Max 1000 chars
-
-### Relationships
-- Comments: Max 1000 chars, max 10 mentions
-- Collections: Max 50 per user, max 1000 logos per collection
-- Favorites: Max 100 per user
+- `v1.0.0-auth` - Initial release with authentication
+- Main features implemented: Authentication, Dark Mode, Basic Layout
 
 ## Contributing
 
-1. Fork the repository
-2. Create your feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
+1. Create a feature branch (`git checkout -b feature/amazing-feature`)
+2. Commit your changes (`git commit -m 'feat: add amazing feature'`)
+3. Push to the branch (`git push origin feature/amazing-feature`)
+4. Open a Pull Request
 
 ## License
 

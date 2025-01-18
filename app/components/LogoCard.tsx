@@ -15,6 +15,8 @@ interface LogoCardProps {
   isRadioStyle?: boolean
   priority?: boolean
   ownerName: string
+  description?: string
+  tags?: string[]
 }
 
 export default function LogoCard({ 
@@ -27,7 +29,9 @@ export default function LogoCard({
   onVote,
   isRadioStyle = false,
   priority = false,
-  ownerName
+  ownerName,
+  description,
+  tags = []
 }: LogoCardProps) {
   const handleVote = () => {
     if (onVote) {
@@ -84,6 +88,23 @@ export default function LogoCard({
             <span>{ownerName}</span>
           </div>
         </div>
+        {description && (
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-2">
+            {description}
+          </p>
+        )}
+        {tags.length > 0 && (
+          <div className="flex flex-wrap gap-1 mb-3">
+            {tags.map((tag, index) => (
+              <span
+                key={index}
+                className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200"
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
+        )}
         <div className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-300">
           <div className="flex items-center space-x-1">
             <Star

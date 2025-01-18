@@ -40,7 +40,7 @@ export default function UploadPage() {
         throw new Error('Failed to upload logo')
       }
 
-      router.push('/gallery')
+      router.push('/mylogos')
     } catch (error) {
       setError('Failed to upload logo. Please try again.')
     } finally {

@@ -653,3 +653,60 @@ To capture additional screenshots:
 - User profile section
 - Sign out button
 - Upload Logo button
+
+## Home Page
+
+### Layout Components
+
+#### Navigation Bar
+- Background: `bg-[#0f1524]`
+- Height: `h-12`
+- Items:
+  - Logo Gallery (left)
+  - Gallery link (center)
+  - Sign In button (right, only shown when not authenticated)
+- Text color: `text-gray-300` with `hover:text-white`
+
+#### Welcome Section
+- Title: "Welcome to Logo Gallery"
+  - Font size: `text-4xl`
+  - Font weight: `font-bold`
+  - Text color: `text-gray-900`
+  - Margin bottom: `mb-4`
+- Subtitle: "Discover and share beautiful logos from around the world"
+  - Font size: `text-xl`
+  - Text color: `text-gray-600`
+  - Margin bottom: `mb-8`
+
+#### Latest Uploads Section
+- Title: "Latest Uploads"
+  - Font size: `text-2xl`
+  - Font weight: `font-semibold`
+  - Margin bottom: `mb-4`
+- Unauthenticated State Message: "Sign in to upload and share your logos"
+  - Text color: `text-gray-600`
+  - Font size: `text-lg`
+
+### States
+1. Unauthenticated View (Default)
+   - Shows basic navigation
+   - Displays welcome message and subtitle
+   - Prompts user to sign in for uploading
+   - Sign In button visible in nav
+
+2. Authenticated View
+   - Additional navigation options
+   - Personalized welcome message
+   - Upload functionality available
+   - User menu replaces Sign In button
+
+### Responsive Behavior
+- Maintains centered layout on all screen sizes
+- Text sizes adjust for mobile
+- Navigation collapses to hamburger menu on small screens
+
+### UI Reference Screenshots
+![Home Page - Unauthenticated](screenshots/home-unauthenticated.png)
+- Shows the default view for visitors
+- Clean, minimal layout focusing on the welcome message
+- Clear call-to-action for signing in

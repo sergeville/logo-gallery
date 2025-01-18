@@ -1,71 +1,94 @@
 # Sign-in Page Design Documentation
 
-## Layout & Structure
+## Sign In Page Design
 
 ### Modal Container
-- Fixed positioning with z-index: 50
-- Backdrop color: #0f1524 with 50% opacity
-- Backdrop blur effect: backdrop-blur-md
-- Click outside to close
-- Body scroll lock when open
-- Preserves background page visibility
+- Position: Fixed, centered on screen
+- Background: Semi-transparent gray backdrop (`bg-gray-500/50`)
+- Backdrop blur effect (`backdrop-blur-md`)
+- Full screen coverage (`inset-0`)
+- Flex container for centering content
 
-### Form Container
-- Max-width: 400px
-- Centered horizontally with `mx-auto`
-- Horizontal padding: px-8
-- Background color: #1a1f36 with 50% opacity
-- Border radius: rounded-lg
-- Shadow: shadow-xl
+### Sign In Form
+- Background: Dark slate (`bg-slate-700`)
+- Width: Max width of 400px
+- Padding: `p-6`
+- Border radius: `rounded-lg`
+- Box shadow: `shadow-xl`
 
-### Header
-- Text: "Sign in to your account"
-- Font size: 2xl
-- Font weight: medium
-- Color: white
-- Margin bottom: mb-8
-- Text alignment: center
+### Typography
+- Title: "Sign in to your account"
+  - Font size: `text-2xl`
+  - Font weight: `font-semibold`
+  - Color: `text-white`
+  - Margin bottom: `mb-6`
+  - Text align: Center
 
-### Input Fields
-- Type: email/password
+### Form Fields
+1. Email Input
+   - Label: "Email address"
+   - Background: Dark (`bg-gray-700`)
+   - Text color: White
+   - Padding: `px-3 py-2`
+   - Border radius: `rounded-md`
+   - Full width
+   - Placeholder styling: `placeholder:text-gray-400`
+
+2. Password Input
+   - Label: "Password"
+   - Background: Dark (`bg-gray-700`)
+   - Text color: White
+   - Padding: `px-3 py-2`
+   - Border radius: `rounded-md`
+   - Full width
+   - Margin top: `mt-4`
+
+### Sign In Button
+- Background: Blue (`bg-blue-600`)
+- Hover: Darker blue (`hover:bg-blue-700`)
+- Text color: White
+- Font weight: Medium
 - Full width
-- Padding: px-4 py-3
-- Background color: rgba(26, 31, 54, 0.8)
-- Text color: white
-- Placeholder color: gray-400
-- Border radius: rounded-md
-- Focus state: 
-  - No outline
-  - Ring width: 2
-  - Ring color: blue-500
+- Padding: `py-2`
+- Border radius: `rounded-md`
+- Margin top: `mt-6`
 
-### Buttons
-Common styles for all buttons:
-- Full width
-- Padding: px-4 py-3
-- Background color: rgba(26, 31, 54, 0.8)
-- Hover background: rgba(42, 47, 69, 0.8)
-- Border radius: rounded-md
-- Text color: white
-- Font size: 15px
-- Font weight: medium
-- Transition: colors
+### Additional Elements
+- Sign up link
+  - Text: "Don't have an account? Sign up"
+  - Color: Blue (`text-blue-500`)
+  - Hover: Brighter blue (`hover:text-blue-400`)
+  - Margin top: `mt-4`
+  - Text align: Center
 
-### Sign-up Link
-- Margin top: mt-6
-- Text size: sm
-- "Don't have an account?" color: gray-400
-- "Sign up" link color: blue-500
-- Hover color: blue-400
-- Font weight for link: medium
+### States
+1. Default State
+   - Clean form with empty fields
+   - Visible labels
+   - Primary button enabled
 
-## Functionality
-- Supports both modal and full-page display modes
-- Email/password authentication
-- Proper form validation and error states
-- Callback URL support for redirects
-- Responsive design for all screen sizes
-- Background page remains visible but blurred
-- Closes on successful authentication
-- Closes on outside click
-- Maintains scroll position of background page 
+2. Focus State
+   - Input highlight on focus
+   - Clear focus rings for accessibility
+
+3. Error State
+   - Red border on invalid fields
+   - Error message below field
+   - Form-level error messages
+
+4. Loading State
+   - Button loading spinner
+   - Disabled form inputs
+
+### Accessibility
+- Proper ARIA labels
+- Keyboard navigation support
+- Error announcements
+- Focus management
+- Color contrast compliance
+
+### Responsive Behavior
+- Maintains modal width on larger screens
+- Full width on mobile with proper padding
+- Adjusts padding and spacing for smaller screens
+- Maintains readable text sizes 

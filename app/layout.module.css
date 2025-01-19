@@ -1,0 +1,12 @@
+/* Base styles */
+.layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Dark mode styles */
+:global(.dark) .layout {
+  background-color: rgb(17, 24, 39);
+  color: white;
+} 

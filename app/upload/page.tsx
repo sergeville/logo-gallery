@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/app/hooks/useAuth'
 import Image from 'next/image'
+import { AuthModal } from '@/app/components/AuthModal'
 
 export default function UploadPage() {
   const router = useRouter()
@@ -20,6 +21,7 @@ export default function UploadPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [uploadType, setUploadType] = useState<'file' | 'url'>('file')
+  const [showAuthModal, setShowAuthModal] = useState(false)
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -57,7 +59,7 @@ export default function UploadPage() {
 
     // Check auth after loading is complete
     if (!user?.email) {
-      router.push('/auth/signin')
+      setShowAuthModal(true)
       return
     }
 
@@ -80,6 +82,10 @@ export default function UploadPage() {
 
         if (!uploadResponse.ok) {
           const errorData = await uploadResponse.json()
+          if (uploadResponse.status === 401) {
+            setShowAuthModal(true)
+            return
+          }
           throw new Error(errorData.error || 'Unable to upload the image. Please try again or choose a different file.')
         }
 
@@ -108,7 +114,7 @@ export default function UploadPage() {
       if (!response.ok) {
         const errorData = await response.json()
         if (response.status === 401) {
-          router.push('/auth/signin')
+          setShowAuthModal(true)
           return
         } else if (response.status === 403) {
           throw new Error('You do not have permission to upload logos.')
@@ -123,7 +129,7 @@ export default function UploadPage() {
       }
 
       // Redirect to profile page after successful upload
-      window.location.href = '/profile'
+      router.push('/profile')
     } catch (err) {
       console.error('Error uploading logo:', err)
       setError(
@@ -198,7 +204,8 @@ export default function UploadPage() {
             value={formData.name}
             onChange={handleChange}
             required
-            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
+            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600 dark:placeholder-gray-400"
+            placeholder="Enter logo name"
           />
         </div>
 
@@ -213,7 +220,8 @@ export default function UploadPage() {
             onChange={handleChange}
             required
             rows={4}
-            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
+            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600 dark:placeholder-gray-400"
+            placeholder="Enter logo description"
           />
         </div>
 
@@ -228,7 +236,8 @@ export default function UploadPage() {
             value={formData.url}
             onChange={handleChange}
             required={!selectedFile}
-            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
+            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600 dark:placeholder-gray-400"
+            placeholder="https://example.com"
           />
         </div>
 
@@ -270,7 +279,7 @@ export default function UploadPage() {
                 accept="image/*"
                 onChange={handleFileSelect}
                 required={uploadType === 'file'}
-                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
+                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600 dark:placeholder-gray-400"
               />
             </div>
           ) : (
@@ -286,7 +295,7 @@ export default function UploadPage() {
                 onChange={handleChange}
                 required={uploadType === 'url'}
                 placeholder="https://example.com/logo.png"
-                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
+                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600 dark:placeholder-gray-400"
               />
             </div>
           )}
@@ -317,7 +326,7 @@ export default function UploadPage() {
             value={formData.tags}
             onChange={handleChange}
             placeholder="design, minimalist, modern"
-            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
+            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600 dark:placeholder-gray-400"
           />
         </div>
 
@@ -342,6 +351,15 @@ export default function UploadPage() {
           )}
         </button>
       </form>
+      {showAuthModal && (
+        <AuthModal 
+          onClose={() => setShowAuthModal(false)}
+          onLoginSuccess={() => {
+            setShowAuthModal(false)
+            router.refresh()
+          }}
+        />
+      )}
     </div>
   )
 } 

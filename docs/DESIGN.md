@@ -198,7 +198,81 @@ logo-gallery/
    - Bundle optimization
    - Tree shaking
 
+## 📸 UI Screenshots
+
+### Homepage (Not Signed In)
+![Homepage](./images/homepage.png)
+
+The homepage features:
+- Clean, dark navy background (`bg-[#0A1A2F]`)
+- Modern navigation bar with:
+  - Logo Gallery branding with development environment indicator
+  - Main navigation links (Gallery, Vote)
+  - Sign In button (primary blue, opens modal)
+  - Dark mode toggle
+- Centered content layout with:
+  - "Welcome to Logo Gallery" main heading
+  - "Discover and share beautiful logos from around the world" subtitle
+  - Latest Uploads section with sign-in prompt
+  - Primary call-to-action: "Sign in to Get Started" button (redirects to `/api/auth/signin`)
+- Authentication Entry Points:
+  1. Navigation bar "Sign In" button: Opens a modal overlay
+  2. Center "Sign in to Get Started" button: Redirects to the authentication page
+- Consistent typography using Inter font
+- Responsive design that adapts to all screen sizes
+
+### Homepage (Signed In)
+![Homepage Signed In](./images/homepage-signed-in.png)
+
+The homepage features:
+- Clean, dark navy background (`bg-[#0A1A2F]`)
+- Modern navigation bar with:
+  - Logo Gallery branding with development environment indicator
+  - Main navigation links (Gallery, Vote)
+  - Upload Logo button (primary blue)
+  - User controls (Test User, Logout)
+  - Dark mode toggle
+- Centered content layout with:
+  - "Welcome to Logo Gallery" main heading
+  - "Discover and share beautiful logos from around the world" subtitle
+  - Latest Uploads section with personalized welcome message
+  - "Welcome back, Test User!" greeting
+- Consistent typography using Inter font
+- Responsive design that adapts to all screen sizes
+
+### Gallery
+![Gallery](./images/gallery.png)
+*Logo gallery with grid layout and search functionality*
+
+### Upload Page
+![Upload Page](./images/UploadLogo.png)
+
+The upload page features:
+- Clean, dark mode interface with proper contrast
+- Form fields for:
+  - Logo Name (required)
+  - Description (required)
+  - Logo URL (website or source)
+  - Image upload with two options:
+    - File upload with drag-and-drop support
+    - Direct URL input
+  - Tags (comma-separated)
+- Real-time image preview
+- Upload progress indicator
+- Validation feedback
+- Responsive layout that adapts to screen size
+- Authentication check with modal prompt if not signed in
+- Clear error messaging and loading states
+- File size limit (5MB) and type validation
+- Dark mode optimized with proper text contrast and visibility
+
+### Sign In Modal
+![Sign In](./images/signin.png)
+*Sign in modal with blur effect overlay*
+
 ## 🎨 Color Palette
+
+![Color Palette](./images/colors.png)
 
 ### Primary Colors
 - Primary Blue: `#2563eb` - Used for primary actions, links, and highlights
@@ -220,7 +294,7 @@ logo-gallery/
 - Gray 200: `#e5e7eb` - Background accents
 - Gray 100: `#f3f4f6` - Light mode hover states
 
-## 📝 Typography
+## 📏 Typography
 
 ### Font Family
 - Primary: `Inter` - Modern, clean sans-serif font for all text
@@ -413,3 +487,22 @@ logo-gallery/
 6. Use consistent spacing
 7. Implement smooth transitions
 8. Follow established color patterns 
+
+## 📏 Layout Examples
+
+### Desktop Layout (>1024px)
+![Desktop Layout](./images/layout-desktop.png)
+*3-column grid layout for desktop screens*
+
+### Tablet Layout (640px-1024px)
+![Tablet Layout](./images/layout-tablet.png)
+*2-column grid layout for tablet screens*
+
+### Mobile Layout (<640px)
+![Mobile Layout](./images/layout-mobile.png)
+*Single column layout for mobile screens*
+
+## 🔤 Typography Examples
+
+![Typography Scale](./images/typography.png)
+*Visual representation of typography scale* 

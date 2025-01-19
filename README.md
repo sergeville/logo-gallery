@@ -124,3 +124,56 @@ Current test coverage:
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Implementation Details
+
+### Homepage (`app/page.tsx`)
+The homepage is implemented as a client-side component with the following features:
+
+- **Authentication State Management**
+  ```typescript
+  const { user, loading } = useAuth();
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  ```
+
+- **Conditional Rendering**
+  - Shows loading skeleton while auth state is being determined
+  - Displays personalized content for authenticated users
+  - Shows sign-in prompt for guests
+
+- **Authentication Modal**
+  - Triggered by "Sign In to Get Started" button
+  - Handles both sign-in and registration
+  - Provides feedback during authentication process
+
+### Authentication Flow
+1. **Initial State**
+   - User lands on homepage
+   - Auth state is checked via `useAuth` hook
+   - Loading skeleton shown during check
+
+2. **Guest Experience**
+   - Welcome message with app description
+   - Sign-in prompt in Latest Uploads section
+   - Modal-based authentication flow
+
+3. **Authenticated Experience**
+   - Personalized welcome message
+   - Quick access to Upload and Gallery features
+   - Session management via NextAuth.js
+
+### Key Components
+- **AuthModal**: Handles user authentication
+- **useAuth Hook**: Manages authentication state
+- **Layout**: Provides consistent structure
+- **Navigation**: Adapts to auth state
+
+### State Management
+- Client-side state for modal visibility
+- Server-side session management
+- Loading states for smooth transitions
+
+### Error Handling
+- Form validation in auth modal
+- Loading state management
+- Graceful fallbacks for network issues

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/app/lib/auth'
-import { writeFile } from 'fs/promises'
+import { writeFile, mkdir } from 'fs/promises'
 import { join } from 'path'
 import crypto from 'crypto'
 
@@ -30,18 +30,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'File size must be less than 5MB' }, { status: 400 })
     }
 
-    // Generate a unique filename
-    const buffer = await file.arrayBuffer()
-    const fileExt = file.type.split('/')[1]
-    const hash = crypto.createHash('sha256')
-    hash.update(Buffer.from(buffer))
-    hash.update(new Date().toISOString())
-    const filename = `${hash.digest('hex').slice(0, 12)}.${fileExt}`
+    // Generate timestamp and clean filename
+    const timestamp = Date.now()
+    const originalName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_')
+    const filename = `${session.user.id}-${timestamp}-${originalName}`
 
     // Create uploads directory if it doesn't exist
     const uploadDir = join(process.cwd(), 'public', 'uploads')
     try {
-      await writeFile(join(uploadDir, '.keep'), '')
+      await mkdir(uploadDir, { recursive: true })
     } catch (error) {
       // Directory already exists
     }
@@ -55,7 +52,8 @@ export async function POST(request: NextRequest) {
     // Return the URL and user ID
     return NextResponse.json({ 
       imageUrl: `/uploads/${filename}`,
-      userId: session.user.id // Include the user ID in the response
+      thumbnailUrl: `/uploads/thumb-${filename}`,
+      userId: session.user.id
     })
 
   } catch (error) {

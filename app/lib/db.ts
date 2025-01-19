@@ -8,7 +8,11 @@ export async function connectToDatabase(): Promise<{ client: MongoClient; db: Db
     return { client, db };
   }
 
-  const uri = process.env.MONGODB_URI || 'mongodb://localhost:27017';
+  if (!process.env.MONGODB_URI) {
+    throw new Error('Please add your MongoDB URI to .env.local');
+  }
+
+  const uri = process.env.MONGODB_URI;
   let dbName: string;
 
   switch (process.env.NODE_ENV) {

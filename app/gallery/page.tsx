@@ -48,44 +48,76 @@ export default function GalleryPage() {
     setCurrentPage(prev => prev + 1);
   };
 
-  if (isLoading && currentPage === 1) {
-    return <div>Loading...</div>;
-  }
-
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8">Logo Gallery</h1>
-      {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-          {error}
+    <div className="min-h-screen bg-[#0A1A2F] py-12">
+      <div className="container mx-auto px-4">
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-4xl font-bold text-white">Logo Gallery</h1>
+          <div className="flex gap-4">
+            {/* Add search and filter controls here later */}
+          </div>
         </div>
-      )}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {logos.map(logo => (
-          <LogoCard
-            key={logo.id}
-            logo={logo}
-            onVote={() => !user && setShowAuthModal(true)}
+
+        {error && (
+          <div className="bg-red-500/10 border border-red-500/20 text-red-500 px-6 py-4 rounded-lg mb-8">
+            <p className="text-sm font-medium">{error}</p>
+          </div>
+        )}
+
+        {isLoading && currentPage === 1 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="bg-[#0A1A2F] rounded-xl shadow-lg p-6 animate-pulse">
+                <div className="relative aspect-[4/3] mb-4 bg-gray-800 rounded-lg"></div>
+                <div className="space-y-3">
+                  <div className="h-6 bg-gray-800 rounded w-3/4"></div>
+                  <div className="h-4 bg-gray-800 rounded w-1/2"></div>
+                  <div className="flex gap-2">
+                    <div className="h-6 bg-gray-800 rounded w-16"></div>
+                    <div className="h-6 bg-gray-800 rounded w-16"></div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {logos.map(logo => (
+              <LogoCard
+                key={logo.id}
+                logo={logo}
+                onVote={() => !user && setShowAuthModal(true)}
+              />
+            ))}
+          </div>
+        )}
+
+        {hasMore && (
+          <div className="mt-12 text-center">
+            <button
+              onClick={handleLoadMore}
+              className="bg-blue-500 hover:bg-blue-600 text-white font-medium px-8 py-3 rounded-lg transition-colors"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  <span>Loading...</span>
+                </div>
+              ) : (
+                'Load More'
+              )}
+            </button>
+          </div>
+        )}
+
+        {showAuthModal && (
+          <AuthModal
+            onClose={() => setShowAuthModal(false)}
+            onLoginSuccess={() => setShowAuthModal(false)}
           />
-        ))}
+        )}
       </div>
-      {hasMore && (
-        <div className="mt-8 text-center">
-          <button
-            onClick={handleLoadMore}
-            className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
-            disabled={isLoading}
-          >
-            {isLoading ? 'Loading...' : 'Load More'}
-          </button>
-        </div>
-      )}
-      {showAuthModal && (
-        <AuthModal
-          onClose={() => setShowAuthModal(false)}
-          onLoginSuccess={() => setShowAuthModal(false)}
-        />
-      )}
     </div>
   );
 } 

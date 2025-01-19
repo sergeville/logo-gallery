@@ -1,12 +1,16 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
 import Link from 'next/link'
 import { useSession, signOut } from 'next-auth/react'
 import ThemeToggle from './ThemeToggle'
+import { AuthModal } from './AuthModal'
+import { useRouter } from 'next/navigation'
 
 export default function Header() {
   const { data: session, status } = useSession()
+  const router = useRouter()
+  const [showAuthModal, setShowAuthModal] = useState(false)
   const env = process.env.NODE_ENV || 'development'
   const dbName = env === 'development' ? 'LogoGalleryDevelopmentDB' : 
                  env === 'test' ? 'LogoGalleryTestDB' : 
@@ -14,6 +18,11 @@ export default function Header() {
 
   const handleLogout = async () => {
     await signOut({ redirect: true, callbackUrl: '/' })
+  }
+
+  const handleLoginSuccess = () => {
+    setShowAuthModal(false)
+    router.refresh()
   }
 
   return (
@@ -74,16 +83,23 @@ export default function Header() {
               </button>
             </>
           ) : (
-            <Link
-              href="/api/auth/signin"
+            <button
+              onClick={() => setShowAuthModal(true)}
               className="rounded-lg bg-blue-500 px-4 py-2 text-white hover:bg-blue-600 transition-colors"
             >
               Sign In
-            </Link>
+            </button>
           )}
           <ThemeToggle />
         </div>
       </div>
+
+      {showAuthModal && (
+        <AuthModal
+          onClose={() => setShowAuthModal(false)}
+          onLoginSuccess={handleLoginSuccess}
+        />
+      )}
     </header>
   )
 } 

@@ -1,23 +1,28 @@
+import { ObjectId } from 'mongodb';
+
 export interface Logo {
-  _id: string;
+  _id: ObjectId;
   name: string;
-  imageUrl: string;
-  thumbnailUrl: string;
-  userId: string;
+  description?: string;
+  imageUrl?: string;
+  thumbnailUrl?: string;
+  url?: string;
+  ownerId: ObjectId;
+  ownerName?: string;
   tags: string[];
   category: string;
-  dimensions: {
+  dimensions?: {
     width: number;
     height: number;
   };
-  fileSize: number;
-  fileType: string;
+  fileSize?: number;
+  fileType?: string;
   createdAt: Date;
   updatedAt: Date;
   averageRating: number;
   totalVotes: number;
   votes?: Array<{
-    userId: string;
+    userId: ObjectId;
     rating: number;
     createdAt: Date;
   }>;

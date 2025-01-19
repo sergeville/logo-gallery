@@ -42,11 +42,6 @@ export const authOptions: AuthOptions = {
   session: {
     strategy: 'jwt'
   },
-  pages: {
-    signIn: '/auth/signin',
-    signOut: '/auth/signout',
-    error: '/auth/error'
-  },
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
@@ -59,6 +54,10 @@ export const authOptions: AuthOptions = {
         session.user.id = token.id as string;
       }
       return session;
+    },
+    async redirect({ url, baseUrl }) {
+      // Always redirect to the homepage
+      return baseUrl;
     }
   }
 }; 

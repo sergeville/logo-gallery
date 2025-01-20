@@ -241,6 +241,7 @@ The homepage features:
 - Responsive design that adapts to all screen sizes
 
 ### Gallery
+
 ![Gallery](./images/gallery.png)
 *Logo gallery with grid layout and search functionality*
 
@@ -267,7 +268,7 @@ The upload page features:
 - Dark mode optimized with proper text contrast and visibility
 
 ### Sign In Modal
-![Sign In](./images/signin.png)
+![Sign In](./images/auth-modal-blur.png)
 *Sign in modal with blur effect overlay*
 
 ## 🎨 Color Palette

@@ -4,9 +4,8 @@ export interface Logo {
   _id: ObjectId;
   name: string;
   description?: string;
-  imageUrl?: string;
+  imageUrl: string;
   thumbnailUrl?: string;
-  url?: string;
   ownerId: ObjectId;
   ownerName?: string;
   tags: string[];

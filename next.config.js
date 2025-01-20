@@ -2,7 +2,7 @@
 const nextConfig = {
   images: {
     domains: ['placehold.co'],
-    unoptimized: true
+    unoptimized: true,
   },
   output: 'standalone',
   webpack: (config, { dev, isServer }) => {
@@ -11,6 +11,17 @@ const nextConfig = {
       config.devtool = 'cheap-module-source-map'
     }
     return config
+  },
+  // Add assetPrefix to serve files from /public directory
+  assetPrefix: '',
+  // Configure static file serving
+  async rewrites() {
+    return [
+      {
+        source: '/uploads/:path*',
+        destination: '/public/uploads/:path*'
+      }
+    ]
   }
 }
 

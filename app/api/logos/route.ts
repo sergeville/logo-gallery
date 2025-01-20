@@ -15,7 +15,6 @@ import { ObjectId, WithId } from 'mongodb';
 interface CreateLogoBody {
   name: string;
   description: string;
-  url?: string;
   imageUrl: string;
   tags?: string[];
 }
@@ -114,6 +113,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' } satisfies ErrorResponse, { status: 400 });
     }
 
+    // Ensure URL has correct format
+    const imageUrl = body.imageUrl.startsWith('/uploads/') 
+      ? body.imageUrl 
+      : `/uploads/${body.imageUrl.split('/').pop()}`;
+
     const { db } = await connectToDatabase();
     const collection = db.collection<Logo>('logos');
 
@@ -121,14 +125,14 @@ export async function POST(request: NextRequest) {
       _id: new ObjectId(),
       name: body.name,
       description: body.description,
-      imageUrl: body.imageUrl,
-      thumbnailUrl: body.imageUrl, // TODO: Generate thumbnail
+      imageUrl,
+      thumbnailUrl: imageUrl, // TODO: Generate thumbnail
       ownerId: new ObjectId(session.user.id),
       tags: body.tags || [],
       category: 'uncategorized', // TODO: Add category support
       dimensions: { width: 0, height: 0 }, // TODO: Extract from image
       fileSize: 0, // TODO: Get file size
-      fileType: body.imageUrl.split('.').pop() || 'unknown',
+      fileType: imageUrl.split('.').pop() || 'unknown',
       createdAt: new Date(),
       updatedAt: new Date(),
       averageRating: 0,

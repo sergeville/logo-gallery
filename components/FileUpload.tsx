@@ -11,9 +11,10 @@ export default function FileUpload() {
     setUploading(true);
     const formData = new FormData();
     formData.append('file', e.target.files[0]);
+    formData.append('name', e.target.files[0].name);
 
     try {
-      const response = await fetch('/api/upload', {
+      const response = await fetch('/api/logos/upload', {
         method: 'POST',
         body: formData,
       });

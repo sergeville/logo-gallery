@@ -37,7 +37,7 @@ export function transformLogo(doc: WithId<Logo>): ClientLogo {
     id: doc._id.toString(),
     name: doc.name,
     description: doc.description || '',
-    imageUrl: doc.imageUrl || doc.url || '',
+    imageUrl: doc.imageUrl,
     thumbnailUrl: doc.thumbnailUrl || '',
     userId: doc.ownerId?.toString() || null,
     ownerName: doc.ownerName || 'Unknown User',

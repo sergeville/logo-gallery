@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from '@/app/lib/auth';
 import { writeFile, unlink } from 'fs/promises';
 import { join } from 'path';
 import { v4 as uuidv4 } from 'uuid';
@@ -57,10 +57,11 @@ export async function POST(request: Request) {
 
     // Save logo metadata to database
     const { db } = await connectToDatabase();
+    const imageUrl = `/uploads/${filename}`;
     const logoData = {
       name,
       filename,
-      url: `/uploads/${filename}`,
+      imageUrl,
       uploadedAt: new Date(),
       userId: new ObjectId(session.user.id),
       averageRating: 0,
@@ -97,7 +98,9 @@ export async function POST(request: Request) {
       logo: {
         ...logoData,
         _id: result.insertedId
-      }
+      },
+      imageUrl,
+      userId: session.user.id
     });
 
   } catch (error) {

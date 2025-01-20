@@ -74,8 +74,9 @@ export default function UploadPage() {
         // Upload the image file
         const formDataWithFile = new FormData()
         formDataWithFile.append('file', selectedFile)
+        formDataWithFile.append('name', formData.name)
         
-        const uploadResponse = await fetch('/api/upload', {
+        const uploadResponse = await fetch('/api/logos/upload', {
           method: 'POST',
           body: formDataWithFile,
         })

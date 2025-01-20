@@ -177,3 +177,14 @@ The homepage is implemented as a client-side component with the following featur
 - Form validation in auth modal
 - Loading state management
 - Graceful fallbacks for network issues
+
+## File Management
+
+The application stores uploaded logo files in the `/public/uploads` directory. This directory is automatically created if it doesn't exist.
+
+### Synchronization Scripts
+
+- `npm run check-logo-sync`: Check if database entries match files in uploads directory
+- `npm run sync-to-local`: Sync database to match local files (treats `/public/uploads` as source of truth)
+- `npm run cleanup-orphaned-files`: Remove files without database entries
+- `npm run remove-broken-logos`: Remove database entries without files

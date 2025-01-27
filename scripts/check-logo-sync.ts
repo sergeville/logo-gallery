@@ -33,23 +33,23 @@ async function generateSyncReport(): Promise<SyncReport> {
 
   // Create maps for comparison
   const databaseFiles = new Map(
-    logos.filter(logo => logo.imageUrl).map(logo => [
-      logo.imageUrl.split('/').pop() || '',
-      { id: logo._id.toString(), url: logo.imageUrl }
-    ])
+    logos.filter(logo => logo.imageUrl).map(logo => {
+      const filename = logo.imageUrl?.split('/').pop() || '';
+      return [filename, { id: logo._id.toString(), url: logo.imageUrl }];
+    })
   );
   const filesOnDisk = new Set(actualFiles);
 
   // Find orphaned database entries (entries without files)
   const orphanedEntries = logos
-    .filter(logo => logo.imageUrl && logo.imageUrl.split('/').pop())
+    .filter(logo => logo.imageUrl)
     .filter(logo => {
-      const filename = logo.imageUrl.split('/').pop();
+      const filename = logo.imageUrl?.split('/').pop();
       return filename && !filesOnDisk.has(filename);
     })
     .map(logo => ({
       logoId: logo._id.toString(),
-      imageUrl: logo.imageUrl
+      imageUrl: logo.imageUrl || ''
     }));
 
   // Find unmapped files (files without database entries)
@@ -59,14 +59,14 @@ async function generateSyncReport(): Promise<SyncReport> {
 
   // Find valid pairs (files with matching database entries)
   const validPairs = logos
-    .filter(logo => logo.imageUrl && logo.imageUrl.split('/').pop())
+    .filter(logo => logo.imageUrl)
     .filter(logo => {
-      const filename = logo.imageUrl.split('/').pop();
+      const filename = logo.imageUrl?.split('/').pop();
       return filename && filesOnDisk.has(filename);
     })
     .map(logo => ({
       logoId: logo._id.toString(),
-      filename: logo.imageUrl.split('/').pop() || ''
+      filename: logo.imageUrl?.split('/').pop() || ''
     }));
 
   return {

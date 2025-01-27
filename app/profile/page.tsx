@@ -1,100 +1,147 @@
 'use client';
 
-import { useState, useEffect } from 'react'
-import { useAuth } from '@/app/hooks/useAuth'
-import { LogoCard } from '@/app/components/LogoCard'
-import { ClientLogo } from '@/app/lib/types'
+import { useSession } from 'next-auth/react'
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import LogoCard from '../components/LogoCard'
+import { AdminLogoCard } from '../components/AdminLogoCard'
+import { ClientLogo } from '../../lib/types'
+
+interface User {
+  id: string;
+  name: string;
+  email: string;
+}
 
 export default function ProfilePage() {
-  const { user } = useAuth()
+  const { data: session, status } = useSession()
+  const router = useRouter()
   const [logos, setLogos] = useState<ClientLogo[]>([])
+  const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState('')
 
   useEffect(() => {
-    const fetchLogos = async () => {
-      if (!user?.email || !user?.id) {
-        console.log('No authenticated user found in profile page');
-        setLoading(false)
-        return
-      }
-      
+    if (status === 'unauthenticated') {
+      router.replace('/auth/signin')
+      return
+    }
+
+    const fetchData = async () => {
       try {
-        console.log('Fetching logos for user:', user.id);
-        const response = await fetch('/api/user/logos')
-        
-        if (!response.ok) {
-          console.error('Failed to load logos:', response.status, response.statusText);
-          const errorData = await response.json().catch(() => ({}));
-          console.error('Error data:', errorData);
-          throw new Error(errorData.error || 'Failed to load user logos')
-        }
-        
-        const data = await response.json()
-        console.log('Received logos data:', data);
-        
-        // Verify the logos belong to the current user
-        if (data.userId !== user.id) {
-          console.error('User ID mismatch:', { responseId: data.userId, currentId: user.id });
-          throw new Error('Invalid user data received')
+        if (!session?.user?.id) {
+          return
         }
 
-        setLogos(data.logos)
-        console.log('Set logos:', data.logos.length);
+        setLoading(true)
+        setError('')
+
+        const [logosResponse, usersResponse] = await Promise.all([
+          fetch('/api/user/logos'),
+          session.user.role === 'ADMIN' ? fetch('/api/users') : null
+        ])
+
+        if (!logosResponse.ok) {
+          throw new Error('Failed to fetch logos')
+        }
+
+        const logosData = await logosResponse.json()
+        setLogos(logosData.logos || [])
+
+        if (session.user.role === 'ADMIN' && usersResponse) {
+          if (!usersResponse.ok) {
+            throw new Error('Failed to fetch users')
+          }
+          const usersData = await usersResponse.json()
+          setUsers(usersData.users || [])
+        }
       } catch (err) {
-        console.error('Error fetching logos:', err)
-        setError('Failed to load your logos')
+        setError(err instanceof Error ? err.message : 'An error occurred')
+        console.error('Error:', err)
       } finally {
         setLoading(false)
       }
     }
 
-    fetchLogos()
-  }, [user?.email, user?.id])
+    if (status === 'authenticated') {
+      fetchData()
+    }
+  }, [session, status, router])
+
+  const handleUpdateOwner = async (logoId: string, newOwnerId: string) => {
+    try {
+      const response = await fetch(`/api/logos/${logoId}/owner`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ newOwnerId }),
+      })
+
+      if (!response.ok) throw new Error('Failed to update owner')
+      
+      // Refresh logos list using the user-specific endpoint
+      const updatedLogosResponse = await fetch('/api/user/logos')
+      if (!updatedLogosResponse.ok) throw new Error('Failed to fetch updated logos')
+      const data = await updatedLogosResponse.json()
+      if (!data.logos) throw new Error('Invalid response format')
+      setLogos(data.logos)
+    } catch (err) {
+      console.error('Error updating owner:', err)
+    }
+  }
+
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen p-8">
+        <div className="text-center">Loading session...</div>
+      </div>
+    )
+  }
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      <div className="min-h-screen p-8">
+        <div className="text-center">Loading logos...</div>
       </div>
     )
   }
 
   if (error) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="text-red-500">{error}</div>
-      </div>
-    )
-  }
-
-  if (!user?.email) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="text-gray-500">Please log in to view your profile</div>
-      </div>
-    )
-  }
-
-  if (logos.length === 0) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="text-gray-500">You haven't uploaded any logos yet</div>
+      <div className="min-h-screen p-8">
+        <div className="text-center text-red-500">{error}</div>
       </div>
     )
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-8">My Logos</h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {logos.map(logo => (
-          <LogoCard
-            key={logo.id}
-            logo={logo}
-            onVote={() => {}} // Disable voting on own logos
-          />
-        ))}
+    <div className="min-h-screen p-8">
+      <div className="max-w-7xl mx-auto">
+        <h1 className="text-3xl font-bold mb-8">My Logos</h1>
+        {logos.length === 0 ? (
+          <div className="text-center text-gray-500 dark:text-gray-400">
+            You haven't uploaded any logos yet.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {logos.map((logo) => (
+              session?.user?.role === 'ADMIN' ? (
+                <AdminLogoCard 
+                  key={logo.id} 
+                  logo={logo} 
+                  onUpdateOwner={handleUpdateOwner}
+                  users={users}
+                />
+              ) : (
+                <LogoCard 
+                  key={logo.id} 
+                  logo={logo} 
+                />
+              )
+            ))}
+          </div>
+        )}
       </div>
     </div>
   )

@@ -1,5 +1,5 @@
 import { ObjectId } from 'mongodb';
-import { Logo } from '@/app/types';
+import { Logo } from '../../app/lib/types';
 
 interface LogoSeedOptions {
   count: number;
@@ -46,13 +46,20 @@ function generateLogo(index: number, userId: ObjectId, options: LogoSeedOptions)
 
   return {
     _id: new ObjectId(),
-    url: `https://example.com/logos/logo-${index}.png`,
+    name: `Logo ${index}`,
     description: generateDescription(style, tags),
-    ownerId: userId,
+    url: `https://example.com/logos/logo-${index}.png`,
+    imageUrl: `https://example.com/logos/logo-${index}.png`,
+    thumbnailUrl: `https://example.com/logos/logo-${index}-thumb.png`,
+    userId: userId,
+    ownerName: 'Test User',
     tags,
     totalVotes: 0,
+    averageRating: 0,
+    votes: [],
     createdAt: now,
-    updatedAt: now
+    updatedAt: now,
+    uploadedAt: now
   };
 }
 

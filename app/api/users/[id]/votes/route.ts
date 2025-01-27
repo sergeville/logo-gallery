@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
-import { connectToDatabase } from '@/app/lib/db'
+import { connectToDatabase } from '../../../../../lib/db'
 import { ObjectId } from 'mongodb'
-import { Logo } from '@/app/lib/types'
+import { Logo } from '../../../../../lib/types'
 
 export async function GET(
   request: Request,

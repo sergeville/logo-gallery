@@ -1,104 +1,62 @@
-import { MongoClient, ObjectId } from 'mongodb';
-import { connectToDatabase, disconnectFromDatabase } from '../../app/lib/db';
-import { hashPassword } from '../../app/lib/auth';
-import { validateUser, validateLogo } from './utils/model-validators';
-import chalk from 'chalk';
-
-interface TestUser {
-  _id: ObjectId;
-  email: string;
-  password: string;
-  name: string;
-  role: string;
-  createdAt: Date;
-}
-
-interface TestLogo {
-  _id: ObjectId;
-  name: string;
-  url: string;
-  userId: ObjectId;
-  createdAt: Date;
-}
+import { TestDbHelper } from '@/scripts/test-data/utils/test-db-helper'
+import { validateUser, validateLogo, ClientUser, ClientLogo } from '@/scripts/seed/validation'
+import { generateTestUser, generateTestLogo } from '@/scripts/test-data/utils/test-data-generator'
 
 async function seedTestData() {
-  const { db } = await connectToDatabase();
-  const usersCollection = db.collection('users');
-  const logosCollection = db.collection('logos');
-
-  // Clear existing data
-  await usersCollection.deleteMany({});
-  await logosCollection.deleteMany({});
-
-  // Create test users
-  const users: TestUser[] = [];
-  for (let i = 1; i <= 5; i++) {
-    const user: TestUser = {
-      _id: new ObjectId(),
-      email: `user${i}@example.com`,
-      password: await hashPassword('password123'),
-      name: `Test User ${i}`,
-      role: 'user',
-      createdAt: new Date()
-    };
-
-    const validationResult = validateUser(user);
-    if (validationResult.errors.length > 0) {
-      console.error(chalk.red(`Invalid user data for user${i}:`));
-      validationResult.errors.forEach(error => {
-        console.error(chalk.red(`  • ${error.message}`));
-      });
-      continue;
-    }
-
-    await usersCollection.insertOne(user);
-    users.push(user);
-    console.log(chalk.green(`Created test user: ${user.email}`));
-  }
-
-  // Create test logos
-  const logos: TestLogo[] = [];
-  for (const user of users) {
-    for (let i = 1; i <= 3; i++) {
-      const logo: TestLogo = {
-        _id: new ObjectId(),
-        name: `Test Logo ${i} for ${user.name}`,
-        url: `https://example.com/logos/logo${i}.png`,
-        userId: user._id,
-        createdAt: new Date()
-      };
-
-      const validationResult = validateLogo(logo);
-      if (validationResult.errors.length > 0) {
-        console.error(chalk.red(`Invalid logo data for logo${i}:`));
-        validationResult.errors.forEach(error => {
-          console.error(chalk.red(`  • ${error.message}`));
-        });
-        continue;
-      }
-
-      await logosCollection.insertOne(logo);
-      logos.push(logo);
-      console.log(chalk.green(`Created test logo: ${logo.name}`));
-    }
-  }
-
-  console.log(chalk.blue('\nSeed data summary:'));
-  console.log(chalk.white(`• Created ${users.length} test users`));
-  console.log(chalk.white(`• Created ${logos.length} test logos`));
-
-  await disconnectFromDatabase();
-}
-
-async function main() {
+  const testDb = new TestDbHelper()
+  
   try {
-    await seedTestData();
-    console.log(chalk.green('\nTest data seeded successfully!'));
-    process.exit(0);
+    await testDb.connect()
+    await testDb.clearAllCollections()
+
+    // Create test user
+    const user = generateTestUser({
+      id: 'test-user-1',
+      email: 'test@example.com',
+      name: 'Test User',
+      role: 'USER'
+    })
+
+    const validationResult = await validateUser(user)
+    if (!validationResult.isValid || !validationResult.data) {
+      console.error('User validation failed:', validationResult.errors)
+      return
+    }
+
+    await testDb.insertUser(validationResult.data)
+
+    // Create test logo
+    const logo = generateTestLogo({
+      id: 'test-logo-1',
+      name: 'Test Logo',
+      description: 'A test logo',
+      imageUrl: 'https://example.com/logo.png',
+      thumbnailUrl: 'https://example.com/logo-thumb.png',
+      ownerId: user.id,
+      ownerName: user.name,
+      category: 'tech',
+      tags: ['test', 'logo']
+    })
+
+    const logoToValidate = {
+      ...logo,
+      createdAt: logo.createdAt ? new Date(logo.createdAt) : undefined
+    }
+
+    const logoValidationResult = await validateLogo(logoToValidate)
+    if (!logoValidationResult.isValid || !logoValidationResult.data) {
+      console.error('Logo validation failed:', logoValidationResult.errors)
+      return
+    }
+
+    await testDb.insertLogo(logoValidationResult.data)
+
+    console.log('Test data seeded successfully')
   } catch (error) {
-    console.error(chalk.red('Error seeding test data:'), error);
-    process.exit(1);
+    console.error('Error seeding test data:', error)
+  } finally {
+    await testDb.disconnect()
   }
 }
 
-main(); 
+seedTestData().catch(console.error) 

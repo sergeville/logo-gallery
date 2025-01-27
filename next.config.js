@@ -1,28 +1,29 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    domains: ['placehold.co'],
-    unoptimized: true,
+    remotePatterns: [
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+        port: '3000',
+        pathname: '/uploads/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'placehold.co',
+      },
+    ],
+    unoptimized: true, // This will prevent Next.js from attempting to optimize local images
   },
   output: 'standalone',
-  webpack: (config, { dev, isServer }) => {
-    // Ensure CSS processing is enabled
-    if (!isServer && dev) {
-      config.devtool = 'cheap-module-source-map'
-    }
-    return config
+  reactStrictMode: true,
+  swcMinify: true,
+  compiler: {
+    styledComponents: true,
   },
-  // Add assetPrefix to serve files from /public directory
+  // Files in the public directory are served at the root path
+  // No need for assetPrefix or rewrites for public files
   assetPrefix: '',
-  // Configure static file serving
-  async rewrites() {
-    return [
-      {
-        source: '/uploads/:path*',
-        destination: '/public/uploads/:path*'
-      }
-    ]
-  }
 }
 
 module.exports = nextConfig 

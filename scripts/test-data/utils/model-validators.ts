@@ -1,173 +1,171 @@
 import { ObjectId } from 'mongodb';
-import { ValidationResult, ValidationRule, createValidationResult, validateField } from '@/app/lib/validation';
+import type { ClientUser, ClientLogo } from '@/scripts/seed/validation'
+import type { ValidationResult, ValidationError, ValidationWarning, ValidationFix } from '@/app/lib/validation/validation-utils'
+
+interface ValidationRule {
+  field: string;
+  message: string;
+  code: string;
+  validate: (value: any) => boolean;
+}
+
+const isValidDate = (value: any): boolean => {
+  if (!(value instanceof Date)) {
+    try {
+      value = new Date(value);
+    } catch {
+      return false;
+    }
+  }
+  return !isNaN(value.getTime());
+};
+
+const isValidUrl = (value: string): boolean => {
+  try {
+    new URL(value);
+    return true;
+  } catch {
+    return false;
+  }
+};
 
 // User validation rules
-const userValidationRules: Record<string, ValidationRule[]> = {
-  email: [{
+export const userRules: ValidationRule[] = [
+  {
     field: 'email',
     message: 'Invalid email format',
     code: 'INVALID_EMAIL',
-    validate: (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
-  }],
-  name: [{
+    validate: (value: any) => typeof value === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
+  },
+  {
     field: 'name',
-    message: 'Name must be at least 2 characters long',
-    code: 'INVALID_NAME_LENGTH',
-    validate: (value: string) => value.length >= 2
-  }],
-  password: [{
+    message: 'Name is required',
+    code: 'INVALID_NAME',
+    validate: (value: any) => typeof value === 'string' && value.length > 0
+  },
+  {
     field: 'password',
-    message: 'Password must be at least 8 characters long',
-    code: 'INVALID_PASSWORD_LENGTH',
-    validate: (value: string) => value.length >= 8
-  }],
-  createdAt: [{
+    message: 'Password must be at least 8 characters',
+    code: 'INVALID_PASSWORD',
+    validate: (value: any) => typeof value === 'string' && value.length >= 8
+  },
+  {
     field: 'createdAt',
     message: 'Invalid creation date',
-    code: 'INVALID_CREATED_DATE',
-    validate: (value: Date) => value instanceof Date && !isNaN(value.getTime())
-  }],
-  updatedAt: [{
+    code: 'INVALID_DATE',
+    validate: isValidDate
+  },
+  {
     field: 'updatedAt',
     message: 'Invalid update date',
-    code: 'INVALID_UPDATED_DATE',
-    validate: (value: Date) => value instanceof Date && !isNaN(value.getTime())
-  }]
-};
+    code: 'INVALID_DATE',
+    validate: isValidDate
+  }
+];
 
 // Logo validation rules
-const logoValidationRules: Record<string, ValidationRule[]> = {
-  name: [{
+export const logoRules: ValidationRule[] = [
+  {
     field: 'name',
-    message: 'Name must be at least 3 characters long',
-    code: 'INVALID_NAME_LENGTH',
-    validate: (value: string) => value.length >= 3
-  }],
-  description: [{
+    message: 'Name is required',
+    code: 'INVALID_NAME',
+    validate: (value: any) => typeof value === 'string' && value.length > 0
+  },
+  {
     field: 'description',
-    message: 'Description must be at least 10 characters long',
-    code: 'INVALID_DESCRIPTION_LENGTH',
-    validate: (value: string) => value.length >= 10
-  }],
-  url: [{
+    message: 'Description is required',
+    code: 'INVALID_DESCRIPTION',
+    validate: (value: any) => typeof value === 'string' && value.length > 0
+  },
+  {
     field: 'url',
     message: 'Invalid URL format',
     code: 'INVALID_URL',
-    validate: (value: string) => {
-      try {
-        new URL(value);
-        return true;
-      } catch {
-        return false;
-      }
-    }
-  }],
-  thumbnailUrl: [{
-    field: 'thumbnailUrl',
-    message: 'Invalid thumbnail URL format',
-    code: 'INVALID_THUMBNAIL_URL',
-    validate: (value: string) => {
-      try {
-        new URL(value);
-        return true;
-      } catch {
-        return false;
-      }
-    }
-  }],
-  previewUrl: [{
-    field: 'previewUrl',
-    message: 'Invalid preview URL format',
-    code: 'INVALID_PREVIEW_URL',
-    validate: (value: string) => {
-      try {
-        new URL(value);
-        return true;
-      } catch {
-        return false;
-      }
-    }
-  }],
-  userId: [{
+    validate: (value: any) => typeof value === 'string' && isValidUrl(value)
+  },
+  {
+    field: 'imageUrl',
+    message: 'Invalid image URL format',
+    code: 'INVALID_IMAGE_URL',
+    validate: (value: any) => typeof value === 'string' && isValidUrl(value)
+  },
+  {
     field: 'userId',
-    message: 'Invalid user ID',
+    message: 'User ID is required',
     code: 'INVALID_USER_ID',
-    validate: (value: string) => ObjectId.isValid(value)
-  }],
-  tags: [{
-    field: 'tags',
-    message: 'Tags must be an array',
-    code: 'INVALID_TAGS',
-    validate: (value: any) => Array.isArray(value)
-  }],
-  createdAt: [{
+    validate: (value: any) => typeof value === 'string' && value.length > 0
+  },
+  {
     field: 'createdAt',
     message: 'Invalid creation date',
-    code: 'INVALID_CREATED_DATE',
-    validate: (value: Date) => value instanceof Date && !isNaN(value.getTime())
-  }],
-  updatedAt: [{
+    code: 'INVALID_DATE',
+    validate: isValidDate
+  },
+  {
     field: 'updatedAt',
     message: 'Invalid update date',
-    code: 'INVALID_UPDATED_DATE',
-    validate: (value: Date) => value instanceof Date && !isNaN(value.getTime())
-  }]
-};
+    code: 'INVALID_DATE',
+    validate: isValidDate
+  }
+];
 
-export function validateUser(user: any): ValidationResult {
-  const result = createValidationResult();
+export function validateUser(user: Partial<ClientUser>): ValidationResult {
+  const errors: ValidationError[] = []
+  const warnings: ValidationWarning[] = []
+  const fixes: ValidationFix[] = []
 
-  // Required fields
-  const requiredFields = ['email', 'name', 'password', 'createdAt'];
-  for (const field of requiredFields) {
-    if (!user[field]) {
-      result.errors.push({
-        field,
-        message: `${field} is required`,
-        code: 'REQUIRED_FIELD'
-      });
-      continue;
-    }
-
-    // Apply validation rules
-    if (userValidationRules[field]) {
-      for (const rule of userValidationRules[field]) {
-        const error = validateField(user[field], rule);
-        if (error) {
-          result.errors.push(error);
-        }
-      }
-    }
+  if (!user.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(user.email)) {
+    errors.push({
+      field: 'email',
+      message: 'Invalid email format'
+    })
   }
 
-  return result;
+  if (!user.name || user.name.trim().length === 0) {
+    errors.push({
+      field: 'name',
+      message: 'Name is required'
+    })
+  }
+
+  return {
+    isValid: errors.length === 0,
+    errors,
+    warnings,
+    fixes
+  }
 }
 
-export function validateLogo(logo: any): ValidationResult {
-  const result = createValidationResult();
+export function validateLogo(logo: Partial<ClientLogo>): ValidationResult {
+  const errors: ValidationError[] = []
+  const warnings: ValidationWarning[] = []
+  const fixes: ValidationFix[] = []
 
-  // Required fields
-  const requiredFields = ['name', 'url', 'userId', 'createdAt'];
-  for (const field of requiredFields) {
-    if (!logo[field]) {
-      result.errors.push({
-        field,
-        message: `${field} is required`,
-        code: 'REQUIRED_FIELD'
-      });
-      continue;
-    }
-
-    // Apply validation rules
-    if (logoValidationRules[field]) {
-      for (const rule of logoValidationRules[field]) {
-        const error = validateField(logo[field], rule);
-        if (error) {
-          result.errors.push(error);
-        }
-      }
-    }
+  if (!logo.imageUrl || !/^https?:\/\/.+/.test(logo.imageUrl)) {
+    errors.push({
+      field: 'imageUrl',
+      message: 'Invalid URL format'
+    })
   }
 
-  return result;
+  if (!logo.description || logo.description.trim().length === 0) {
+    errors.push({
+      field: 'description',
+      message: 'Description is required'
+    })
+  }
+
+  if (!logo.name || logo.name.trim().length === 0) {
+    errors.push({
+      field: 'name',
+      message: 'Name is required'
+    })
+  }
+
+  return {
+    isValid: errors.length === 0,
+    errors,
+    warnings,
+    fixes
+  }
 } 

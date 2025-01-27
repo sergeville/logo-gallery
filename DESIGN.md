@@ -149,8 +149,10 @@ app/
 3. **Logo Detail** (`/gallery/[id]`)
    - Full logo display
    - Metadata and description
-   - Owner information
+   - Owner information (referenced by userId)
    - Rating and comments
+   - Edit/delete options for logo owner
+   - Ownership determined by matching userId with current user
 
 4. **Upload** (`/upload`)
    - Logo upload form

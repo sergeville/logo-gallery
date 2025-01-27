@@ -4,10 +4,17 @@
  * Includes global providers, metadata, and common layout elements.
  */
 
+import './globals.css'
+import { Inter } from 'next/font/google'
 import { Providers } from './providers'
 import Header from './components/Header'
-import './globals.css'
 import type { Metadata } from 'next'
+import { ReactNode } from 'react'
+
+const inter = Inter({
+  subsets: ['latin'],
+  display: 'swap',
+})
 
 /**
  * Application metadata configuration
@@ -15,10 +22,12 @@ import type { Metadata } from 'next'
  */
 export const metadata: Metadata = {
   title: 'Logo Gallery',
-  description: 'A beautiful gallery of logos with rating and collection features',
-  icons: {
-    icon: '/favicon.ico',
-  },
+  description: 'A gallery for sharing and discovering logos'
+}
+
+interface LayoutProps {
+  children: ReactNode
+  modal: ReactNode
 }
 
 /**
@@ -29,19 +38,14 @@ export const metadata: Metadata = {
  * - Global providers for theme, auth, etc.
  * - Common layout elements (header)
  */
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function RootLayout({ children, modal }: LayoutProps) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning className={inter.className}>
       <body suppressHydrationWarning>
         <Providers>
-          <div suppressHydrationWarning>
-            <Header />
-            {children}
-          </div>
+          <Header />
+          {children}
+          {modal}
         </Providers>
       </body>
     </html>

@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/lib/auth';
+import { authOptions } from '../../auth/[...nextauth]/options';
 import { writeFile, unlink } from 'fs/promises';
 import { join } from 'path';
 import { v4 as uuidv4 } from 'uuid';
-import { connectToDatabase } from '@/app/lib/db';
+import { connectToDatabase } from '../../../../lib/db';
 import { ObjectId } from 'mongodb';
 
 export async function POST(request: Request) {
@@ -23,6 +23,9 @@ export async function POST(request: Request) {
     const formData = await request.formData();
     const file = formData.get('file') as File;
     const name = formData.get('name') as string;
+    const description = formData.get('description') || '';
+    const url = formData.get('url') || '';
+    const tags = formData.get('tags') ? (formData.get('tags') as string).split(',').map(tag => tag.trim()).filter(Boolean) : [];
 
     if (!file || !name) {
       return NextResponse.json(
@@ -58,12 +61,20 @@ export async function POST(request: Request) {
     // Save logo metadata to database
     const { db } = await connectToDatabase();
     const imageUrl = `/uploads/${filename}`;
+    
+    // Get user details
+    const user = await db.collection('users').findOne({ _id: new ObjectId(session.user.id) });
+    
     const logoData = {
       name,
+      description,
+      url,
       filename,
       imageUrl,
       uploadedAt: new Date(),
-      userId: new ObjectId(session.user.id),
+      ownerId: new ObjectId(session.user.id),
+      ownerName: user?.name || session.user.email,
+      tags,
       averageRating: 0,
       totalVotes: 0,
       dimensions: {

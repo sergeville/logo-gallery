@@ -1,9 +1,11 @@
+'use client';
+
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { ClientLogo } from '@/app/lib/transforms';
-import { AuthModal } from '@/app/components/AuthModal';
+import { ClientLogo } from '../../lib/types';
+import AuthModal from '../components/AuthModal';
 
 export default function VotePage() {
   const { data: session } = useSession();

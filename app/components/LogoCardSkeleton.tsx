@@ -1,32 +1,30 @@
-export default function LogoCardSkeleton() {
+const LogoCardSkeleton = () => {
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden animate-pulse">
+    <div
+      data-testid="skeleton-container"
+      role="status"
+      aria-label="Loading logo card"
+      className="rounded-lg border border-gray-200 dark:border-gray-700 p-4"
+    >
       {/* Image skeleton */}
-      <div className="relative aspect-square bg-gray-200 dark:bg-gray-700" />
+      <div
+        data-testid="skeleton-image"
+        className="h-48 w-full bg-gray-200 dark:bg-gray-700 rounded animate-pulse mb-4"
+      />
 
-      {/* Content skeleton */}
-      <div className="p-4 space-y-3">
-        <div className="flex items-start justify-between">
-          {/* Title skeleton */}
-          <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-2/3" />
-          {/* Tag skeleton */}
-          <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded-full w-16" />
-        </div>
+      {/* Title skeleton */}
+      <div
+        data-testid="skeleton-text"
+        className="h-4 w-3/4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mb-2"
+      />
 
-        {/* Rating skeleton */}
-        <div className="flex items-center justify-between">
-          <div className="flex space-x-1">
-            {[1, 2, 3, 4, 5].map((i) => (
-              <div key={i} className="w-6 h-6 bg-gray-200 dark:bg-gray-700 rounded-full" />
-            ))}
-          </div>
-          {/* Vote count skeleton */}
-          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-16" />
-        </div>
-
-        {/* Date skeleton */}
-        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-24" />
-      </div>
+      {/* Description skeleton */}
+      <div
+        data-testid="skeleton-text"
+        className="h-3 w-1/2 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"
+      />
     </div>
   )
-} 
+}
+
+export default LogoCardSkeleton 

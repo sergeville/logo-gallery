@@ -1,5 +1,6 @@
 import { getConfig } from '../index';
-import { Config } from '../test';
+import type { Config } from '../types';
+import { testConfig as config } from '../test';
 
 describe('Test Environment Configuration', () => {
   it('should load test environment configuration correctly', () => {

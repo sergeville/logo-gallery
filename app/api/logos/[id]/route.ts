@@ -1,29 +1,103 @@
 import { NextResponse } from 'next/server';
-import { connectToDatabase } from '@/lib/mongodb';
+import { connectToDatabase } from '../../../../lib/db';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/lib/auth';
+import { authOptions } from '../../auth/[...nextauth]/options';
 import { ObjectId } from 'mongodb';
 import { unlink } from 'fs/promises';
 import { join } from 'path';
+import { ClientLogo, Logo } from '../../../../lib/types';
+import { transformLogo } from '../../../../lib/transforms';
 
 export async function GET(
   request: Request,
   { params }: { params: { id: string } }
 ) {
   try {
-    const { db } = await connectToDatabase();
-    const logo = await db.collection('logos').findOne({
-      _id: new ObjectId(params.id),
-    });
-
-    if (!logo) {
-      return new NextResponse('Logo not found', { status: 404 });
+    if (!params.id || !ObjectId.isValid(params.id)) {
+      return NextResponse.json({ error: 'Invalid logo ID' }, { status: 400 });
     }
 
-    return NextResponse.json(logo);
+    const { db } = await connectToDatabase();
+    const logo = await db
+      .collection<Logo>('logos')
+      .findOne({ _id: new ObjectId(params.id) });
+
+    if (!logo) {
+      return NextResponse.json({ error: 'Logo not found' }, { status: 404 });
+    }
+
+    return NextResponse.json(transformLogo(logo));
   } catch (error) {
     console.error('Error fetching logo:', error);
-    return new NextResponse('Internal Server Error', { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to fetch logo' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PUT(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Check if user is admin
+    if ((session.user as any).role !== 'ADMIN') {
+      return NextResponse.json(
+        { error: 'Only admin users can update logos' },
+        { status: 403 }
+      );
+    }
+
+    if (!params.id || !ObjectId.isValid(params.id)) {
+      return NextResponse.json({ error: 'Invalid logo ID' }, { status: 400 });
+    }
+
+    const body = await request.json();
+    const { name, description, tags, url, imageUrl } = body;
+
+    if (!name) {
+      return NextResponse.json(
+        { error: 'Name is required' },
+        { status: 400 }
+      );
+    }
+
+    const { db } = await connectToDatabase();
+    const updateResult = await db.collection<Logo>('logos').updateOne(
+      { _id: new ObjectId(params.id) },
+      {
+        $set: {
+          name,
+          description,
+          tags: tags || [],
+          url,
+          imageUrl,
+          updatedAt: new Date()
+        }
+      }
+    );
+
+    if (!updateResult.matchedCount) {
+      return NextResponse.json({ error: 'Logo not found' }, { status: 404 });
+    }
+
+    const updatedLogo = await db
+      .collection<Logo>('logos')
+      .findOne({ _id: new ObjectId(params.id) });
+
+    return NextResponse.json(transformLogo(updatedLogo!));
+  } catch (error) {
+    console.error('Error updating logo:', error);
+    return NextResponse.json(
+      { error: 'Failed to update logo' },
+      { status: 500 }
+    );
   }
 }
 
@@ -33,52 +107,37 @@ export async function DELETE(
 ) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
+    if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Check if user is admin
+    if ((session.user as any).role !== 'ADMIN') {
+      return NextResponse.json(
+        { error: 'Only admin users can delete logos' },
+        { status: 403 }
+      );
+    }
+
+    if (!params.id || !ObjectId.isValid(params.id)) {
+      return NextResponse.json({ error: 'Invalid logo ID' }, { status: 400 });
+    }
+
     const { db } = await connectToDatabase();
-    const logosCollection = db.collection('logos');
+    const deleteResult = await db
+      .collection<Logo>('logos')
+      .deleteOne({ _id: new ObjectId(params.id) });
 
-    // Find the logo first to verify ownership and get file info
-    const logo = await logosCollection.findOne({
-      _id: new ObjectId(params.id)
-    });
-
-    if (!logo) {
+    if (!deleteResult.deletedCount) {
       return NextResponse.json({ error: 'Logo not found' }, { status: 404 });
     }
 
-    // Verify ownership
-    if (logo.ownerId.toString() !== session.user.id) {
-      return NextResponse.json({ error: 'Unauthorized - You can only delete your own logos' }, { status: 403 });
-    }
-
-    // Delete from database
-    const result = await logosCollection.deleteOne({
-      _id: new ObjectId(params.id)
-    });
-
-    if (result.deletedCount === 0) {
-      return NextResponse.json({ error: 'Failed to delete logo' }, { status: 500 });
-    }
-
-    // Delete the file from uploads directory
-    const filename = logo.imageUrl.split('/').pop();
-    if (filename) {
-      const filePath = join(process.cwd(), 'public', 'uploads', filename);
-      try {
-        await unlink(filePath);
-      } catch (error) {
-        console.error('Error deleting logo file:', error);
-        // Don't fail the request if file deletion fails
-      }
-    }
-
     return NextResponse.json({ message: 'Logo deleted successfully' });
-
   } catch (error) {
     console.error('Error deleting logo:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to delete logo' },
+      { status: 500 }
+    );
   }
 } 

@@ -1,6 +1,6 @@
 import { NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
-import { connectToDatabase } from '@/app/lib/db'
+import { connectToDatabase } from '../../../../lib/db'
 import bcrypt from 'bcrypt'
 
 export const authOptions: NextAuthOptions = {
@@ -12,27 +12,57 @@ export const authOptions: NextAuthOptions = {
         password: { label: 'Password', type: 'password' }
       },
       async authorize(credentials) {
+        console.log('🔍 [NextAuth] authorize callback started', { email: credentials?.email });
+        
         if (!credentials?.email || !credentials?.password) {
-          throw new Error('Email and password are required')
+          console.error('❌ [NextAuth] Missing credentials');
+          throw new Error('Email and password are required');
         }
 
-        const { db } = await connectToDatabase()
-        const user = await db.collection('users').findOne({ email: credentials.email })
+        try {
+          const { db } = await connectToDatabase();
+          console.log('✅ [NextAuth] Database connected');
+          
+          const user = await db.collection('users').findOne({ email: credentials.email });
+          console.log('🔍 [NextAuth] User lookup result:', { 
+            found: !!user, 
+            email: credentials.email,
+            passwordLength: user?.password?.length 
+          });
 
-        if (!user) {
-          throw new Error('Invalid credentials')
-        }
+          if (!user) {
+            console.error('❌ [NextAuth] User not found');
+            throw new Error('Invalid credentials');
+          }
 
-        const isPasswordValid = await bcrypt.compare(credentials.password, user.password)
+          // Log the password comparison inputs
+          console.log('🔐 [NextAuth] Password comparison:', { 
+            providedPassword: credentials.password,
+            storedHash: user.password,
+          });
 
-        if (!isPasswordValid) {
-          throw new Error('Invalid credentials')
-        }
+          const isValid = await bcrypt.compare(credentials.password, user.password);
+          console.log('🔐 [NextAuth] Password validation:', { 
+            isValid,
+            passwordLength: credentials.password.length,
+            hashLength: user.password.length
+          });
 
-        return {
-          id: user._id.toString(),
-          email: user.email,
-          name: user.name
+          if (!isValid) {
+            console.error('❌ [NextAuth] Invalid password');
+            throw new Error('Invalid credentials');
+          }
+
+          console.log('✅ [NextAuth] Authentication successful');
+          return {
+            id: user._id.toString(),
+            email: user.email,
+            name: user.name,
+            role: user.role || 'USER'
+          };
+        } catch (error) {
+          console.error('❌ [NextAuth] Auth error:', error);
+          throw error;
         }
       }
     })
@@ -41,7 +71,31 @@ export const authOptions: NextAuthOptions = {
     strategy: 'jwt'
   },
   pages: {
-    signIn: '/auth/signin'
+    signIn: '/'
+  },
+  callbacks: {
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id;
+        token.role = user.role;
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      if (session.user) {
+        session.user.id = token.id as string;
+        session.user.role = token.role as string;
+      }
+      return session;
+    },
+    async redirect({ url, baseUrl }) {
+      // If the url starts with baseUrl, allow it
+      if (url.startsWith(baseUrl)) return url;
+      // Otherwise only allow relative urls
+      if (url.startsWith('/')) return `${baseUrl}${url}`;
+      // Default to homepage
+      return baseUrl;
+    }
   },
   cookies: {
     sessionToken: {

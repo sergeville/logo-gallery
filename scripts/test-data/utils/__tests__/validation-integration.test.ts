@@ -1,64 +1,111 @@
 import { TestDbHelper } from '../test-db-helper'
+import { validateUser, validateLogo } from '../../../seed/validation'
+import type { ClientUser, ClientLogo } from '@/lib/types'
 
 describe('Validation Integration Tests', () => {
   let testDb: TestDbHelper
-  let testUsers: any[]
-  let testLogos: any[]
 
-  beforeAll(async () => {
+  beforeEach(async () => {
     testDb = new TestDbHelper()
     await testDb.connect()
   })
 
-  afterAll(async () => {
+  afterEach(async () => {
+    await testDb.clearAllCollections()
     await testDb.disconnect()
   })
 
-  beforeEach(async () => {
-    await testDb.clearDatabase()
-    
-    testUsers = [
-      {
-        email: 'test@example.com',
-        username: 'testuser',
-        password: 'password123'
-      }
-    ]
-
-    testLogos = [
-      {
-        name: 'Test Logo',
-        imageUrl: 'https://example.com/logo.png',
-        dimensions: { width: 100, height: 100 }
-      }
-    ]
-  })
-
   describe('User Validation', () => {
-    it('should validate a valid user', async () => {
-      const user = testUsers[0]
-      await testDb.insertUser(user)
-      const result = await testDb.findUser({ email: user.email })
-      expect(result).toBeTruthy()
+    it('validates and fixes user data', async () => {
+      const testUser: Partial<ClientUser> = {
+        name: 'Test User',
+        email: 'test@example.com',
+        role: 'user',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      }
+
+      const validationResult = await validateUser(testUser)
+      expect(validationResult.isValid).toBe(true)
+      expect(validationResult.errors).toHaveLength(0)
+
+      if (validationResult.isValid && validationResult.data) {
+        await testDb.insertUser(validationResult.data)
+        const result = await testDb.findUser({ email: testUser.email })
+        expect(result).toBeDefined()
+        expect(result?.name).toBe(testUser.name)
+      }
     })
 
-    it('should detect invalid email format', async () => {
-      const user = { ...testUsers[0], email: 'invalid-email' }
-      await expect(testDb.insertUser(user)).rejects.toThrow()
+    it('detects invalid user data', async () => {
+      const invalidUser: Partial<ClientUser> = {
+        name: '',
+        email: 'invalid-email',
+        role: 'user',
+        createdAt: 'invalid-date',
+        updatedAt: 'invalid-date'
+      }
+
+      const validationResult = await validateUser(invalidUser)
+      expect(validationResult.isValid).toBe(false)
+      expect(validationResult.errors.length).toBeGreaterThan(0)
     })
   })
 
   describe('Logo Validation', () => {
-    it('should validate a valid logo', async () => {
-      const logo = testLogos[0]
-      await testDb.insertLogo(logo)
-      const result = await testDb.findLogo({ name: logo.name })
-      expect(result).toBeTruthy()
+    it('validates and fixes logo data', async () => {
+      const testLogo: Partial<ClientLogo> = {
+        name: 'Test Logo',
+        description: 'A test logo',
+        imageUrl: 'https://example.com/logo.png',
+        thumbnailUrl: 'https://example.com/logo-thumb.png',
+        ownerId: '1',
+        ownerName: 'Test User',
+        category: 'tech',
+        tags: ['test', 'logo'],
+        dimensions: { width: 200, height: 200 },
+        fileSize: 1024,
+        fileType: 'image/png',
+        averageRating: 0,
+        totalVotes: 0,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      }
+
+      const validationResult = await validateLogo(testLogo)
+      expect(validationResult.isValid).toBe(true)
+      expect(validationResult.errors).toHaveLength(0)
+
+      if (validationResult.isValid && validationResult.data) {
+        await testDb.insertLogo(validationResult.data)
+        const result = await testDb.findLogo({ name: testLogo.name })
+        expect(result).toBeDefined()
+        expect(result?.description).toBe(testLogo.description)
+      }
     })
 
-    it('should detect invalid URLs', async () => {
-      const logo = { ...testLogos[0], imageUrl: 'invalid-url' }
-      await expect(testDb.insertLogo(logo)).rejects.toThrow()
+    it('detects invalid logo data', async () => {
+      const invalidLogo: Partial<ClientLogo> = {
+        name: '',
+        description: '',
+        imageUrl: 'invalid-url',
+        thumbnailUrl: 'invalid-url',
+        ownerId: '',
+        ownerName: '',
+        category: '',
+        tags: [],
+        dimensions: { width: -1, height: -1 },
+        fileSize: -1,
+        fileType: 'invalid',
+        averageRating: -1,
+        totalVotes: -1,
+        createdAt: 'invalid-date',
+        updatedAt: 'invalid-date'
+      }
+
+      const validationResult = await validateLogo(invalidLogo)
+      expect(validationResult.isValid).toBe(false)
+      expect(validationResult.errors.length).toBeGreaterThan(0)
     })
   })
 }) 

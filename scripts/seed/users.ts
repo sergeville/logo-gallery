@@ -1,5 +1,5 @@
 import { ObjectId } from 'mongodb';
-import { User } from '@/app/types';
+import { User } from '../../app/lib/types';
 
 interface UserSeedOptions {
   count: number;
@@ -16,9 +16,7 @@ async function generateUser(index: number, options: UserSeedOptions): Promise<Us
   return {
     _id: new ObjectId(),
     email,
-    name: options.withProfiles ? `Test User ${index}` : undefined,
-    image: options.withProfiles ? `https://example.com/avatars/${index}.jpg` : undefined,
-    role: options.roles ? options.roles[Math.floor(Math.random() * options.roles.length)] : 'user',
+    name: `Test User ${index}`,
     createdAt: new Date(),
     updatedAt: new Date()
   };

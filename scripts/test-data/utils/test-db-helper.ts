@@ -1,20 +1,27 @@
 import { MongoClient, Db, Collection, Document } from 'mongodb'
+import type { ClientUser, ClientLogo } from '@/lib/types'
+import { MockMongoClient } from '@app/mocks/mongodb'
 
 /**
  * Helper class for managing MongoDB test database connections and operations.
  * Provides methods for connecting to MongoDB, managing collections, and performing CRUD operations.
  */
 export class TestDbHelper {
-  private client: MongoClient | null = null
-  private db: Db | null = null
-  private uri: string
+  private client: MongoClient | MockMongoClient
+  private db: Db | any
+  private dbName: string
+  private _isConnected: boolean = false
 
   /**
    * Creates a new TestDbHelper instance.
-   * @param uri - Optional MongoDB connection URI. Defaults to MONGODB_URI environment variable or localhost.
    */
-  constructor(uri?: string) {
-    this.uri = uri || process.env.MONGODB_URI || 'mongodb://localhost:27017/test_db'
+  constructor(uri: string = process.env.MONGODB_TEST_URI || 'mongodb://localhost:27017', dbName: string = 'test') {
+    this.dbName = dbName
+    if (process.env.NODE_ENV === 'test') {
+      this.client = new MockMongoClient()
+    } else {
+      this.client = new MongoClient(uri)
+    }
   }
 
   /**
@@ -22,10 +29,13 @@ export class TestDbHelper {
    * @throws Error if connection fails
    */
   async connect(): Promise<void> {
-    if (!this.client) {
-      this.client = new MongoClient(this.uri)
+    try {
       await this.client.connect()
-      this.db = this.client.db(process.env.MONGODB_DB || 'test_db')
+      this.db = this.client.db(this.dbName)
+      this._isConnected = true
+    } catch (error) {
+      console.error('Failed to connect to database:', error)
+      throw error
     }
   }
 
@@ -35,8 +45,7 @@ export class TestDbHelper {
   async disconnect(): Promise<void> {
     if (this.client) {
       await this.client.close()
-      this.client = null
-      this.db = null
+      this._isConnected = false
     }
   }
 
@@ -46,33 +55,31 @@ export class TestDbHelper {
    * @returns Collection instance for the specified name
    * @throws Error if database is not connected
    */
-  getCollection<T extends Document>(name: string): Collection<T> {
-    if (!this.db) {
-      throw new Error('Database not connected. Call connect() first.')
+  collection<T extends Document>(name: string): Collection<T> {
+    if (!this._isConnected) {
+      throw new Error('Database not connected')
     }
-    return this.db.collection<T>(name)
+    return this.db.collection(name)
   }
 
   /**
    * Inserts a user document into the users collection.
-   * @param user - The user document to insert
-   * @returns Promise resolving to the inserted document's ID as a string
+   * @param userData - The user data to insert
+   * @returns Promise resolving to void
    */
-  async insertUser(user: any): Promise<string> {
-    const collection = this.getCollection('users')
-    const result = await collection.insertOne(user)
-    return result.insertedId.toString()
+  async insertUser(user: Partial<ClientUser>): Promise<void> {
+    const collection = this.collection<ClientUser>('users')
+    await collection.insertOne(user as any)
   }
 
   /**
    * Inserts a logo document into the logos collection.
-   * @param logo - The logo document to insert
-   * @returns Promise resolving to the inserted document's ID as a string
+   * @param logoData - The logo data to insert
+   * @returns Promise resolving to void
    */
-  async insertLogo(logo: any): Promise<string> {
-    const collection = this.getCollection('logos')
-    const result = await collection.insertOne(logo)
-    return result.insertedId.toString()
+  async insertLogo(logo: Partial<ClientLogo>): Promise<void> {
+    const collection = this.collection<ClientLogo>('logos')
+    await collection.insertOne(logo as any)
   }
 
   /**
@@ -80,8 +87,8 @@ export class TestDbHelper {
    * @param query - The query to find the user
    * @returns Promise resolving to the found user document or null if not found
    */
-  async findUser(query: any): Promise<any> {
-    const collection = this.getCollection('users')
+  async findUser(query: Partial<ClientUser>): Promise<ClientUser | null> {
+    const collection = this.collection<ClientUser>('users')
     return collection.findOne(query)
   }
 
@@ -90,8 +97,8 @@ export class TestDbHelper {
    * @param query - The query to find the logo
    * @returns Promise resolving to the found logo document or null if not found
    */
-  async findLogo(query: any): Promise<any> {
-    const collection = this.getCollection('logos')
+  async findLogo(query: Partial<ClientLogo>): Promise<ClientLogo | null> {
+    const collection = this.collection<ClientLogo>('logos')
     return collection.findOne(query)
   }
 
@@ -100,34 +107,39 @@ export class TestDbHelper {
    * @param name - The name of the collection to clear
    */
   async clearCollection(name: string): Promise<void> {
-    const collection = this.getCollection(name)
-    await collection.deleteMany({})
-  }
-
-  /**
-   * Deletes all documents from multiple collections.
-   * @param names - Array of collection names to clear
-   */
-  async clearCollections(names: string[]): Promise<void> {
-    await Promise.all(names.map(name => this.clearCollection(name)));
+    if (!this._isConnected) {
+      throw new Error('Database not connected')
+    }
+    await this.db.collection(name).deleteMany({})
   }
 
   /**
    * Deletes all documents from all collections in the database.
    */
-  async clearDatabase(): Promise<void> {
-    if (!this.db) {
-      throw new Error('Database not connected. Call connect() first.')
+  async clearAllCollections(): Promise<void> {
+    if (!this._isConnected) {
+      throw new Error('Database not connected')
     }
-    const collections = await this.db.listCollections().toArray()
-    await Promise.all(collections.map(c => this.clearCollection(c.name)))
+    const collections = await this.db.collections()
+    await Promise.all(collections.map((collection: Collection) => collection.deleteMany({})))
+  }
+
+  /**
+   * Deletes all documents from the specified collections.
+   * @param collections - The names of the collections to clear
+   */
+  async clearCollections(collections: string[]): Promise<void> {
+    if (!Array.isArray(collections)) {
+      throw new Error('Collections parameter must be an array')
+    }
+    await Promise.all(collections.map(name => this.clearCollection(name)))
   }
 
   /**
    * Gets the MongoDB client instance.
    * @returns The MongoDB client
    */
-  getClient(): MongoClient | null {
+  getClient(): MongoClient | MockMongoClient {
     return this.client
   }
 
@@ -136,16 +148,17 @@ export class TestDbHelper {
    * @returns The MongoDB database
    */
   async getDb(): Promise<Db | null> {
-    return this.db;
+    return this.db
   }
 
-  async isConnected(): Promise<boolean> {
-    try {
-      return this.client !== null && await this.client.db().command({ ping: 1 }).then(() => true).catch(() => false);
-    } catch {
-      return false;
-    }
+  /**
+   * Checks if the database is connected.
+   * @returns True if connected, false otherwise
+   */
+  get isConnected(): boolean {
+    return this._isConnected
   }
 }
 
-export default TestDbHelper
+// Export a singleton instance
+export const testDb = new TestDbHelper()

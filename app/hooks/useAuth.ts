@@ -1,20 +1,25 @@
 import { useSession } from 'next-auth/react';
-import { ClientUser } from '@/app/lib/types';
 
-interface AuthState {
-  user: Partial<ClientUser> | null;
-  loading: boolean;
+export interface AuthState {
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  user: {
+    id?: string;
+    name?: string | null;
+    email?: string | null;
+    image?: string | null;
+    role?: string;
+  } | null;
 }
 
 export function useAuth(): AuthState {
   const { data: session, status } = useSession();
 
   return {
-    user: session?.user ? {
-      id: session.user.id || '',
-      email: session.user.email || '',
-      name: session.user.name || ''
-    } : null,
-    loading: status === 'loading'
+    isAuthenticated: status === 'authenticated',
+    isLoading: status === 'loading',
+    user: session?.user || null,
   };
-} 
+}
+
+export default useAuth; 

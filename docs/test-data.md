@@ -1,285 +1,114 @@
-# Test Data Generation Guide
+# Test Data System Documentation
 
 ## Overview
-This guide describes how to generate and manage test data using MongoDB in the test environment.
 
-## Directory Structure
-```
-scripts/
-├── seed/                   # Test data generation scripts
-│   ├── users.ts           # User data generation
-│   ├── logos.ts           # Logo data generation
-│   └── __tests__/         # Test files for seed scripts
-└── seed-data/             # Static test data files
-    └── images/            # Test images
-```
+The test data system provides a robust way to generate, validate, and manage test data for the application. It includes type-safe interfaces, validation, and database helpers.
 
-## Implemented Scripts
+## Test Data Types
 
-### 1. User Data Generation (`scripts/seed/users.ts`)
+### User Test Data
 ```typescript
-interface UserSeedOptions {
-  count: number;
-  withProfiles?: boolean;
-  roles?: Array<'user' | 'admin'>;
-  passwordHash?: string;
-}
-
-// Generate multiple users
-const users = await seedUsers({
-  count: 10,
-  withProfiles: true,
-  roles: ['user', 'admin']
-});
-
-// Generate admin users
-const admins = await seedAdmins(2);
-
-// Create a single test user
-const testUser = await createTestUser({
-  email: 'custom@example.com'
-});
-```
-
-### 2. Logo Data Generation (`scripts/seed/logos.ts`)
-```typescript
-interface LogoSeedOptions {
-  count: number;
-  perUser?: number;
-  withRatings?: boolean;
-  userIds: ObjectId[];
-  minVotes?: number;
-  maxVotes?: number;
-}
-
-// Generate multiple logos
-const logos = await seedLogos({
-  count: 10,
-  userIds: existingUserIds,
-  withRatings: true,
-  perUser: 2
-});
-
-// Create a single test logo
-const testLogo = await createTestLogo(userId, {
-  name: 'Custom Logo'
-});
-```
-
-### 3. Relationship Data Generation (`scripts/seed/relationships.ts`)
-```typescript
-interface RelationshipSeedOptions {
-  users: { _id: ObjectId }[];
-  logos: { _id: ObjectId }[];
-  commentsPerLogo?: number;
-  collectionsPerUser?: number;
-  logosPerCollection?: number;
-  favoritesPerUser?: number;
-  maxRepliesPerComment?: number;
-}
-
-// Generate all relationships
-const relationships = await seedRelationships({
-  users: existingUsers,
-  logos: existingLogos,
-  commentsPerLogo: 3,
-  collectionsPerUser: 2,
-  favoritesPerUser: 5
-});
-
-// Or generate specific relationships
-const comments = await seedComments({ users, logos });
-const collections = await seedCollections({ users, logos });
-const favorites = await seedFavorites({ users, logos });
-```
-
-## Data Models
-
-### Users Collection
-```typescript
-interface User {
-  _id: ObjectId;
-  username: string;
-  email: string;
-  password: string; // hashed
-  profile: {
-    image?: string;
-    bio?: string;
-    location?: string;
-    website?: string;
-    company?: string;
-  };
-  role: 'user' | 'admin';
-  createdAt: Date;
-  lastLogin: Date;
-  isActive: boolean;
+interface TestUser extends Omit<ClientUser, 'role' | 'createdAt' | 'updatedAt'> {
+  role: 'USER' | 'ADMIN' | 'DESIGNER';
+  createdAt: string;
+  updatedAt: string;
 }
 ```
 
-### Logos Collection
+### Logo Test Data
 ```typescript
-interface Logo {
-  _id: ObjectId;
-  name: string;
-  url: string;
-  description: string;
-  userId: ObjectId;
-  tags: string[];
-  averageRating: number;
-  votes: Array<{
-    userId: ObjectId;
-    rating: number;
-    timestamp: Date;
-  }>;
-  createdAt: Date;
-  updatedAt: Date;
+interface TestLogo extends Omit<ClientLogo, 'createdAt' | 'updatedAt'> {
+  createdAt: string;
+  updatedAt: string;
 }
 ```
 
-### Comments Collection
+## Database Helper
+
+The `TestDbHelper` class provides a type-safe interface for managing test data:
+
 ```typescript
-interface Comment {
-  _id: ObjectId;
-  logoId: ObjectId;
-  userId: ObjectId;
-  content: string;
-  createdAt: Date;
-  updatedAt: Date;
-  likes: number;
-  replies?: Comment[];
+class TestDbHelper {
+  async connect(): Promise<void>;
+  async disconnect(): Promise<void>;
+  async insertUser(userData: Partial<ClientUser>): Promise<string>;
+  async insertLogo(logoData: Partial<ClientLogo>): Promise<string>;
+  async findUser(query: Partial<ClientUser>): Promise<ClientUser | null>;
+  async findLogo(query: Partial<ClientLogo>): Promise<ClientLogo | null>;
+  async clearCollection(name: string): Promise<void>;
+  async clearAllCollections(): Promise<void>;
+  isConnected(): boolean;
 }
 ```
 
-### Collections Collection
+## MongoDB Mock
+
+The MongoDB mock system provides a type-safe way to test database operations:
+
 ```typescript
-interface Collection {
-  _id: ObjectId;
-  name: string;
-  description: string;
-  userId: ObjectId;
-  logoIds: ObjectId[];
-  isPublic: boolean;
-  createdAt: Date;
-  updatedAt: Date;
+class MockCollection<T extends Document> {
+  async insertOne(doc: T): Promise<{ insertedId: string }>;
+  async findOne(query: Partial<T>): Promise<T | null>;
+  async find(query?: Partial<T>): Promise<T[]>;
+  async updateOne(query: Partial<T>, update: { $set: Partial<T> }): Promise<{ modifiedCount: number }>;
+  async deleteOne(query: Partial<T>): Promise<{ deletedCount: number }>;
+  async deleteMany(query?: Partial<T>): Promise<{ deletedCount: number }>;
+  async countDocuments(query?: Partial<T>): Promise<number>;
 }
 ```
 
-### Favorites Collection
+## Test Data Generation
+
+### Example Usage
 ```typescript
-interface Favorite {
-  _id: ObjectId;
-  userId: ObjectId;
-  logoId: ObjectId;
-  createdAt: Date;
+const users: TestUser[] = [
+  {
+    id: 'test-user-1',
+    email: 'test@example.com',
+    name: 'Test User',
+    role: 'USER',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  }
+];
+
+const logos: TestLogo[] = [
+  {
+    id: 'test-logo-1',
+    name: 'Test Logo',
+    description: 'A test logo',
+    imageUrl: 'https://example.com/logo.png',
+    thumbnailUrl: 'https://example.com/logo-thumb.png',
+    category: 'test',
+    tags: ['test'],
+    dimensions: { width: 100, height: 100 },
+    fileSize: 1024,
+    fileType: 'image/png',
+    averageRating: 0,
+    totalVotes: 0,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  }
+];
+```
+
+## Validation Integration
+
+Test data is validated before insertion:
+```typescript
+const validationResult = validateUser(user);
+if (validationResult.errors.length > 0) {
+  console.error('Invalid user data:', validationResult.errors);
+  // Handle validation failure
 }
 ```
 
-## Features
+## Recent Updates
 
-### User Generation
-- Random username and email generation
-- Password hashing with bcrypt
-- Optional profile generation
-- Role assignment (user/admin)
-- Timestamp management
-
-### Logo Generation
-- Style-based naming
-- Tag system with predefined categories
-- Rating and voting system
-- Even distribution among users
-- Dynamic description generation
-- Timestamp management
-
-### Relationship Generation
-- Nested comment structure with replies
-- Public and private collections
-- Like counts for comments
-- Even distribution of favorites
-- Realistic content generation
-- Timestamp management for all relationships
-
-## Usage Examples
-
-### Complete Test Data Setup
-```typescript
-import { seedUsers } from '../seed/users';
-import { seedLogos } from '../seed/logos';
-import { seedRelationships } from '../seed/relationships';
-
-async function setupCompleteTestData() {
-  // Create users and logos first
-  const users = await seedUsers({
-    count: 10,
-    withProfiles: true
-  });
-
-  const logos = await seedLogos({
-    count: 30,
-    userIds: users.map(u => u._id),
-    withRatings: true
-  });
-
-  // Then create all relationships
-  const relationships = await seedRelationships({
-    users,
-    logos,
-    commentsPerLogo: 3,
-    collectionsPerUser: 2,
-    favoritesPerUser: 5,
-    maxRepliesPerComment: 2
-  });
-
-  return { users, logos, relationships };
-}
-```
-
-### Testing Usage
-```typescript
-describe('Logo Gallery Tests', () => {
-  let testUser;
-  let testLogo;
-
-  beforeEach(async () => {
-    testUser = await createTestUser();
-    testLogo = await createTestLogo(testUser._id);
-  });
-
-  it('should handle logo operations', async () => {
-    // Test with generated data
-  });
-});
-```
-
-## Best Practices
-
-1. **Data Generation**
-   - Use realistic data patterns
-   - Maintain referential integrity
-   - Generate consistent timestamps
-   - Include edge cases
-
-2. **Testing**
-   - Clean up test data after tests
-   - Use isolated test databases
-   - Maintain data relationships
-   - Test edge cases
-
-3. **Performance**
-   - Use bulk operations for large datasets
-   - Implement proper cleanup
-   - Monitor database size
-   - Handle large datasets efficiently
-
-## Configuration
-
-The test environment uses Jest with the following configuration:
-```javascript
-// jest.config.js
-module.exports = {
-  preset: 'ts-jest',
-  testEnvironment: 'node',
-  roots: ['<rootDir>/scripts'],
-  testMatch: ['**/__tests__/**/*.test.ts'],
-};
-``` 
+- Added type-safe interfaces for test data
+- Improved MongoDB mock system with proper typing
+- Enhanced validation integration
+- Added proper error handling
+- Updated date handling to use ISO strings
+- Added required ID fields to test data
+- Improved test coverage 

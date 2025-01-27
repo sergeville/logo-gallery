@@ -1,4 +1,4 @@
-import { ValidationResult, ValidationError } from '@/app/lib/validation';
+import { ValidationResult } from '@/app/lib/validation/validation-utils';
 import chalk from 'chalk';
 
 interface QualityMetrics {

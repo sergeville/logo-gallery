@@ -1,7 +1,7 @@
-import { MongoClient, ObjectId } from 'mongodb';
-import { connectToDatabase, disconnectFromDatabase } from '../../app/lib/db';
-import { validateUser, validateLogo } from './utils/model-validators';
-import { ValidationResult } from '../../app/lib/validation';
+import { MongoClient } from 'mongodb';
+import { validateUser, validateLogo } from '../seed/validation';
+import type { ValidationResult, ValidationError } from '@/lib/types';
+import type { ClientUser, ClientLogo } from '@/lib/types';
 import chalk from 'chalk';
 
 interface ValidationReport {
@@ -12,45 +12,67 @@ interface ValidationReport {
   fixes: string[];
 }
 
-async function validateTestData() {
-  const { db } = await connectToDatabase();
-  const usersCollection = db.collection('users');
-  const logosCollection = db.collection('logos');
-
-  const reports: ValidationReport[] = [];
-
-  // Validate users
-  const users = await usersCollection.find({}).toArray();
-  for (const user of users) {
-    const result = validateUser(user);
-    if (result.errors.length > 0 || result.warnings.length > 0) {
-      const report = createReport(user._id.toString(), '', result);
-      reports.push(report);
-    }
-  }
-
-  // Validate logos
-  const logos = await logosCollection.find({}).toArray();
-  for (const logo of logos) {
-    const result = validateLogo(logo);
-    if (result.errors.length > 0 || result.warnings.length > 0) {
-      const report = createReport(logo.userId?.toString() || '', logo._id.toString(), result);
-      reports.push(report);
-    }
-  }
-
-  await disconnectFromDatabase();
-  return reports;
+function createReport(userId: string, logoId: string, result: ValidationResult): string {
+  const header = `Validation Report${userId ? ` for User ${userId}` : ''}${logoId ? ` for Logo ${logoId}` : ''}`
+  const errors = result.errors.map((e: ValidationError) => `${e.field}: ${e.message}`).join('\n  ')
+  const warnings = result.warnings.map((w: ValidationError) => `${w.field}: ${w.message}`).join('\n  ')
+  
+  return `${header}
+${result.errors.length > 0 ? `\nErrors:\n  ${errors}` : ''}
+${result.warnings.length > 0 ? `\nWarnings:\n  ${warnings}` : ''}`
 }
 
-function createReport(userId: string, logoId: string, result: ValidationResult): ValidationReport {
-  return {
-    userId,
-    logoId,
-    errors: result.errors.map(e => e.message),
-    warnings: result.warnings.map(w => w.message),
-    fixes: result.fixes.map(f => f.action)
-  };
+async function validateTestData() {
+  const client = new MongoClient(process.env.MONGODB_TEST_URI || 'mongodb://localhost:27017');
+  
+  try {
+    await client.connect();
+    const db = client.db('test');
+    
+    // Validate users
+    const users = await db.collection('users').find().toArray();
+    console.log(`\nValidating ${users.length} users...`);
+    
+    for (const user of users) {
+      const result = await validateUser(user as Partial<ClientUser>);
+      if (result.errors.length > 0 || result.warnings.length > 0) {
+        console.log(`\nValidation issues for user ${user._id}:`);
+        if (result.errors.length > 0) {
+          console.log('Errors:');
+          result.errors.forEach((error: ValidationError) => console.log(`- ${error.field}: ${error.message}`));
+        }
+        if (result.warnings.length > 0) {
+          console.log('Warnings:');
+          result.warnings.forEach((warning: ValidationError) => console.log(`- ${warning.field}: ${warning.message}`));
+        }
+      }
+    }
+    
+    // Validate logos
+    const logos = await db.collection('logos').find().toArray();
+    console.log(`\nValidating ${logos.length} logos...`);
+    
+    for (const logo of logos) {
+      const result = await validateLogo(logo as Partial<ClientLogo>);
+      if (result.errors.length > 0 || result.warnings.length > 0) {
+        console.log(`\nValidation issues for logo ${logo._id}:`);
+        if (result.errors.length > 0) {
+          console.log('Errors:');
+          result.errors.forEach((error: ValidationError) => console.log(`- ${error.field}: ${error.message}`));
+        }
+        if (result.warnings.length > 0) {
+          console.log('Warnings:');
+          result.warnings.forEach((warning: ValidationError) => console.log(`- ${warning.field}: ${warning.message}`));
+        }
+      }
+    }
+    
+    console.log('\nValidation complete');
+  } catch (error) {
+    console.error('Error validating test data:', error);
+  } finally {
+    await client.close();
+  }
 }
 
 function printReport(reports: ValidationReport[]) {
@@ -84,8 +106,7 @@ function printReport(reports: ValidationReport[]) {
 
 async function main() {
   try {
-    const reports = await validateTestData();
-    printReport(reports);
+    await validateTestData();
     process.exit(0);
   } catch (error) {
     console.error('Error during validation:', error);

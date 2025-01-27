@@ -40,7 +40,41 @@ export async function connectDB() {
 ```
 
 ### Create Models
-`src/models/User.ts` and `src/models/Logo.ts` as provided in documentation.
+
+`src/models/Logo.ts`:
+```typescript
+import { ObjectId } from 'mongodb';
+
+export interface Logo {
+  _id: ObjectId;
+  name: string;
+  description?: string;
+  imageUrl?: string;
+  url?: string;  // Legacy field
+  thumbnailUrl?: string;
+  userId: ObjectId;  // References the user who owns this logo
+  ownerName?: string;
+  tags?: string[];
+  category?: string;
+  dimensions?: {
+    width: number;
+    height: number;
+  };
+  fileSize?: number;
+  fileType?: string;
+  averageRating: number;
+  totalVotes: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+```
+
+### Logo Ownership
+- Each logo must have a `userId` field referencing the user who owns it
+- The `userId` is set automatically when a logo is created
+- Only the owner can edit or delete their logos
+- The owner's name is stored in `ownerName` for display purposes
+- Ownership checks are performed in API routes using the authenticated user's ID
 
 ## 4. API Implementation
 

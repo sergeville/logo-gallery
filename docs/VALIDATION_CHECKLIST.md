@@ -1,3 +1,109 @@
+# Validation System Documentation
+
+## Overview
+
+The validation system provides a unified way to validate user and logo data across the application. It uses a consistent type system and provides detailed error reporting.
+
+## Types
+
+### ValidationResult
+```typescript
+interface ValidationResult {
+  errors: ValidationError[];
+  warnings: ValidationWarning[];
+  fixes: FixSuggestion[];
+}
+
+interface ValidationError {
+  field: string;
+  message: string;
+  code: string;
+}
+
+interface ValidationWarning {
+  field: string;
+  message: string;
+  code: string;
+}
+
+interface FixSuggestion {
+  field: string;
+  action: string;
+  value?: any;
+}
+```
+
+## Validation Functions
+
+### User Validation
+- `validateUser(user: Partial<ClientUser>): ValidationResult`
+  - Validates email format
+  - Validates required name field
+  - Returns validation result with errors, warnings, and fixes
+
+### Logo Validation
+- `validateLogo(logo: Partial<ClientLogo>): ValidationResult`
+  - Validates image URL format
+  - Validates required description field
+  - Validates required name field
+  - Returns validation result with errors, warnings, and fixes
+
+## Error Codes
+
+### User Validation Codes
+- `INVALID_EMAIL_FORMAT`: Invalid email address format
+- `MISSING_NAME`: Required name field is missing
+- `INVALID_PASSWORD`: Password does not meet requirements
+
+### Logo Validation Codes
+- `INVALID_URL_FORMAT`: Invalid image URL format
+- `MISSING_DESCRIPTION`: Required description field is missing
+- `MISSING_NAME`: Required name field is missing
+
+## Usage Examples
+
+### Validating a User
+```typescript
+const user = {
+  email: 'test@example.com',
+  name: 'Test User'
+};
+
+const result = validateUser(user);
+if (result.errors.length > 0) {
+  console.error('Validation failed:', result.errors);
+}
+```
+
+### Validating a Logo
+```typescript
+const logo = {
+  name: 'Test Logo',
+  imageUrl: 'https://example.com/logo.png',
+  description: 'A test logo'
+};
+
+const result = validateLogo(logo);
+if (result.errors.length > 0) {
+  console.error('Validation failed:', result.errors);
+}
+```
+
+## Testing
+
+The validation system includes comprehensive tests:
+- Unit tests for individual validation functions
+- Integration tests with the database
+- Test helpers for validation in test data generation
+
+## Recent Updates
+
+- Consolidated validation types between app/lib/validation and scripts/seed/validation
+- Added proper error codes and messages
+- Improved type safety throughout the validation system
+- Enhanced test coverage for validation functions
+- Added support for warning messages and fix suggestions
+
 # Database and Type System Validation Checklist
 
 ## When Making Changes to Database Structure

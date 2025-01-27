@@ -1,75 +1,53 @@
-import { ObjectId } from 'mongodb';
+import type { ClientUser, ClientLogo } from '@/lib/types'
+import { faker } from '@faker-js/faker'
 
-export interface TestUser {
-  _id?: ObjectId;
-  username: string;
-  email: string;
-  password: string;
-  bio?: string;
-  avatarUrl?: string;
-  website?: string;
-  createdAt?: Date;
-  updatedAt?: Date;
+export interface TestUser extends Omit<ClientUser, 'id'> {
+  id?: string
+  username?: string
+  password?: string
 }
 
-export interface TestLogo {
-  _id?: ObjectId;
-  name: string;
-  url: string;
-  description: string;
-  ownerId: ObjectId;
-  tags?: string[];
-  rating?: number;
-  votes?: number;
-  colors?: string[];
-  dimensions?: {
-    width: number;
-    height: number;
-  };
-  fileType?: string;
-  metadata?: {
-    version: string;
-    status: string;
-  };
-  createdAt?: Date;
-  updatedAt?: Date;
+export interface TestLogo extends Omit<ClientLogo, 'id'> {
+  id?: string
+  url?: string
 }
 
-export function generateTestUser(overrides = {}): TestUser {
+export function generateTestUser(options: Partial<TestUser> = {}): TestUser {
+  const id = options.id || faker.string.uuid()
   return {
-    username: 'testuser',
-    email: 'test@example.com',
-    password: 'password123',
-    bio: 'Test user bio',
-    avatarUrl: 'https://example.com/avatar.png',
-    website: 'https://example.com',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    ...overrides
-  };
+    id,
+    username: options.username || faker.internet.userName(),
+    email: options.email || faker.internet.email(),
+    name: options.name || faker.person.fullName(),
+    password: options.password || 'password123',
+    role: options.role || 'user',
+    favorites: options.favorites || [],
+    createdAt: options.createdAt || new Date().toISOString(),
+    updatedAt: options.updatedAt || new Date().toISOString()
+  }
 }
 
-export function generateTestLogo(ownerId?: ObjectId, overrides = {}): TestLogo {
+export function generateTestLogo(options: Partial<TestLogo> = {}): TestLogo {
+  const id = options.id || faker.string.uuid()
+  const ownerId = options.ownerId || faker.string.uuid()
+  const ownerName = options.ownerName || faker.person.fullName()
+  
   return {
-    name: 'Test Logo',
-    url: 'https://example.com/logo.png',
-    description: 'A test logo',
-    ownerId: ownerId || new ObjectId(),
-    tags: ['minimal', 'modern'],
-    rating: 4,
-    votes: 10,
-    colors: ['#000000', '#FFFFFF'],
-    dimensions: {
-      width: 100,
-      height: 100
-    },
-    fileType: 'png',
-    metadata: {
-      version: '1.0',
-      status: 'active'
-    },
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    ...overrides
-  };
+    id,
+    name: options.name || faker.company.name(),
+    description: options.description || faker.lorem.sentence(),
+    imageUrl: options.imageUrl || faker.image.url(),
+    thumbnailUrl: options.thumbnailUrl || faker.image.url(),
+    ownerId,
+    ownerName,
+    category: options.category || faker.helpers.arrayElement(['tech', 'finance', 'retail', 'other']),
+    tags: options.tags || [faker.word.sample(), faker.word.sample()],
+    dimensions: options.dimensions || { width: 200, height: 200 },
+    fileSize: options.fileSize || faker.number.int({ min: 1000, max: 1000000 }),
+    fileType: options.fileType || faker.helpers.arrayElement(['image/png', 'image/jpeg', 'image/svg+xml']),
+    averageRating: options.averageRating || 0,
+    totalVotes: options.totalVotes || 0,
+    createdAt: options.createdAt || new Date().toISOString(),
+    updatedAt: options.updatedAt || new Date().toISOString()
+  }
 } 

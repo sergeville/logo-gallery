@@ -1,6 +1,7 @@
 import { connectToDatabase } from '../../app/lib/db';
 import bcrypt from 'bcrypt';
 import { User } from '../../app/lib/types';
+import { ObjectId } from 'mongodb';
 
 const testUser = {
   email: 'test@example.com',
@@ -29,6 +30,7 @@ async function createTestUser() {
     // Create user
     const result = await usersCollection.insertOne({
       ...testUser,
+      _id: new ObjectId(),
       password: hashedPassword
     });
 

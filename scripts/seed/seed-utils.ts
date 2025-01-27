@@ -41,4 +41,29 @@ export function generateMockLogo(userId: ObjectId, index: number): ILogo {
 
 export function generateMockLogos(userId: ObjectId, count: number): ILogo[] {
   return Array.from({ length: count }, (_, i) => generateMockLogo(userId, i + 1));
+}
+
+export function createLogo(userId: ObjectId, index: number): ILogo {
+  return {
+    _id: new ObjectId(),
+    name: `Test Logo ${index}`,
+    description: `Description for test logo ${index}`,
+    imageUrl: `https://example.com/logos/test-logo-${index}.png`,
+    thumbnailUrl: `https://example.com/logos/test-logo-${index}-thumb.png`,
+    url: `https://example.com/logos/test-logo-${index}.png`,
+    userId,
+    ownerName: 'Test User',
+    category: 'Test',
+    tags: ['test', `tag${index}`],
+    dimensions: {
+      width: 800,
+      height: 600
+    },
+    fileSize: 256 * 1024,
+    fileType: 'png',
+    totalVotes: 0,
+    votes: [],
+    createdAt: new Date(),
+    updatedAt: new Date()
+  };
 } 

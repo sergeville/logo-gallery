@@ -10,14 +10,25 @@ Retrieves a specific logo by its ID.
 **Response (200 OK)**
 ```json
 {
-  "_id": "string",
+  "id": "string",
   "name": "string",
-  "imageUrl": "string",
   "description": "string",
+  "imageUrl": "string",
+  "thumbnailUrl": "string",
   "ownerId": "string",
+  "ownerName": "string",
   "tags": ["string"],
+  "category": "string",
+  "dimensions": {
+    "width": "number",
+    "height": "number"
+  },
+  "fileSize": "number",
+  "fileType": "string",
   "averageRating": "number",
-  "totalVotes": "number"
+  "totalVotes": "number",
+  "createdAt": "string",
+  "updatedAt": "string"
 }
 ```
 
@@ -55,6 +66,9 @@ Uploads a new logo file and creates a logo entry.
 **Request Body (multipart/form-data)**
 - `file`: Logo image file
 - `name`: Logo name
+- `description`: Logo description
+- `category`: Logo category
+- `tags`: Array of tags
 
 **Response (200 OK)**
 ```json
@@ -62,11 +76,25 @@ Uploads a new logo file and creates a logo entry.
   "success": true,
   "message": "Logo uploaded successfully",
   "logo": {
-    "_id": "string",
+    "id": "string",
     "name": "string",
+    "description": "string",
     "imageUrl": "string",
+    "thumbnailUrl": "string",
     "ownerId": "string",
-    "createdAt": "string"
+    "ownerName": "string",
+    "category": "string",
+    "tags": ["string"],
+    "dimensions": {
+      "width": "number",
+      "height": "number"
+    },
+    "fileSize": "number",
+    "fileType": "string",
+    "averageRating": "number",
+    "totalVotes": "number",
+    "createdAt": "string",
+    "updatedAt": "string"
   }
 }
 ```

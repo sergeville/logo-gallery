@@ -1,64 +1,58 @@
-import { render, screen } from '@testing-library/react';
-import Page from '../page';
-import { AuthProvider } from '../../contexts/AuthContext';
+import { render, screen, waitFor } from '@testing-library/react'
+import { SessionProvider } from 'next-auth/react'
+import GalleryPage from '../page'
+import { server } from '@app/mocks/test-server'
+import { rest } from 'msw'
+
+const mockLogos = [
+  {
+    id: 'test-logo-id',
+    name: 'Test Logo',
+    description: 'Test Logo Description',
+    imageUrl: '/test-image.png',
+    thumbnailUrl: '/test-thumbnail.png',
+    votes: 0,
+    ownerName: 'Test User',
+    tags: ['test'],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  }
+]
 
 describe('Gallery Page', () => {
-  beforeEach(() => {
-    global.fetch = jest.fn();
-  });
-
   it('renders logo cards', async () => {
-    const mockLogo = {
-      _id: '123',
-      name: 'Test Logo',
-      url: 'https://example.com/logo.png',
-      description: 'Test Logo Description',
-      ownerId: '456',
-      tags: ['test'],
-      totalVotes: 0,
-      createdAt: new Date().toISOString()
-    };
-
-    const mockResponse = {
-      logos: [mockLogo],
-      pagination: {
-        current: 1,
-        total: 1,
-        hasMore: false
-      }
-    };
-
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockResponse
-    });
-
     render(
-      <AuthProvider>
-        <Page />
-      </AuthProvider>
-    );
+      <SessionProvider session={null}>
+        <GalleryPage />
+      </SessionProvider>
+    )
 
-    expect(await screen.findByText('Test Logo')).toBeInTheDocument();
-    expect(await screen.findByText('Test Logo Description')).toBeInTheDocument();
-  });
+    await waitFor(() => {
+      expect(screen.getByText('Test Logo')).toBeInTheDocument()
+      expect(screen.getByText('Test Logo Description')).toBeInTheDocument()
+      expect(screen.getByText('Test User')).toBeInTheDocument()
+      expect(screen.getByText('#test')).toBeInTheDocument()
+    })
+  })
 
   it('handles fetch errors gracefully', async () => {
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
-      ok: false,
-      status: 500,
-      json: async () => ({
-        success: false,
-        message: 'Failed to fetch logos'
+    server.use(
+      rest.get('/api/logos', (req, res, ctx) => {
+        return res(
+          ctx.status(500),
+          ctx.json({ error: 'Failed to load logos' })
+        )
       })
-    });
+    )
 
     render(
-      <AuthProvider>
-        <Page />
-      </AuthProvider>
-    );
+      <SessionProvider session={null}>
+        <GalleryPage />
+      </SessionProvider>
+    )
 
-    expect(await screen.findByText(/failed to fetch logos/i)).toBeInTheDocument();
-  });
-}); 
+    await waitFor(() => {
+      expect(screen.getByText(/failed to load logos/i)).toBeInTheDocument()
+    })
+  })
+}) 

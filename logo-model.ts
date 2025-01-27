@@ -9,7 +9,7 @@ interface IVote {
 interface ILogo {
   name: string;
   url: string;
-  userId: mongoose.Types.ObjectId;
+  userId: mongoose.Types.ObjectId;  // References the user who owns this logo
   description?: string;
   tags: string[];
   votes: IVote[];

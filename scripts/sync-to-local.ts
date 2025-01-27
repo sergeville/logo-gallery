@@ -1,3 +1,5 @@
+import { MongoClient } from 'mongodb'
+import type { Logo } from '@/lib/types'
 import { generateSyncReport } from './check-logo-sync';
 import { connectToDatabase } from '@/lib/mongodb';
 import { ObjectId } from 'mongodb';
@@ -30,95 +32,41 @@ async function ensureUploadsDir() {
 }
 
 async function syncToLocal() {
-  console.log(chalk.blue('\n=== Synchronizing Database to Local Files ===\n'));
-
+  const sourceClient = new MongoClient(process.env.MONGODB_SOURCE_URI || '')
+  const targetClient = new MongoClient(process.env.MONGODB_TARGET_URI || '')
+  
   try {
-    await ensureUploadsDir();
-    const report = await generateSyncReport();
+    await sourceClient.connect()
+    await targetClient.connect()
     
-    if (report.isInSync) {
-      console.log(chalk.green('✓ Already in sync! No changes needed.\n'));
-      return;
+    const sourceDb = sourceClient.db(process.env.MONGODB_SOURCE_DB || 'logo-gallery')
+    const targetDb = targetClient.db(process.env.MONGODB_TARGET_DB || 'logo-gallery')
+    
+    // Get logos from source
+    const sourceLogos = await sourceDb.collection<Logo>('logos').find().toArray()
+    console.log(`Found ${sourceLogos.length} logos in source database`)
+    
+    // Clear target logos collection
+    await targetDb.collection('logos').deleteMany({})
+    
+    if (sourceLogos.length > 0) {
+      // Insert logos into target
+      const result = await targetDb.collection('logos').insertMany(sourceLogos)
+      console.log(`Successfully synced ${result.insertedCount} logos to target database`)
     }
-
-    const { db } = await connectToDatabase();
-    const logosCollection = db.collection('logos');
-    let changes = 0;
-
-    // 1. Remove orphaned database entries
-    if (report.orphanedEntries.length > 0) {
-      console.log(chalk.yellow(`\nRemoving ${report.orphanedEntries.length} orphaned database entries...`));
-      
-      for (const { logoId, imageUrl } of report.orphanedEntries) {
-        try {
-          const result = await logosCollection.deleteOne({
-            _id: new ObjectId(logoId)
-          });
-
-          if (result.deletedCount === 1) {
-            console.log(chalk.gray(`✓ Removed database entry: ${logoId} (${imageUrl})`));
-            changes++;
-          }
-        } catch (error) {
-          console.error(chalk.red(`✗ Failed to remove database entry ${logoId}:`), error);
-        }
-      }
-    }
-
-    // 2. Create entries for unmapped files
-    if (report.unmappedFiles.length > 0) {
-      console.log(chalk.yellow(`\nCreating ${report.unmappedFiles.length} database entries for unmapped files...`));
-      
-      for (const filename of report.unmappedFiles) {
-        try {
-          const filePath = join(process.cwd(), 'public', 'uploads', filename);
-          const fileInfo = await getFileInfo(filePath);
-          
-          const logoEntry = {
-            _id: new ObjectId(),
-            name: filename.split('.')[0], // Use filename without extension as name
-            imageUrl: `/uploads/${filename}`,
-            description: 'Auto-generated entry from local file',
-            ownerId: new ObjectId(), // You might want to set this to a default user
-            tags: [],
-            fileSize: fileInfo.size,
-            fileType: filename.split('.').pop()?.toLowerCase() || 'unknown',
-            createdAt: fileInfo.created,
-            updatedAt: new Date(),
-            averageRating: 0,
-            totalVotes: 0
-          };
-
-          const result = await logosCollection.insertOne(logoEntry);
-          
-          if (result.insertedId) {
-            console.log(chalk.gray(`✓ Created database entry for: ${filename}`));
-            changes++;
-          }
-        } catch (error) {
-          console.error(chalk.red(`✗ Failed to create database entry for ${filename}:`), error);
-        }
-      }
-    }
-
-    // Final verification
-    const finalReport = await generateSyncReport();
-    if (finalReport.isInSync) {
-      console.log(chalk.green(`\n✓ Synchronization completed successfully! Made ${changes} changes.\n`));
-    } else {
-      console.log(chalk.yellow('\n⚠ Some synchronization actions failed. Please check the logs above.\n'));
-      process.exit(1);
-    }
-
+    
+    console.log('Sync completed successfully')
   } catch (error) {
-    console.error(chalk.red('\nError during synchronization:'), error);
-    process.exit(1);
+    console.error('Error during sync:', error)
+  } finally {
+    await sourceClient.close()
+    await targetClient.close()
   }
 }
 
 // Run if called directly
 if (require.main === module) {
-  syncToLocal();
+  syncToLocal().catch(console.error)
 }
 
 export { syncToLocal }; 

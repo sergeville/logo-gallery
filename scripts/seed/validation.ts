@@ -1,58 +1,104 @@
 import { ObjectId } from 'mongodb'
+import type { ValidationResult, ValidationError, ValidationFix } from '@/app/lib/validation/validation-utils'
 
-interface User {
+export interface ClientUser {
   _id?: string | ObjectId
   name: string
   email: string
   password?: string
   image?: string
+  role?: 'USER' | 'ADMIN'
 }
 
-interface Logo {
+export interface ClientLogo {
   _id?: string | ObjectId
   name: string
   url: string
   description?: string
+  imageUrl: string
+  thumbnailUrl: string
   userId: string | ObjectId
+  ownerId?: string | ObjectId
+  category?: string
+  tags?: string[]
   votes?: number
   createdAt?: Date
 }
 
-export const validateUser = (user: Partial<User>): { isValid: boolean; error?: string } => {
-  if (!user.name) {
-    return { isValid: false, error: 'Name is required' }
-  }
+export async function validateUser(user: Partial<ClientUser>): Promise<ValidationResult> {
+  const errors: ValidationError[] = []
+  const warnings: ValidationError[] = []
+  const fixes: ValidationFix[] = []
 
+  // Validate required fields
   if (!user.email) {
-    return { isValid: false, error: 'Email is required' }
+    errors.push({ field: 'email', message: 'Email is required' })
+  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(user.email)) {
+    errors.push({ field: 'email', message: 'Invalid email format' })
   }
 
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-  if (!emailRegex.test(user.email)) {
-    return { isValid: false, error: 'Invalid email format' }
+  if (!user.name) {
+    errors.push({ field: 'name', message: 'Name is required' })
   }
 
-  return { isValid: true }
+  if (user.role && !['USER', 'ADMIN'].includes(user.role)) {
+    errors.push({ field: 'role', message: 'Invalid role' })
+  }
+
+  // Return validation result
+  return {
+    isValid: errors.length === 0,
+    errors,
+    warnings,
+    fixes,
+    data: errors.length === 0 ? user : undefined
+  }
 }
 
-export const validateLogo = (logo: Partial<Logo>): { isValid: boolean; error?: string } => {
+export async function validateLogo(logo: Partial<ClientLogo>): Promise<ValidationResult> {
+  const errors: ValidationError[] = []
+  const warnings: ValidationError[] = []
+  const fixes: ValidationFix[] = []
+
+  // Validate required fields
   if (!logo.name) {
-    return { isValid: false, error: 'Name is required' }
+    errors.push({ field: 'name', message: 'Name is required' })
   }
 
-  if (!logo.url) {
-    return { isValid: false, error: 'URL is required' }
+  if (!logo.description) {
+    errors.push({ field: 'description', message: 'Description is required' })
   }
 
-  try {
-    new URL(logo.url)
-  } catch {
-    return { isValid: false, error: 'Invalid URL format' }
+  if (!logo.imageUrl) {
+    errors.push({ field: 'imageUrl', message: 'Image URL is required' })
+  } else if (!/^https?:\/\/.+/.test(logo.imageUrl)) {
+    errors.push({ field: 'imageUrl', message: 'Invalid image URL format' })
+  }
+
+  if (!logo.thumbnailUrl) {
+    errors.push({ field: 'thumbnailUrl', message: 'Thumbnail URL is required' })
+  } else if (!/^https?:\/\/.+/.test(logo.thumbnailUrl)) {
+    errors.push({ field: 'thumbnailUrl', message: 'Invalid thumbnail URL format' })
   }
 
   if (!logo.userId) {
-    return { isValid: false, error: 'User ID is required' }
+    errors.push({ field: 'userId', message: 'User ID is required' })
   }
 
-  return { isValid: true }
+  if (!logo.category) {
+    warnings.push({ field: 'category', message: 'Category is recommended' })
+  }
+
+  if (!logo.tags || !Array.isArray(logo.tags) || logo.tags.length === 0) {
+    warnings.push({ field: 'tags', message: 'Tags are recommended' })
+  }
+
+  // Return validation result
+  return {
+    isValid: errors.length === 0,
+    errors,
+    warnings,
+    fixes,
+    data: errors.length === 0 ? logo : undefined
+  }
 } 

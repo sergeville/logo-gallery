@@ -4,7 +4,7 @@ import React, { useState } from 'react'
 import Link from 'next/link'
 import { useSession, signOut } from 'next-auth/react'
 import ThemeToggle from './ThemeToggle'
-import { AuthModal } from './AuthModal'
+import AuthModal from './AuthModal'
 import { useRouter } from 'next/navigation'
 
 export default function Header() {
@@ -52,6 +52,12 @@ export default function Header() {
           >
             Vote
           </Link>
+          <Link 
+            href="/my-logos"
+            className="text-gray-600 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400 font-medium transition-colors"
+          >
+            My Logos
+          </Link>
         </nav>
 
         {/* Right section - Auth & Theme */}
@@ -71,7 +77,16 @@ export default function Header() {
                   href="/profile" 
                   className="flex items-center space-x-2 text-gray-600 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400 transition-colors"
                 >
-                  <span className="hidden sm:inline">{session.user?.name || session.user?.email}</span>
+                  <div className="hidden sm:flex items-center">
+                    <span className="font-medium">
+                      {session.user?.name || session.user?.email}
+                    </span>
+                    {session.user?.role && (
+                      <span className="ml-2 px-2.5 py-0.5 text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300 rounded-full capitalize">
+                        {session.user.role}
+                      </span>
+                    )}
+                  </div>
                   <span className="sm:hidden">Profile</span>
                 </Link>
               </div>

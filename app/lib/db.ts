@@ -1,56 +1,39 @@
 import { MongoClient, Db } from 'mongodb'
 
-let client: MongoClient | null = null;
-let db: Db | null = null;
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017'
+const MONGODB_DB = process.env.MONGODB_DB || 'logo-gallery'
+
+if (!MONGODB_URI) {
+  throw new Error('Please define the MONGODB_URI environment variable inside .env.local')
+}
+
+if (!MONGODB_DB) {
+  throw new Error('Please define the MONGODB_DB environment variable inside .env.local')
+}
+
+let cachedClient: MongoClient | null = null
+let cachedDb: Db | null = null
 
 export async function connectToDatabase(): Promise<{ client: MongoClient; db: Db }> {
-  if (client && db) {
-    return { client, db };
+  if (cachedClient && cachedDb) {
+    return { client: cachedClient, db: cachedDb }
   }
 
-  if (!process.env.MONGODB_URI) {
-    throw new Error('Please add your MongoDB URI to .env.local');
-  }
+  const client = await MongoClient.connect(MONGODB_URI)
+  const db = client.db(MONGODB_DB)
 
-  const uri = process.env.MONGODB_URI;
-  let dbName: string;
+  cachedClient = client
+  cachedDb = db
 
-  switch (process.env.NODE_ENV) {
-    case 'development':
-      dbName = 'LogoGalleryDevelopmentDB';
-      break;
-    case 'test':
-      dbName = 'LogoGalleryTestDB';
-      break;
-    case 'production':
-      dbName = 'LogoGalleryDB';
-      break;
-    default:
-      dbName = 'LogoGalleryDevelopmentDB';
-  }
-
-  try {
-    client = await MongoClient.connect(uri);
-    db = client.db(dbName);
-    return { client, db };
-  } catch (error) {
-    console.error('Failed to connect to database:', error);
-    throw error;
-  }
+  return { client, db }
 }
 
 export async function disconnectFromDatabase(): Promise<void> {
-  if (client) {
-    await client.close();
-    client = null;
-    db = null;
+  if (cachedClient) {
+    await cachedClient.close()
+    cachedClient = null
+    cachedDb = null
   }
 }
 
-export function getDb(): Db | null {
-  return db;
-}
-
-export function getClient(): MongoClient | null {
-  return client;
-} 
+export default connectToDatabase 

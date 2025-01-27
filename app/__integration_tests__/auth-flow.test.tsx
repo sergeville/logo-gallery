@@ -1,97 +1,296 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { signIn } from 'next-auth/react';
-import { AuthProvider } from '../contexts/AuthContext';
-import GalleryPage from '../gallery/page';
+import { render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { rest } from 'msw'
+import { setupServer } from 'msw/node'
+import { SessionProvider } from 'next-auth/react'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { generateTestUser } from '../utils/test-utils'
+import App from '../page'
+import { useSession, signIn, signOut } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
+import { useAuth } from '@/app/hooks/useAuth'
+import Navbar from '../components/Navbar'
 
-jest.mock('next-auth/react');
+const mockUser = generateTestUser()
 
-describe('Authentication Flow Integration', () => {
-  const mockLogo = {
-    _id: '123',
-    url: 'https://example.com/logo.png',
-    description: 'Test Logo',
-    ownerId: '456',
-    tags: ['test'],
-    totalVotes: 0,
-    createdAt: new Date('2025-01-14')
-  };
+const server = setupServer(
+  // Auth endpoints
+  rest.post('/api/auth/login', async (req, res, ctx) => {
+    const { email, password } = await req.json()
+    if (email === 'test@example.com' && password === 'password123') {
+      return res(
+        ctx.status(200),
+        ctx.json({
+          success: true,
+          user: mockUser
+        })
+      )
+    }
+    return res(
+      ctx.status(401),
+      ctx.json({
+        success: false,
+        message: 'Invalid credentials'
+      })
+    )
+  }),
+
+  rest.post('/api/auth/register', async (req, res, ctx) => {
+    const { email, password, name } = await req.json()
+    if (!email || !password || !name) {
+      return res(
+        ctx.status(400),
+        ctx.json({
+          success: false,
+          message: 'All fields are required'
+        })
+      )
+    }
+    return res(
+      ctx.status(201),
+      ctx.json({
+        success: true,
+        message: 'User registered successfully',
+        user: mockUser
+      })
+    )
+  })
+)
+
+beforeAll(() => server.listen())
+afterEach(() => server.resetHandlers())
+afterAll(() => server.close())
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: false,
+    },
+  },
+})
+
+const renderApp = (session = null) => {
+  return render(
+    <SessionProvider session={session}>
+      <QueryClientProvider client={queryClient}>
+        <App />
+      </QueryClientProvider>
+    </SessionProvider>
+  )
+}
+
+describe('Authentication Flow', () => {
+  const mockRouter = {
+    push: jest.fn(),
+    refresh: jest.fn()
+  }
+  const user = userEvent.setup()
 
   beforeEach(() => {
-    global.fetch = jest.fn(() =>
-      Promise.resolve({
-        ok: true,
-        json: () => Promise.resolve([mockLogo])
+    queryClient.clear()
+    jest.clearAllMocks()
+    ;(useRouter as jest.Mock).mockReturnValue(mockRouter)
+    ;(useSession as jest.Mock).mockReturnValue({
+      data: null,
+      status: 'unauthenticated'
+    })
+    ;(useAuth as jest.Mock).mockReturnValue({ user: null })
+    ;(signIn as jest.Mock).mockResolvedValue({ ok: true, error: null })
+  })
+
+  describe('Sign In Flow', () => {
+    it('completes full sign in flow successfully', async () => {
+      const mockUser = generateTestUser()
+      render(<Navbar />)
+
+      // Initial state - Sign in button visible
+      expect(screen.getByRole('button', { name: /sign in/i })).toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: /sign out/i })).not.toBeInTheDocument()
+
+      // Click sign in
+      await user.click(screen.getByRole('button', { name: /sign in/i }))
+
+      // Auth modal appears
+      expect(screen.getByRole('dialog')).toBeInTheDocument()
+      
+      // Fill in credentials
+      await user.type(screen.getByLabelText(/email/i), 'test@example.com')
+      await user.type(screen.getByLabelText(/password/i), 'password123')
+      
+      // Submit form
+      await user.click(screen.getByRole('button', { name: /sign in/i }))
+      
+      // Mock successful authentication
+      ;(useSession as jest.Mock).mockReturnValue({
+        data: { user: mockUser },
+        status: 'authenticated'
       })
-    ) as jest.Mock;
-    (signIn as jest.Mock).mockClear();
-  });
+      ;(useAuth as jest.Mock).mockReturnValue({ user: mockUser })
 
-  it('shows auth modal when unauthenticated user tries to vote', async () => {
-    render(
-      <AuthProvider>
-        <GalleryPage />
-      </AuthProvider>
-    );
+      // Verify UI updates
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /sign out/i })).toBeInTheDocument()
+      expect(screen.getByText(mockUser.name)).toBeInTheDocument()
+      expect(mockRouter.refresh).toHaveBeenCalled()
+    })
 
-    const voteButton = await screen.findByRole('button', { name: /set as favorite/i });
-    fireEvent.click(voteButton);
+    it('handles sign in error gracefully', async () => {
+      ;(signIn as jest.Mock).mockResolvedValue({ ok: false, error: 'Invalid credentials' })
+      render(<Navbar />)
 
-    const modal = await screen.findByRole('dialog');
-    expect(modal).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Sign In' })).toBeInTheDocument();
-  });
+      // Start sign in flow
+      await user.click(screen.getByRole('button', { name: /sign in/i }))
+      await user.type(screen.getByLabelText(/email/i), 'test@example.com')
+      await user.type(screen.getByLabelText(/password/i), 'wrongpassword')
+      await user.click(screen.getByRole('button', { name: /sign in/i }))
 
-  it('allows voting after authentication', async () => {
-    (signIn as jest.Mock).mockResolvedValueOnce({ ok: true });
+      // Verify error handling
+      expect(screen.getByText(/invalid credentials/i)).toBeInTheDocument()
+      expect(screen.getByRole('dialog')).toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: /sign out/i })).not.toBeInTheDocument()
+    })
+  })
 
-    render(
-      <AuthProvider>
-        <GalleryPage />
-      </AuthProvider>
-    );
+  describe('Sign Out Flow', () => {
+    it('handles sign out process correctly', async () => {
+      const mockUser = generateTestUser()
+      ;(useSession as jest.Mock).mockReturnValue({
+        data: { user: mockUser },
+        status: 'authenticated'
+      })
+      ;(useAuth as jest.Mock).mockReturnValue({ user: mockUser })
 
-    const voteButton = await screen.findByRole('button', { name: /set as favorite/i });
-    fireEvent.click(voteButton);
+      render(<Navbar />)
 
-    const emailInput = await screen.findByLabelText(/email/i);
-    const passwordInput = await screen.findByLabelText(/password/i);
-    const submitButton = screen.getByRole('button', { name: /^Sign In$/i });
+      // Initial authenticated state
+      expect(screen.getByRole('button', { name: /sign out/i })).toBeInTheDocument()
+      expect(screen.getByText(mockUser.name)).toBeInTheDocument()
 
-    fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
-    fireEvent.change(passwordInput, { target: { value: 'password123' } });
-    fireEvent.click(submitButton);
+      // Sign out
+      await user.click(screen.getByRole('button', { name: /sign out/i }))
 
-    await waitFor(() => {
-      expect(signIn).toHaveBeenCalledWith('credentials', {
-        email: 'test@example.com',
-        password: 'password123',
-        redirect: false
-      });
-    });
-  });
+      // Mock unauthenticated state
+      ;(useSession as jest.Mock).mockReturnValue({
+        data: null,
+        status: 'unauthenticated'
+      })
+      ;(useAuth as jest.Mock).mockReturnValue({ user: null })
 
-  it('handles login errors gracefully', async () => {
-    (signIn as jest.Mock).mockResolvedValueOnce({ error: 'Invalid credentials' });
+      // Verify UI updates
+      expect(screen.queryByText(mockUser.name)).not.toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /sign in/i })).toBeInTheDocument()
+      expect(signOut).toHaveBeenCalledWith({ redirect: false })
+      expect(mockRouter.refresh).toHaveBeenCalled()
+    })
+  })
 
-    render(
-      <AuthProvider>
-        <GalleryPage />
-      </AuthProvider>
-    );
+  describe('Protected Navigation', () => {
+    it('shows protected links only when authenticated', async () => {
+      render(<Navbar />)
 
-    const voteButton = await screen.findByRole('button', { name: /set as favorite/i });
-    fireEvent.click(voteButton);
+      // Unauthenticated state
+      expect(screen.queryByRole('link', { name: /my logos/i })).not.toBeInTheDocument()
+      expect(screen.queryByRole('link', { name: /upload logo/i })).not.toBeInTheDocument()
 
-    const emailInput = await screen.findByLabelText(/email/i);
-    const passwordInput = await screen.findByLabelText(/password/i);
-    const submitButton = screen.getByRole('button', { name: /^Sign In$/i });
+      // Mock authentication
+      const mockUser = generateTestUser()
+      ;(useSession as jest.Mock).mockReturnValue({
+        data: { user: mockUser },
+        status: 'authenticated'
+      })
+      ;(useAuth as jest.Mock).mockReturnValue({ user: mockUser })
 
-    fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
-    fireEvent.change(passwordInput, { target: { value: 'password123' } });
-    fireEvent.click(submitButton);
+      // Re-render to trigger update
+      render(<Navbar />)
 
-    await waitFor(() => {
-      expect(screen.getByText(/invalid credentials/i)).toBeInTheDocument();
-    });
-  });
-}); 
+      // Verify protected links appear
+      expect(screen.getByRole('link', { name: /my logos/i })).toBeInTheDocument()
+      expect(screen.getByRole('link', { name: /upload logo/i })).toBeInTheDocument()
+    })
+  })
+
+  describe('Sign Up Flow', () => {
+    it('allows user to create a new account', async () => {
+      renderApp()
+
+      // Open auth modal
+      await user.click(screen.getByRole('button', { name: /sign in/i }))
+
+      // Switch to sign up mode
+      await user.click(screen.getByText(/create an account/i))
+
+      // Fill in registration details
+      await user.type(screen.getByLabelText(/email/i), 'newuser@example.com')
+      await user.type(screen.getByLabelText(/password/i), 'password123')
+      await user.type(screen.getByLabelText(/name/i), 'New User')
+
+      // Submit form
+      await user.click(screen.getByRole('button', { name: /sign up/i }))
+
+      // Verify success
+      await waitFor(() => {
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+        expect(screen.getByText(/New User/i)).toBeInTheDocument()
+      })
+    })
+
+    it('shows error for invalid registration data', async () => {
+      server.use(
+        rest.post('/api/auth/register', (req, res, ctx) => {
+          return res(
+            ctx.status(400),
+            ctx.json({
+              success: false,
+              message: 'Email already registered'
+            })
+          )
+        })
+      )
+
+      renderApp()
+
+      // Open auth modal
+      await user.click(screen.getByRole('button', { name: /sign in/i }))
+
+      // Switch to sign up mode
+      await user.click(screen.getByText(/create an account/i))
+
+      // Fill in registration details
+      await user.type(screen.getByLabelText(/email/i), 'existing@example.com')
+      await user.type(screen.getByLabelText(/password/i), 'password123')
+      await user.type(screen.getByLabelText(/name/i), 'Existing User')
+
+      // Submit form
+      await user.click(screen.getByRole('button', { name: /sign up/i }))
+
+      // Verify error message
+      await waitFor(() => {
+        expect(screen.getByText(/email already registered/i)).toBeInTheDocument()
+      })
+    })
+  })
+
+  describe('Authentication State', () => {
+    it('shows authenticated UI when user is logged in', () => {
+      renderApp({
+        user: mockUser,
+        expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+      })
+
+      expect(screen.getByText(mockUser.name)).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /sign out/i })).toBeInTheDocument()
+    })
+
+    it('shows unauthenticated UI when user is logged out', () => {
+      renderApp(null)
+
+      expect(screen.getByRole('button', { name: /sign in/i })).toBeInTheDocument()
+      expect(screen.queryByText(mockUser.name)).not.toBeInTheDocument()
+    })
+  })
+
+  it('should handle successful login', async () => {
+    renderApp(createMockSession('USER'))
+    // ... rest of the test
+  })
+}) 

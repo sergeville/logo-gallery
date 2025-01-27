@@ -25,44 +25,54 @@ interface User {
   _id: ObjectId;
   email: string;
   name: string;
-  password: string; // Hashed
+  password?: string;
+  role: 'user' | 'admin' | 'designer';
+  favorites?: ObjectId[];
   createdAt: Date;
   updatedAt: Date;
-  profile: {
-    avatar: string;
-    bio: string;
-  };
 }
 
 // Logo Model
 interface Logo {
   _id: ObjectId;
   name: string;
-  description?: string;
-  url: string;
+  description: string;
+  imageUrl: string;
   thumbnailUrl: string;
   ownerId: ObjectId;
-  ownerName: string;
-  category: string;
+  ownerName?: string;
   tags: string[];
+  category: string;
   dimensions: {
     width: number;
     height: number;
   };
   fileSize: number;
   fileType: string;
-  uploadedAt: Date;
-  totalVotes: number;
   averageRating: number;
+  totalVotes: number;
+  votes?: Array<{
+    userId: ObjectId;
+    rating: number;
+    createdAt: Date;
+  }>;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
-// Vote Model
-interface Vote {
+// Collection Model
+interface Collection {
   _id: ObjectId;
-  logoId: ObjectId;
-  userId: ObjectId;
-  rating: number;
+  name: string;
+  description: string;
+  ownerId: ObjectId;
+  ownerName?: string;
+  logoIds: ObjectId[];
+  isPublic: boolean;
+  tags?: string[];
+  collaborators?: ObjectId[];
   createdAt: Date;
+  updatedAt: Date;
 }
 ```
 
@@ -74,16 +84,17 @@ logo-gallery/
 │   ├── auth/                # Authentication pages
 │   ├── components/          # Shared components
 │   ├── lib/                 # Utility functions
+│   ├── models/             # Database models
 │   ├── (routes)/           # Page routes
 │   └── layout.tsx          # Root layout
 ├── public/
 │   └── uploads/            # Logo uploads directory
 ├── styles/
 │   └── globals.css         # Global styles
-├── docs/
-│   └── DESIGN.md           # This document
+├── docs/                   # Documentation
 └── scripts/
-    └── seed/              # Database seeding
+    ├── seed/              # Database seeding
+    └── test-data/         # Test data generation
 ```
 
 ## 🚀 Setup & Installation

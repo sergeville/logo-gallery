@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAuth } from '@/app/hooks/useAuth';
-import { AuthModal } from '@/app/components/AuthModal';
-import { LogoCard } from '@/app/components/LogoCard';
-import { ClientLogo } from '@/app/lib/types';
+import { useAuth } from '../hooks/useAuth';
+import AuthModal from '../components/AuthModal';
+import LogoCard from '../components/LogoCard';
+import { AdminLogoCard } from '../components/AdminLogoCard';
+import { ClientLogo } from '../../lib/types';
 
 interface PaginatedResponse {
   logos: ClientLogo[];
@@ -15,18 +16,39 @@ interface PaginatedResponse {
   };
 }
 
+interface User {
+  id: string;
+  name: string;
+  email: string;
+}
+
 export default function GalleryPage() {
-  const { user, loading } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [logos, setLogos] = useState<ClientLogo[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
 
+  const fetchUsers = async () => {
+    if (user?.role !== 'admin') return;
+    
+    try {
+      const response = await fetch('/api/users');
+      if (!response.ok) throw new Error('Failed to fetch users');
+      const data = await response.json();
+      setUsers(data.users);
+    } catch (err) {
+      console.error('Error fetching users:', err);
+    }
+  };
+
   const fetchLogos = async () => {
     try {
       setError(null);
+      setIsLoading(true);
       const response = await fetch(`/api/logos?page=${currentPage}`);
       if (!response.ok) throw new Error('Failed to fetch logos');
       const data: PaginatedResponse = await response.json();
@@ -40,9 +62,37 @@ export default function GalleryPage() {
     }
   };
 
+  const handleUpdateOwner = async (logoId: string, newOwnerId: string) => {
+    try {
+      const response = await fetch(`/api/logos/${logoId}/owner`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ newOwnerId }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update logo owner');
+      }
+
+      // Refresh the logos list
+      await fetchLogos();
+    } catch (error) {
+      console.error('Error updating logo owner:', error);
+      setError('Failed to update logo owner. Please try again.');
+    }
+  };
+
   useEffect(() => {
     fetchLogos();
   }, [currentPage]);
+
+  useEffect(() => {
+    if (user?.role === 'admin') {
+      fetchUsers();
+    }
+  }, [user]);
 
   const handleLoadMore = () => {
     setCurrentPage(prev => prev + 1);
@@ -83,11 +133,20 @@ export default function GalleryPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {logos.map(logo => (
-              <LogoCard
-                key={logo.id}
-                logo={logo}
-                onVote={() => !user && setShowAuthModal(true)}
-              />
+              user?.role === 'admin' ? (
+                <AdminLogoCard
+                  key={logo.id}
+                  logo={logo}
+                  onUpdateOwner={handleUpdateOwner}
+                  users={users}
+                />
+              ) : (
+                <LogoCard
+                  key={logo.id}
+                  logo={logo}
+                  onVote={() => !user && setShowAuthModal(true)}
+                />
+              )
             ))}
           </div>
         )}

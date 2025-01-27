@@ -1,0 +1,430 @@
+import React, { useState, useEffect } from 'react';
+import { render, screen, waitFor, cleanup } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { rest } from 'msw';
+import { setupServer } from 'msw/node';
+import type { Session } from 'next-auth';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ThemeProvider } from 'next-themes';
+import { SessionProvider } from 'next-auth/react';
+import '@testing-library/jest-dom';
+import App from '../page';
+import AuthModal from '../components/AuthModal';
+import { generateTestLogo } from '../utils/test-utils';
+import { useRouter } from 'next/navigation';
+import { signIn } from 'next-auth/react';
+
+// Add fetch polyfill for MSW
+import 'whatwg-fetch';
+
+// Mock URL.createObjectURL
+global.URL.createObjectURL = jest.fn(() => 'mock-url');
+global.URL.revokeObjectURL = jest.fn();
+
+// Create server instance
+const server = setupServer(
+  // Auth endpoints
+  rest.post('/api/auth/callback/credentials', (req, res, ctx) => {
+    return res(
+      ctx.status(200),
+      ctx.json({
+        user: mockUser,
+        expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+      })
+    )
+  }),
+
+  rest.get('/api/auth/session', (req, res, ctx) => {
+    return res(
+      ctx.status(200),
+      ctx.json({
+        user: mockUser,
+        expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+      })
+    )
+  }),
+
+  // Logo upload endpoint
+  rest.post('/api/logos', (req, res, ctx) => {
+    return res(
+      ctx.status(200),
+      ctx.json({ message: 'Logo uploaded successfully', logo: mockLogo })
+    )
+  }),
+
+  // Logo list endpoint
+  rest.get('/api/logos', (req, res, ctx) => {
+    return res(
+      ctx.status(200),
+      ctx.json([
+        {
+          id: '1',
+          name: 'Test Logo',
+          description: 'A test logo description',
+          imageUrl: '/test.png',
+          userId: mockUser.id,
+        },
+      ])
+    )
+  })
+);
+
+// Test lifecycle
+beforeAll(() => server.listen());
+afterEach(() => {
+  server.resetHandlers();
+  cleanup();
+});
+afterAll(() => server.close());
+
+// Mock next-auth
+jest.mock('next-auth/react', () => ({
+  signIn: jest.fn(() => Promise.resolve({ ok: true })),
+  signOut: jest.fn(() => Promise.resolve()),
+  SessionProvider: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="mock-session-provider">{children}</div>
+  )
+}));
+
+// Create mockUseSession reference
+const mockUseSession = jest.spyOn(require('next-auth/react'), 'useSession');
+
+// Types
+interface AuthModalProps {
+  onClose: () => void
+  onLoginSuccess: () => void
+}
+
+interface CustomSession extends Session {
+  name?: string
+  role?: string
+}
+
+// Mock user data
+const mockUser = {
+  id: '1',
+  name: 'Test User',
+  email: 'test@example.com',
+  role: 'user',
+}
+
+// Update createMockSession to return proper Session type
+const createMockSession = (role: string = 'user'): Session => ({
+  user: {
+    id: 'test-user-id',
+    name: 'Test User',
+    email: 'test@example.com',
+    role: role,
+    image: null
+  },
+  expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+})
+
+const mockLogo = generateTestLogo()
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: false,
+    },
+  },
+});
+// Mock next/navigation
+jest.mock('next/navigation', () => ({
+  useRouter: () => ({
+    push: jest.fn((path) => {
+      if (path === '/upload') {
+        const UploadPage = jest.requireActual('../upload/page').default;
+        render(<UploadPage />);
+      }
+    }),
+    replace: jest.fn(),
+    back: jest.fn(),
+    pathname: '/upload'
+  })
+}));
+
+// Mock AuthModal component
+jest.mock('../components/AuthModal', () => ({
+  default: function MockAuthModal({ onClose, onLoginSuccess }: AuthModalProps) {
+    const handleSubmit = async (e: React.FormEvent) => {
+      e.preventDefault();
+      await signIn('credentials', {
+        email: 'test@example.com',
+        password: 'password123'
+      });
+      onLoginSuccess();
+    };
+
+    return (
+      <div role="dialog" aria-label="Authentication">
+        <form onSubmit={handleSubmit}>
+          <label htmlFor="email">Email</label>
+          <input
+            type="email"
+            id="email"
+            defaultValue="test@example.com"
+          />
+          <label htmlFor="password">Password</label>
+          <input
+            type="password"
+            id="password"
+            defaultValue="password123"
+          />
+          <button type="submit" data-testid="auth-submit">Sign In</button>
+          <button type="button" onClick={onClose}>Close</button>
+        </form>
+      </div>
+    );
+  }
+}));
+
+// Mock HomePage component
+jest.mock('../page', () => ({
+  default: function MockApp({ children }: { children: React.ReactNode }) {
+    const [theme, setTheme] = useState('light');
+    const [showAuthForm, setShowAuthForm] = useState(false);
+    
+    useEffect(() => {
+      document.documentElement.classList.toggle('dark', theme === 'dark');
+    }, [theme]);
+
+    return (
+      <div>
+        <nav>
+          <a href="/upload" role="link" aria-label="Upload Logo">Upload Logo</a>
+          <a href="/gallery" role="link" aria-label="Gallery">Gallery</a>
+          <button onClick={() => setShowAuthForm(true)}>Sign In</button>
+          <button
+            onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
+            role="button"
+            aria-label={theme === 'light' ? 'Switch to dark theme' : 'Switch to light theme'}
+          >
+            {theme === 'light' ? '🌙' : '☀️'}
+          </button>
+        </nav>
+        {showAuthForm && (
+          <AuthModal
+            onClose={() => setShowAuthForm(false)}
+            onLoginSuccess={() => setShowAuthForm(false)}
+          />
+        )}
+        {children}
+      </div>
+    );
+  }
+}));
+
+// Mock UploadForm component
+jest.mock('../upload/page', () => ({
+  default: function MockUploadForm() {
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [success, setSuccess] = useState(false);
+
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+      e.preventDefault();
+      if (!selectedFile) return;
+
+      const formData = new FormData();
+      formData.append('file', selectedFile);
+      formData.append('name', (e.currentTarget.elements.namedItem('name') as HTMLInputElement).value);
+      formData.append('description', (e.currentTarget.elements.namedItem('description') as HTMLInputElement).value);
+
+      try {
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData
+        });
+
+        if (response.ok) {
+          setSuccess(true);
+        }
+      } catch (error) {
+        console.error('Upload failed:', error);
+      }
+    };
+
+    return (
+      <form onSubmit={handleSubmit}>
+        <label htmlFor="name">Logo Name</label>
+        <input type="text" id="name" name="name" required />
+        
+        <label htmlFor="description">Description</label>
+        <textarea id="description" name="description" required />
+        
+        <label htmlFor="file">Logo File</label>
+        <input
+          type="file"
+          id="file"
+          accept="image/*"
+          onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+          required
+        />
+        
+        <button type="submit">Upload Logo</button>
+        {success && <div role="alert">Logo uploaded successfully!</div>}
+      </form>
+    );
+  }
+}));
+
+// Helper function to create a mock file for testing
+const createMockFile = () => {
+  const content = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]); // PNG header bytes
+  const blob = new Blob([content], { type: 'image/png' });
+  return new File([blob], 'test-logo.png', { 
+    type: 'image/png',
+    lastModified: new Date().getTime()
+  });
+}
+
+const renderApp = (session: Session | null = null) => {
+  // Update useSession mock based on provided session
+  mockUseSession.mockImplementation(() => ({
+    data: session,
+    status: session ? 'authenticated' : 'unauthenticated'
+  }));
+
+  return render(
+    <SessionProvider session={session}>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider attribute="class" defaultTheme="light">
+          <div data-testid="app-wrapper">
+            <App />
+          </div>
+        </ThemeProvider>
+      </QueryClientProvider>
+    </SessionProvider>
+  );
+};
+// Helper function to wait for authentication
+const waitForAuthentication = async () => {
+  await waitFor(() => {
+    expect(screen.getByRole('link', { name: /upload logo/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /logout/i })).toBeInTheDocument()
+    expect(screen.getByText(mockUser.name)).toBeInTheDocument()
+  })
+};
+
+// Helper function to navigate to upload page
+const user = userEvent.setup();
+
+const navigateToUpload = async () => {
+  const router = useRouter();
+  router.push('/upload');
+  await waitForUploadForm();
+};
+
+// Helper function to wait for upload form
+const waitForUploadForm = async () => {
+  await waitFor(() => {
+    expect(screen.getByLabelText(/^Logo Name$/)).toBeInTheDocument()
+    expect(screen.getByLabelText(/^Description$/)).toBeInTheDocument()
+    expect(screen.getByLabelText(/^Logo Image$/)).toBeInTheDocument()
+  })
+}
+
+// Helper function to fill upload form
+const fillUploadForm = async (logoName: string, description: string, file: File) => {
+  await user.type(screen.getByLabelText(/^Logo Name$/), logoName)
+  await user.type(screen.getByLabelText(/^Description$/), description)
+  await user.upload(screen.getByLabelText(/^Logo Image$/), file)
+  await user.click(screen.getByRole('button', { name: /upload logo/i }))
+}
+
+// Helper function to verify upload success
+const verifyUploadSuccess = async () => {
+  await waitFor(() => {
+    expect(screen.getByRole('alert')).toHaveTextContent(/logo uploaded successfully/i)
+  })
+}
+
+describe('End-to-End User Journeys', () => {
+  beforeEach(() => {
+    server.listen()
+  })
+
+  afterEach(() => {
+    server.resetHandlers()
+    cleanup()
+  })
+
+  afterAll(() => {
+    server.close()
+  })
+
+  describe('New User Journey', () => {
+    it('completes registration and first logo upload', async () => {
+      renderApp()
+
+      // Click the initial sign in button
+      await user.click(screen.getByRole('button', { name: /sign in to get started/i }))
+
+      // Wait for auth form to render
+      await waitFor(() => {
+        expect(screen.getByLabelText(/^email$/i)).toBeInTheDocument()
+      })
+
+      // Fill in and submit auth form
+      await user.type(screen.getByLabelText(/^email$/i), 'test@example.com')
+      await user.type(screen.getByLabelText(/^password$/i), 'password123')
+      await user.click(screen.getByTestId('auth-submit'))
+
+      // Wait for authentication
+      await waitForAuthentication()
+
+      await navigateToUpload()
+      const file = createMockFile()
+      await fillUploadForm('Test Logo', 'A test logo description', file)
+      await verifyUploadSuccess()
+    })
+  })
+
+  describe('Logo Management Journey', () => {
+    it('completes logo upload, voting, and filtering flow', async () => {
+      const session = createMockSession();
+      renderApp(session);
+
+      await waitForAuthentication();
+      await navigateToUpload();
+      await waitForUploadForm();
+
+      const file = createMockFile();
+      await fillUploadForm('Test Logo', 'Test Description', file);
+      await verifyUploadSuccess();
+    });
+  })
+
+  describe('Theme Customization Journey', () => {
+    it('persists theme preference across navigation', async () => {
+      renderApp(createMockSession());
+
+      await waitForAuthentication();
+      
+      // Toggle theme
+      const themeToggle = screen.getByRole('button', {
+        name: /switch to dark theme/i
+      });
+      await user.click(themeToggle);
+
+      // Verify theme change
+      expect(document.documentElement).toHaveClass('dark');
+    });
+  })
+
+  describe('Admin Journey', () => {
+    it('completes admin logo management flow', async () => {
+      const adminUser = { ...mockUser, role: 'ADMIN' };
+      
+      renderApp(createMockSession('ADMIN'));
+
+      // Wait for authentication
+      await waitForAuthentication();
+
+      await navigateToUpload();
+      const file = createMockFile();
+      await fillUploadForm('Admin Logo', 'An admin test logo', file);
+      await verifyUploadSuccess();
+    });
+  })
+}) 

@@ -3,29 +3,34 @@
   "compilerOptions": {
     "jsx": "react-jsx",
     "module": "commonjs",
-    "target": "es2018",
-    "esModuleInterop": true,
+    "target": "es2017",
+    "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
-    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "noEmit": true,
+    "esModuleInterop": true,
     "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "incremental": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./*"]
-    },
-    "types": ["jest", "node"]
+      "@/*": ["app/*"],
+      "@lib/*": ["lib/*"],
+      "@config/*": ["config/*"],
+      "@scripts/*": ["scripts/*"]
+    }
   },
   "include": [
+    "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
     "**/*.js",
     "**/*.jsx",
-    "jest.config.js",
-    "jest.setup.js"
+    "jest.setup.ts",
+    "jest.config.js"
   ],
-  "exclude": [
-    "node_modules",
-    ".next",
-    "out",
-    "e2e"
-  ]
+  "exclude": ["node_modules"]
 } 

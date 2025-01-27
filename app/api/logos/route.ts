@@ -6,10 +6,10 @@
 
 import { NextResponse, type NextRequest } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/lib/auth';
-import { connectToDatabase } from '@/app/lib/db';
-import { Logo } from '@/app/models/Logo';
-import { ClientLogo, transformLogo } from '@/app/lib/transforms';
+import { authOptions } from '../auth/[...nextauth]/options';
+import { connectToDatabase } from '../../../lib/db';
+import { ClientLogo, Logo } from '../../../lib/types';
+import { transformLogo } from '../../../lib/transforms';
 import { ObjectId, WithId } from 'mongodb';
 
 interface CreateLogoBody {
@@ -43,61 +43,42 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '12');
-    const search = searchParams.get('search') || '';
-    const category = searchParams.get('category') || '';
-    const tag = searchParams.get('tag') || '';
+    const userId = searchParams.get('userId');
+    const limit = 12;
+    const skip = (page - 1) * limit;
 
     const { db } = await connectToDatabase();
-    const collection = db.collection<Logo>('logos');
+    
+    // Build query based on userId if provided
+    const query = userId ? { userId: new ObjectId(userId) } : {};
+    
+    const [logos, total] = await Promise.all([
+      db.collection<Logo>('logos')
+        .find(query)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .toArray(),
+      db.collection<Logo>('logos').countDocuments(query)
+    ]);
 
-    // Build query
-    const query: any = {};
-    if (search) {
-      query.$or = [
-        { name: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } }
-      ];
-    }
-    if (category) {
-      query.category = category;
-    }
-    if (tag) {
-      query.tags = tag;
-    }
-
-    // Get total count for pagination
-    const total = await collection.countDocuments(query);
-    const hasMore = total > page * limit;
-
-    // Get paginated results
-    const logos = await collection
-      .find(query)
-      .sort({ createdAt: -1 })
-      .skip((page - 1) * limit)
-      .limit(limit)
-      .toArray();
-
-    // Transform logos for client
-    const transformedLogos = logos.map(logo => transformLogo(logo as WithId<Logo>));
+    const hasMore = total > skip + logos.length;
+    const clientLogos = logos.map(transformLogo);
 
     return NextResponse.json({
-      logos: transformedLogos,
+      logos: clientLogos,
       pagination: {
         current: page,
         total: Math.ceil(total / limit),
         hasMore
       }
-    } satisfies GetLogosResponse);
-
-  } catch (error) {
-    console.error('Error fetching logos:', error);
-    return NextResponse.json({ 
-      error: 'Failed to fetch logos',
-      details: error instanceof Error ? error.message : undefined
-    } satisfies ErrorResponse, { 
-      status: 500 
     });
+  } catch (error) {
+    console.error('Error in GET /api/logos:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch logos' },
+      { status: 500 }
+    );
   }
 }
 
@@ -127,8 +108,8 @@ export async function POST(request: NextRequest) {
       description: body.description,
       imageUrl,
       thumbnailUrl: imageUrl, // TODO: Generate thumbnail
-      ownerId: new ObjectId(session.user.id),
-      tags: body.tags || [],
+      userId: new ObjectId(session.user.id),
+      ownerName: session.user.name || 'Unknown User',
       category: 'uncategorized', // TODO: Add category support
       dimensions: { width: 0, height: 0 }, // TODO: Extract from image
       fileSize: 0, // TODO: Get file size
@@ -136,7 +117,9 @@ export async function POST(request: NextRequest) {
       createdAt: new Date(),
       updatedAt: new Date(),
       averageRating: 0,
-      totalVotes: 0
+      totalVotes: 0,
+      tags: body.tags || [],
+      votes: []
     };
 
     await collection.insertOne(logo);

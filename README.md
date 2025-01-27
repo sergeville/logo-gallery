@@ -107,6 +107,10 @@ Current test coverage:
 - Tags: 1-50 tags, each 2-30 chars
 - Rating: 0-5 range
 - Description: Max 1000 chars
+- userId: Required, references the user who owns the logo
+- Dimensions: Width and height in pixels
+- FileSize: Size in bytes
+- FileType: Supported image formats (png, jpeg, svg)
 
 ### Relationships
 - Comments: Max 1000 chars, max 10 mentions

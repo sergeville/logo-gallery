@@ -1,198 +1,140 @@
 # Database Testing Documentation
 
 ## Overview
-This document describes the database testing infrastructure for the Logo Gallery application, including our seeding strategy for test data generation.
 
-## Test Data Generation
+The database testing system provides a comprehensive suite of tools and utilities for testing MongoDB operations in a type-safe manner.
 
-### Seeding Strategy
-The application uses a structured seeding approach with three main components:
+## Components
 
-1. **User Seeding** (`scripts/seed/users.ts`)
-   - Generates test users with profiles
-   - Supports both regular and admin users
-   - Includes password hashing and profile generation
+### TestDbHelper
 
-2. **Logo Seeding** (`scripts/seed/logos.ts`)
-   - Creates test logos with metadata
-   - Supports ratings and voting
-   - Maintains user relationships
-   - Includes tag and style generation
+The `TestDbHelper` class provides a type-safe interface for database operations in tests:
 
-### Usage Example
 ```typescript
-import { seedUsers } from './scripts/seed/users';
-import { seedLogos } from './scripts/seed/logos';
-
-async function setupTestDatabase() {
-  // Create test users
-  const users = await seedUsers({
-    count: 10,
-    withProfiles: true,
-    roles: ['user', 'admin']
-  });
-
-  // Create test logos
-  const logos = await seedLogos({
-    count: 30,
-    userIds: users.map(u => u._id),
-    withRatings: true,
-    perUser: 3
-  });
-
-  return { users, logos };
+class TestDbHelper {
+  constructor();
+  async connect(): Promise<void>;
+  async disconnect(): Promise<void>;
+  async insertUser(userData: Partial<ClientUser>): Promise<string>;
+  async insertLogo(logoData: Partial<ClientLogo>): Promise<string>;
+  async findUser(query: Partial<ClientUser>): Promise<ClientUser | null>;
+  async findLogo(query: Partial<ClientLogo>): Promise<ClientLogo | null>;
+  async clearCollection(name: string): Promise<void>;
+  async clearAllCollections(): Promise<void>;
+  isConnected(): boolean;
 }
 ```
 
-## Test Database Helper
+### MongoDB Mock
 
-The test database helper provides utilities for managing test data:
+The MongoDB mock system provides in-memory database operations for testing:
 
-### Connection Management
 ```typescript
-import { testDbHelper } from './utils/test-db-helper';
-
-// Connect to test database
-await testDbHelper.connect();
-
-// Perform operations...
-
-// Disconnect when done
-await testDbHelper.disconnect();
-```
-
-### Transaction Management
-```typescript
-// Start a transaction
-await testDbHelper.startTransaction();
-
-try {
-  // Perform operations...
-  await testDbHelper.commitTransaction();
-} catch (error) {
-  await testDbHelper.abortTransaction();
-  throw error;
+class MockCollection<T extends Document> {
+  async insertOne(doc: T): Promise<{ insertedId: string }>;
+  async findOne(query: Partial<T>): Promise<T | null>;
+  async find(query?: Partial<T>): Promise<T[]>;
+  async updateOne(query: Partial<T>, update: { $set: Partial<T> }): Promise<{ modifiedCount: number }>;
+  async deleteOne(query: Partial<T>): Promise<{ deletedCount: number }>;
+  async deleteMany(query?: Partial<T>): Promise<{ deletedCount: number }>;
+  async countDocuments(query?: Partial<T>): Promise<number>;
 }
 ```
 
-### Data Operations
-```typescript
-// Insert test data
-const user = await testDbHelper.insertUser(userData);
-const logo = await testDbHelper.insertLogo(logoData);
+## Test Configuration
 
-// Find data
-const userLogos = await testDbHelper.findLogosByUserId(user._id);
+### Environment Variables
+```typescript
+process.env.MONGODB_TEST_URI = 'mongodb://localhost:27017/test';
+process.env.NEXTAUTH_URL = 'http://localhost:3000';
+process.env.NEXTAUTH_SECRET = 'test-secret';
 ```
 
-## Best Practices
-
-### 1. Test Data Generation
-- Use seed scripts for consistent data
-- Maintain referential integrity
-- Include edge cases
-- Use realistic data patterns
-
-### 2. Test Isolation
+### Test Database Config
 ```typescript
-describe('Logo Tests', () => {
-  let testUser;
-  let testLogo;
+const testConfig = {
+  mongodb: {
+    uri: process.env.MONGODB_TEST_URI || 'mongodb://localhost:27017',
+    dbName: 'LogoGalleryTestDB',
+    options: {
+      retryWrites: true,
+      w: 'majority'
+    }
+  }
+};
+```
+
+## Usage Examples
+
+### Basic Test Setup
+```typescript
+describe('Database Tests', () => {
+  let testDb: TestDbHelper;
+
+  beforeAll(async () => {
+    testDb = new TestDbHelper();
+    await testDb.connect();
+  });
+
+  afterAll(async () => {
+    await testDb.disconnect();
+  });
 
   beforeEach(async () => {
-    await testDbHelper.clearCollections();
-    testUser = await createTestUser();
-    testLogo = await createTestLogo(testUser._id);
+    await testDb.clearAllCollections();
   });
 
-  afterEach(async () => {
-    await testDbHelper.clearCollections();
+  it('should insert and retrieve a user', async () => {
+    const userData = {
+      id: 'test-user-1',
+      email: 'test@example.com',
+      name: 'Test User'
+    };
+
+    const userId = await testDb.insertUser(userData);
+    const user = await testDb.findUser({ id: userId });
+    expect(user).toBeTruthy();
+    expect(user?.email).toBe(userData.email);
   });
 });
 ```
 
-### 3. Error Handling
+### Validation Integration
 ```typescript
-try {
-  await testDbHelper.connect();
-  // Test operations...
-} catch (error) {
-  console.error('Test database error:', error);
-  throw error;
-} finally {
-  await testDbHelper.disconnect();
-}
+it('should validate user data before insertion', async () => {
+  const invalidUser = {
+    email: 'invalid-email',
+    name: ''
+  };
+
+  const validationResult = validateUser(invalidUser);
+  expect(validationResult.errors.length).toBeGreaterThan(0);
+});
 ```
 
-## Configuration
+## Best Practices
 
-### Environment Variables
-```env
-MONGODB_TEST_URI=mongodb://localhost:27017/LogoGalleryTest
-```
+1. **Test Isolation**
+   - Use a separate test database
+   - Clear collections between tests
+   - Use unique identifiers for test data
 
-### Jest Configuration
-```javascript
-// jest.config.js
-module.exports = {
-  preset: 'ts-jest',
-  testEnvironment: 'node',
-  roots: ['<rootDir>/scripts'],
-  testMatch: ['**/__tests__/**/*.test.ts'],
-};
-```
+2. **Type Safety**
+   - Use proper types for all database operations
+   - Validate data before insertion
+   - Handle errors appropriately
 
-## Testing Strategy
+3. **Performance**
+   - Use in-memory MongoDB mock for unit tests
+   - Use real MongoDB instance for integration tests
+   - Clean up test data after tests
 
-### 1. Unit Tests
-- Test individual database operations
-- Verify data validation
-- Check error handling
-- Test helper functions
+## Recent Updates
 
-### 2. Integration Tests
-- Test data relationships
-- Verify cascading operations
-- Test bulk operations
-- Check constraints
-
-### 3. Performance Tests
-- Test with large datasets
-- Verify bulk operation efficiency
-- Check query performance
-- Monitor memory usage
-
-## Troubleshooting
-
-### Common Issues
-1. Connection Failures
-   - Check MongoDB service
-   - Verify connection string
-   - Check network connectivity
-   - Verify credentials
-
-2. Data Generation Issues
-   - Check seed script logs
-   - Verify data integrity
-   - Check for missing references
-   - Monitor memory usage
-
-3. Performance Issues
-   - Use bulk operations
-   - Implement proper indexes
-   - Monitor query patterns
-   - Clean up test data
-
-## Maintenance
-
-### Regular Tasks
-1. Update seed scripts as schema changes
-2. Review and update test data patterns
-3. Monitor test database size
-4. Clean up old test data
-
-### Version Updates
-1. Update MongoDB driver
-2. Check TypeScript types
-3. Update test utilities
-4. Review seed scripts 
+- Added type-safe database operations
+- Improved MongoDB mock system
+- Enhanced error handling
+- Added validation integration
+- Updated date handling
+- Improved test coverage
+- Added proper cleanup procedures 

@@ -1,15 +1,19 @@
 'use client'
 
-import Image from 'next/image'
-import { ClientLogo } from '@/app/lib/types'
+import Link from 'next/link'
+import { ClientLogo } from '../../lib/types'
 import { useState } from 'react'
+import Image from 'next/image'
+import { useSession } from 'next-auth/react'
 
 interface LogoCardProps {
   logo: ClientLogo
-  onVote?: () => void
+  onVote?: (logoId: string) => void
+  isVoting?: boolean
 }
 
-export function LogoCard({ logo, onVote }: LogoCardProps) {
+export default function LogoCard({ logo, onVote, isVoting = false }: LogoCardProps) {
+  const { data: session } = useSession()
   const [imageError, setImageError] = useState(false);
   const [isImageLoading, setIsImageLoading] = useState(true);
 
@@ -22,76 +26,85 @@ export function LogoCard({ logo, onVote }: LogoCardProps) {
     setIsImageLoading(false);
   };
 
+  // Format owner name to handle both email and name consistently
+  const displayOwner = () => {
+    if (!logo.ownerName) {
+      return { name: null, showLink: true };
+    }
+    
+    const ownerNameLower = logo.ownerName.toLowerCase();
+    
+    // Special cases that need the Update Owner link
+    const specialCases = ['unknown user', 'unknown owner', '', 'undefined', 'null'];
+    if (specialCases.includes(ownerNameLower) || ownerNameLower.includes('unknown')) {
+      return { name: null, showLink: true };
+    }
+    
+    // Handle email addresses and admin
+    if (ownerNameLower === 'admin') {
+      return { name: 'admin', showLink: true };
+    } else if (logo.ownerName.includes('@')) {
+      return { name: logo.ownerName.split('@')[0], showLink: false };
+    }
+    
+    return { name: logo.ownerName, showLink: false };
+  };
+
+  const ownerInfo = displayOwner();
+
+  const handleVote = () => {
+    if (onVote) {
+      onVote(logo.id)
+    }
+  }
+
   return (
-    <div className="bg-[#0A1A2F] rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 p-6">
-      <div className="relative aspect-[4/3] mb-4 bg-gray-800 rounded-lg overflow-hidden">
-        {isImageLoading && (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
-          </div>
-        )}
-        {imageError ? (
-          <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400 p-4">
-            <svg className="w-12 h-12 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-            <p className="text-center text-sm mb-3">Image failed to load.</p>
-            <button 
-              onClick={() => window.location.href = '/upload'}
-              className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-medium transition-colors text-sm"
-            >
-              Try Upload Again
-            </button>
-          </div>
-        ) : (
+    <div className="bg-[#0A1A2F] rounded-lg shadow-lg overflow-hidden border border-gray-700/50">
+      <div className="relative aspect-video w-full bg-gray-800">
+        {!imageError ? (
           <Image
-            src={logo.imageUrl || logo.url}
-            alt={logo.name}
+            src={logo.imageUrl}
+            alt={logo.name || 'Logo'}
             fill
-            className="object-cover hover:scale-105 transition-transform duration-200"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            className={`object-contain transition-opacity duration-300 ${
+              isImageLoading ? 'opacity-0' : 'opacity-100'
+            }`}
             onError={handleImageError}
-            onLoadingComplete={handleImageLoad}
-            sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            onLoad={handleImageLoad}
             priority
           />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center text-gray-400">
+            Failed to load image
+          </div>
+        )}
+        {isImageLoading && !imageError && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+          </div>
         )}
       </div>
-      
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-white truncate">{logo.name}</h3>
-          <div className="flex items-center gap-3">
-            <span className="text-sm font-medium text-gray-300">
-              {logo.totalVotes || 0} votes
-            </span>
-            {onVote && (
-              <button 
-                onClick={onVote}
-                className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
-              >
-                Vote
-              </button>
-            )}
+      <div className="p-4">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{logo.name}</h3>
+        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{logo.description}</p>
+        <div className="mt-4 flex justify-between items-center">
+          <div className="text-sm text-gray-500 dark:text-gray-400">
+            <span>{logo.totalVotes} votes</span>
+            <span className="mx-2">•</span>
+            <span>Rating: {logo.averageRating.toFixed(1)}</span>
           </div>
+          {session && onVote && (
+            <button
+              onClick={() => onVote(logo.id)}
+              disabled={isVoting}
+              className="mt-4 w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 rounded-md text-white font-medium disabled:opacity-50"
+              aria-label="Vote"
+            >
+              {isVoting ? 'Voting...' : 'Vote'}
+            </button>
+          )}
         </div>
-        
-        <div className="text-sm text-gray-400 flex items-center gap-2">
-          <span className="inline-block w-6 h-6 rounded-full bg-gray-700 flex-shrink-0"></span>
-          <span>{logo.ownerName || 'Unknown User'}</span>
-        </div>
-        
-        {logo.tags && logo.tags.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            {logo.tags.map((tag, index) => (
-              <span 
-                key={index}
-                className="text-xs bg-gray-800 text-gray-300 px-3 py-1 rounded-full font-medium hover:bg-gray-700 transition-colors"
-              >
-                #{tag}
-              </span>
-            ))}
-          </div>
-        )}
       </div>
     </div>
   )

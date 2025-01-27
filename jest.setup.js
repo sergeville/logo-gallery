@@ -1,5 +1,6 @@
 // Learn more: https://github.com/testing-library/jest-dom
 import '@testing-library/jest-dom'
+import 'whatwg-fetch'
 
 // Mock next/navigation
 jest.mock('next/navigation', () => ({
@@ -41,4 +42,8 @@ jest.mock('@/lib/db', () => ({
 // Mock environment variables
 process.env.MONGODB_URI = 'mongodb://localhost:27017/test'
 process.env.NEXTAUTH_SECRET = 'test-secret'
-process.env.NEXTAUTH_URL = 'http://localhost:3000' 
+process.env.NEXTAUTH_URL = 'http://localhost:3000'
+
+// Mock URL.createObjectURL
+global.URL.createObjectURL = jest.fn(() => 'mock-url')
+global.URL.revokeObjectURL = jest.fn() 

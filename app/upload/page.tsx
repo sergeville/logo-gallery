@@ -2,13 +2,13 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAuth } from '@/app/hooks/useAuth'
+import { useAuth } from '../hooks/useAuth'
 import Image from 'next/image'
-import { AuthModal } from '@/app/components/AuthModal'
+import AuthModal from '../components/AuthModal'
 
 export default function UploadPage() {
   const router = useRouter()
-  const { user, loading } = useAuth()
+  const { user, isLoading } = useAuth()
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -52,7 +52,7 @@ export default function UploadPage() {
     }
 
     // Wait for auth state to be ready
-    if (loading) {
+    if (isLoading) {
       setError('Please wait while we verify your session...')
       return
     }
@@ -71,10 +71,13 @@ export default function UploadPage() {
       let userId = user.id
 
       if (uploadType === 'file' && selectedFile) {
-        // Upload the image file
+        // Upload the image file and logo data in one request
         const formDataWithFile = new FormData()
         formDataWithFile.append('file', selectedFile)
         formDataWithFile.append('name', formData.name)
+        formDataWithFile.append('description', formData.description)
+        formDataWithFile.append('url', formData.url)
+        formDataWithFile.append('tags', formData.tags)
         
         const uploadResponse = await fetch('/api/logos/upload', {
           method: 'POST',
@@ -87,15 +90,16 @@ export default function UploadPage() {
             setShowAuthModal(true)
             return
           }
-          throw new Error(errorData.error || 'Unable to upload the image. Please try again or choose a different file.')
+          throw new Error(errorData.error || 'Unable to upload the logo. Please try again.')
         }
 
         const uploadData = await uploadResponse.json()
-        if (!uploadData.imageUrl) {
-          throw new Error('The server did not return the uploaded image URL. Please try again.')
+        if (!uploadData.success) {
+          throw new Error('Failed to upload the logo. Please try again.')
         }
-        imageUrl = uploadData.imageUrl
-        userId = uploadData.userId
+
+        // Redirect to gallery page after successful upload
+        router.push('/gallery')
       }
 
       // Create the logo with the image URL and user ID
@@ -167,7 +171,7 @@ export default function UploadPage() {
     }
   }
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>

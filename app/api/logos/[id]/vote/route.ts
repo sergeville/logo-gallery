@@ -1,8 +1,9 @@
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
-import { connectToDatabase } from '@/app/lib/db';
+import { authOptions } from '../../../auth/[...nextauth]/options';
+import { connectToDatabase } from '../../../../../lib/db';
 import { ObjectId, Document, WithId } from 'mongodb';
 import type { UpdateFilter, Collection, PullOperator, PushOperator, Filter } from 'mongodb';
+import { NextResponse } from 'next/server';
 
 interface Vote {
   userId: string;

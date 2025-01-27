@@ -1,9 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { useAuth } from '@/app/hooks/useAuth';
+import { useAuth } from '../hooks/useAuth';
 import { useState } from 'react';
-import { AuthModal } from './AuthModal';
+import AuthModal from './AuthModal';
 import { signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';

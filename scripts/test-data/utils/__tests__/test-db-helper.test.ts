@@ -1,9 +1,7 @@
-import { MongoClient } from 'mongodb'
 import { TestDbHelper } from '../test-db-helper'
+import { MongoClient } from 'mongodb'
 
-jest.mock('mongodb')
-
-describe('Test Database Helper', () => {
+describe('TestDbHelper', () => {
   let testDbHelper: TestDbHelper
 
   beforeEach(() => {
@@ -14,63 +12,69 @@ describe('Test Database Helper', () => {
     await testDbHelper.disconnect()
   })
 
-  it('connects to database', async () => {
-    await testDbHelper.connect()
-    expect(MongoClient.connect).toHaveBeenCalledWith(process.env.MONGODB_TEST_URI || 'mongodb://localhost:27017/test')
-  })
-
-  it('disconnects from database', async () => {
-    await testDbHelper.connect()
-    await testDbHelper.disconnect()
-    expect(await testDbHelper.isConnected()).toBe(false);
-    expect(await testDbHelper.getDb()).toBeNull();
-  })
-
-  it('gets collection', async () => {
-    await testDbHelper.connect()
-    const collection = testDbHelper.getCollection('test')
-    expect(collection).toBeDefined()
-  })
-
-  it('clears collection', async () => {
-    await testDbHelper.connect()
-    await testDbHelper.clearCollection('test')
-    const collection = testDbHelper.getCollection('test')
-    expect(collection.deleteMany).toHaveBeenCalledWith({})
-  })
-
-  it('clears multiple collections', async () => {
-    await testDbHelper.connect()
-    const collections = ['users', 'logos']
-    await testDbHelper.clearCollections(collections)
-    collections.forEach(name => {
-      const collection = testDbHelper.getCollection(name)
-      expect(collection.deleteMany).toHaveBeenCalledWith({})
+  describe('constructor', () => {
+    it('should create an instance with default values', () => {
+      expect(testDbHelper).toBeInstanceOf(TestDbHelper)
+      expect(testDbHelper.getClient()).toBeDefined()
     })
   })
 
-  it('inserts user', async () => {
-    await testDbHelper.connect()
-    const user = { name: 'Test User', email: 'test@example.com' }
-    const result = await testDbHelper.insertUser(user)
-    expect(result).toEqual({ ...user, _id: expect.any(String) })
+  describe('connection management', () => {
+    it('should start disconnected', () => {
+      expect(testDbHelper.isConnected).toBe(false)
+    })
+
+    it('should connect to database', async () => {
+      await testDbHelper.connect()
+      expect(testDbHelper.isConnected).toBe(true)
+
+      const collection = testDbHelper.collection('test')
+      expect(collection).toBeDefined()
+    })
+
+    it('should disconnect from database', async () => {
+      await testDbHelper.connect()
+      const collection = testDbHelper.collection('test')
+      expect(collection).toBeDefined()
+
+      await testDbHelper.disconnect()
+      expect(testDbHelper.isConnected).toBe(false)
+    })
   })
 
-  it('inserts logo', async () => {
-    await testDbHelper.connect()
-    const logo = { name: 'Test Logo', url: 'http://example.com/logo.png' }
-    const result = await testDbHelper.insertLogo(logo)
-    expect(result).toEqual({ ...logo, _id: expect.any(String) })
+  describe('collection operations', () => {
+    beforeEach(async () => {
+      await testDbHelper.connect()
+    })
+
+    it('should clear specified collections', async () => {
+      const collections = ['test1', 'test2']
+      for (const name of collections) {
+        const collection = testDbHelper.collection(name)
+        await collection.insertOne({ test: true })
+      }
+
+      await testDbHelper.clearCollections(collections)
+
+      for (const name of collections) {
+        const collection = testDbHelper.collection(name)
+        const count = await collection.countDocuments()
+        expect(count).toBe(0)
+      }
+    })
   })
 
-  it('throws error when accessing collection without connection', () => {
-    expect(() => testDbHelper.getCollection('test')).toThrow('Database not connected')
-  })
+  describe('error handling', () => {
+    it('should throw error when accessing collection without connection', () => {
+      expect(() => testDbHelper.collection('test')).toThrow('Database not connected')
+    })
 
-  it('validates collections array in clearCollections', async () => {
-    await testDbHelper.connect()
-    await expect(testDbHelper.clearCollections(null as any)).rejects.toThrow('Collections must be an array of strings')
-    await expect(testDbHelper.clearCollections(undefined as any)).rejects.toThrow('Collections must be an array of strings')
-    await expect(testDbHelper.clearCollections([null] as any)).resolves.not.toThrow()
+    it('should throw error when clearing collection without connection', async () => {
+      await expect(testDbHelper.clearCollection('test')).rejects.toThrow('Database not connected')
+    })
+
+    it('should throw error when clearing collections with invalid parameter', async () => {
+      await expect(testDbHelper.clearCollections(null as any)).rejects.toThrow('Collections parameter must be an array')
+    })
   })
 }) 

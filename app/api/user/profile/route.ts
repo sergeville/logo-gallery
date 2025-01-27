@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { ObjectId } from 'mongodb';
-import { connectToDatabase } from '@/app/lib/db';
-import { validateUserProfile } from '@/app/lib/validation';
+import { connectToDatabase } from '../../../../lib/db';
+import { validateUserProfile } from '../../../../lib/validation';
 
 export async function GET(request: NextRequest) {
   try {
@@ -39,10 +39,10 @@ export async function PUT(request: NextRequest) {
 
     // Validate update data
     const validationResult = validateUserProfile(updateData);
-    if (validationResult.errors.length > 0) {
+    if (!validationResult.isValid) {
       return NextResponse.json({ 
         error: 'Invalid data',
-        details: validationResult.errors 
+        details: validationResult.error 
       }, { status: 400 });
     }
 

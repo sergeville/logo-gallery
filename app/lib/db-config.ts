@@ -1,10 +1,10 @@
 import { MongoClient } from 'mongodb'
 
-if (!process.env.MONGODB_URI) {
+if (!process.env.MONGODB_URI && process.env.NODE_ENV !== 'test') {
   throw new Error('Please add your MongoDB URI to .env.local')
 }
 
-const uri = process.env.MONGODB_URI
+const uri = process.env.MONGODB_URI || 'mongodb://localhost:27017/test'
 const options = {}
 
 let client: MongoClient
@@ -34,4 +34,6 @@ export async function connectToDatabase() {
   const client = await clientPromise
   const db = client.db()
   return { client, db }
-} 
+}
+
+export { uri, options } 

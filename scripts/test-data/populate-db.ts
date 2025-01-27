@@ -38,7 +38,7 @@ async function populateTestDatabase() {
       const specificLogos = generateSpecificLogos(designerUser._id as ObjectId).map(logo => ({
         ...logo,
         _id: new ObjectId(logo._id),
-        ownerId: new ObjectId(logo.ownerId)
+        userId: new ObjectId(logo.userId)
       }));
       await db.collection('logos').insertMany(specificLogos);
     }
@@ -47,7 +47,7 @@ async function populateTestDatabase() {
     const randomLogos = generateLogos(userIds as ObjectId[], 50).map(logo => ({
       ...logo,
       _id: new ObjectId(logo._id),
-      ownerId: new ObjectId(logo.ownerId)
+      userId: new ObjectId(logo.userId)
     }));
     await db.collection('logos').insertMany(randomLogos);
 

@@ -8,6 +8,7 @@ import { signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { signIn } from 'next-auth/react';
+import ThemeToggle from './ThemeToggle';
 
 export default function Navbar() {
   const { user } = useAuth();
@@ -31,41 +32,40 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="bg-[#0A1A2F] border-b border-gray-800">
+    <nav className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+        {/* Site name on the left */}
+        <Link href="/" className="text-xl font-bold nav-link">
+          Logo Gallery
+        </Link>
+
+        {/* Navigation links and buttons on the right */}
         <div className="flex items-center space-x-6">
-          <Link href="/" className="text-xl font-bold text-white">
-            Logo Gallery
+          <Link href="/gallery" className="nav-link">
+            Gallery
           </Link>
-          <div className="flex items-center space-x-6">
-            <Link href="/gallery" className="text-gray-300 hover:text-white transition-colors">
-              Gallery
+          <Link href="/vote" className="nav-link">
+            Vote
+          </Link>
+          {user && (
+            <Link href="/my-logos" className="nav-link">
+              My Logos
             </Link>
-            <Link href="/vote" className="text-gray-300 hover:text-white transition-colors">
-              Vote
-            </Link>
-            {user && (
-              <Link href="/my-logos" className="text-gray-300 hover:text-white transition-colors">
-                My Logos
-              </Link>
-            )}
-          </div>
-        </div>
-        <div className="flex items-center space-x-6">
+          )}
           {user ? (
             <>
               <Link 
                 href="/upload" 
-                className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors"
+                className="btn-primary"
               >
                 Upload Logo
               </Link>
-              <span className="text-gray-300">
+              <span className="nav-link">
                 {user.name || 'Test User'}
               </span>
               <button 
                 onClick={handleSignOut}
-                className="text-gray-300 hover:text-white transition-colors"
+                className="nav-link"
               >
                 Sign Out
               </button>
@@ -73,11 +73,12 @@ export default function Navbar() {
           ) : (
             <button 
               onClick={handleSignIn}
-              className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors"
+              className="btn-primary"
             >
               Sign In
             </button>
           )}
+          <ThemeToggle />
         </div>
       </div>
 

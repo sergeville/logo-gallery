@@ -3,26 +3,30 @@
 @tailwind utilities;
 
 :root {
+  --foreground-rgb: 17, 24, 39;
+  --background-rgb: 249, 250, 251;
+}
+
+:root[class~="dark"] {
   --foreground-rgb: 255, 255, 255;
-  --background-start-rgb: 10, 26, 47;
-  --background-end-rgb: 10, 26, 47;
+  --background-rgb: 10, 26, 47;
 }
 
 body {
   color: rgb(var(--foreground-rgb));
-  background: rgb(var(--background-start-rgb));
+  background: rgb(var(--background-rgb));
   min-height: 100vh;
 }
 
 @layer base {
   h1 {
-    @apply text-2xl font-bold md:text-3xl lg:text-4xl text-white;
+    @apply text-gray-900 dark:text-white;
   }
   h2 {
-    @apply text-xl font-semibold md:text-2xl lg:text-3xl text-white;
+    @apply text-gray-900 dark:text-white;
   }
   p {
-    @apply text-gray-300;
+    @apply text-gray-700 dark:text-gray-300;
   }
 }
 
@@ -31,9 +35,15 @@ body {
     @apply bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors;
   }
   .btn-secondary {
-    @apply bg-gray-700 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors;
+    @apply bg-gray-200 text-gray-900 dark:bg-gray-700 dark:text-white px-4 py-2 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors;
   }
   .nav-link {
-    @apply text-gray-300 hover:text-white transition-colors;
+    @apply text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors;
+  }
+  .page-container {
+    @apply min-h-screen bg-gray-50 dark:bg-[#0A1A2F];
+  }
+  .content-section {
+    @apply bg-white dark:bg-gray-800 rounded-lg shadow-sm;
   }
 }

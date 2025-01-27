@@ -6,10 +6,8 @@
 
 import './globals.css'
 import { Inter } from 'next/font/google'
-import { Providers } from './providers'
-import Header from './components/Header'
 import type { Metadata } from 'next'
-import { ReactNode } from 'react'
+import RootLayoutClient from './RootLayoutClient'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -26,8 +24,8 @@ export const metadata: Metadata = {
 }
 
 interface LayoutProps {
-  children: ReactNode
-  modal: ReactNode
+  children: React.ReactNode
+  modal?: React.ReactNode
 }
 
 /**
@@ -40,13 +38,12 @@ interface LayoutProps {
  */
 export default function RootLayout({ children, modal }: LayoutProps) {
   return (
-    <html lang="en" suppressHydrationWarning className={inter.className}>
-      <body suppressHydrationWarning>
-        <Providers>
-          <Header />
+    <html lang="en" suppressHydrationWarning>
+      <body className={inter.className}>
+        <RootLayoutClient>
           {children}
           {modal}
-        </Providers>
+        </RootLayoutClient>
       </body>
     </html>
   )

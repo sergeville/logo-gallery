@@ -1,520 +1,176 @@
-# Logo Gallery Design System & Documentation
+# Logo Gallery Design System
 
-## 📋 Project Overview
+## Theme Configuration
 
-The Logo Gallery is a web application for uploading, displaying, and managing logo designs. Users can upload logos, view others' submissions, and interact through ratings and comments.
+### Colors
+```css
+/* Light Mode */
+- Background (main): rgb(249, 250, 251)
+- Background (content): white
+- Text (primary): rgb(17, 24, 39)
+- Text (secondary): rgb(55, 65, 81)
+- Border: rgb(229, 231, 235)
 
-## 🏗 Architecture
+/* Dark Mode */
+- Background (main): rgb(10, 26, 47)
+- Background (content): rgb(31, 41, 55)
+- Text (primary): white
+- Text (secondary): rgb(209, 213, 219)
+- Border: rgb(55, 65, 81)
+```
 
-### Tech Stack
-- **Frontend**: Next.js 14 with App Router
-- **Backend**: Next.js API Routes
-- **Database**: MongoDB
-- **Authentication**: NextAuth.js
-- **Styling**: Tailwind CSS
-- **Image Storage**: Local file system with uploads directory
-- **State Management**: React Hooks + Context
-- **Form Handling**: React Hook Form
-- **Validation**: Zod
+### Typography
+```css
+/* Font Family */
+- Primary: Inter (Latin subset)
 
-### Database Schema
+/* Text Sizes */
+- Site Title: text-xl font-bold
+- Headings: text-2xl font-semibold
+- Body: text-base
+- Navigation: text-base
+```
 
-```typescript
-// User Model
-interface User {
-  _id: ObjectId;
-  email: string;
-  name: string;
-  password?: string;
-  role: 'user' | 'admin' | 'designer';
-  favorites?: ObjectId[];
-  createdAt: Date;
-  updatedAt: Date;
+## Layout Components
+
+### Root Layout
+- Full-height container with flex column
+- Consistent background colors in light/dark modes
+- Proper provider nesting (Theme -> Session -> Auth)
+- Container width constraints with padding
+
+### Navbar
+- Fixed position at top
+- Light/dark mode aware background
+- Flexible spacing between elements
+- Left: Site branding
+- Right: Navigation links, auth buttons, theme toggle
+- Consistent hover states
+
+### Content Sections
+```css
+.page-container {
+  @apply min-h-screen bg-gray-50 dark:bg-[#0A1A2F];
 }
 
-// Logo Model
-interface Logo {
-  _id: ObjectId;
-  name: string;
-  description: string;
-  imageUrl: string;
-  thumbnailUrl: string;
-  ownerId: ObjectId;
-  ownerName?: string;
-  tags: string[];
-  category: string;
-  dimensions: {
-    width: number;
-    height: number;
-  };
-  fileSize: number;
-  fileType: string;
-  averageRating: number;
-  totalVotes: number;
-  votes?: Array<{
-    userId: ObjectId;
-    rating: number;
-    createdAt: Date;
-  }>;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-// Collection Model
-interface Collection {
-  _id: ObjectId;
-  name: string;
-  description: string;
-  ownerId: ObjectId;
-  ownerName?: string;
-  logoIds: ObjectId[];
-  isPublic: boolean;
-  tags?: string[];
-  collaborators?: ObjectId[];
-  createdAt: Date;
-  updatedAt: Date;
+.content-section {
+  @apply bg-white dark:bg-gray-800 rounded-lg shadow-sm;
 }
 ```
 
-### Directory Structure
-```
-logo-gallery/
-├── app/
-│   ├── api/                 # API routes
-│   ├── auth/                # Authentication pages
-│   ├── components/          # Shared components
-│   ├── lib/                 # Utility functions
-│   ├── models/             # Database models
-│   ├── (routes)/           # Page routes
-│   └── layout.tsx          # Root layout
-├── public/
-│   └── uploads/            # Logo uploads directory
-├── styles/
-│   └── globals.css         # Global styles
-├── docs/                   # Documentation
-└── scripts/
-    ├── seed/              # Database seeding
-    └── test-data/         # Test data generation
-```
-
-## 🚀 Setup & Installation
-
-1. **Prerequisites**
-   ```bash
-   Node.js >= 18.0.0
-   MongoDB >= 5.0
-   npm or yarn
-   ```
-
-2. **Environment Variables**
-   ```env
-   # .env.local
-   MONGODB_URI=mongodb://localhost:27017/LogoGalleryDevelopmentDB
-   NEXTAUTH_URL=http://localhost:3000
-   NEXTAUTH_SECRET=your-secret-key
-   JWT_SECRET=your-jwt-secret
-   ```
-
-3. **Installation Steps**
-   ```bash
-   # Clone repository
-   git clone [repository-url]
-   cd logo-gallery
-
-   # Install dependencies
-   npm install
-
-   # Setup database
-   npm run db:setup
-   npm run db:seed
-
-   # Start development server
-   npm run dev
-   ```
-
-## 🔐 Authentication Flow
-
-1. **Sign Up**
-   - Route: `/auth/signup`
-   - Validates email and password
-   - Creates user in database
-   - Automatically signs in user
-
-2. **Sign In**
-   - Route: `/auth/signin`
-   - Supports email/password
-   - Uses NextAuth.js session management
-   - Redirects to previous page or home
-
-3. **Protected Routes**
-   - Middleware checks authentication
-   - Redirects to sign in if needed
-   - Preserves original destination
-
-## 📤 Upload Process
-
-1. **File Upload**
-   - Accepts images up to 5MB
-   - Validates file type (jpg, png, svg)
-   - Generates unique filename
-   - Creates thumbnail version
-
-2. **Metadata Extraction**
-   - Gets image dimensions
-   - Calculates file size
-   - Determines file type
-   - Associates with user
-
-3. **Storage**
-   - Saves to `/public/uploads`
-   - Updates database record
-   - Returns success/error
-
-## 🖼 Gallery Implementation
-
-1. **Logo Display**
-   - Responsive grid layout
-   - Lazy loading images
-   - Skeleton loading states
-   - Error boundaries
-
-2. **Filtering & Search**
-   - By category
-   - By tag
-   - By user
-   - Full-text search
-
-3. **Pagination**
-   - Server-side
-   - 12 items per page
-   - Maintains filters
-
-## 🎯 Performance Optimizations
-
-1. **Image Optimization**
-   - Automatic thumbnail generation
-   - Next.js Image component
-   - WebP format support
-   - Lazy loading
-
-2. **Data Loading**
-   - Server-side pagination
-   - Incremental Static Regeneration
-   - SWR for client caching
-   - Optimistic updates
-
-3. **Code Optimization**
-   - Dynamic imports
-   - Route prefetching
-   - Bundle optimization
-   - Tree shaking
-
-## 📸 UI Screenshots
-
-### Homepage (Not Signed In)
-![Homepage](./images/homepage.png)
-
-The homepage features:
-- Clean, dark navy background (`bg-[#0A1A2F]`)
-- Modern navigation bar with:
-  - Logo Gallery branding with development environment indicator
-  - Main navigation links (Gallery, Vote)
-  - Sign In button (primary blue, opens modal)
-  - Dark mode toggle
-- Centered content layout with:
-  - "Welcome to Logo Gallery" main heading
-  - "Discover and share beautiful logos from around the world" subtitle
-  - Latest Uploads section with sign-in prompt
-  - Primary call-to-action: "Sign in to Get Started" button (redirects to `/api/auth/signin`)
-- Authentication Entry Points:
-  1. Navigation bar "Sign In" button: Opens a modal overlay
-  2. Center "Sign in to Get Started" button: Redirects to the authentication page
-- Consistent typography using Inter font
-- Responsive design that adapts to all screen sizes
-
-### Homepage (Signed In)
-![Homepage Signed In](./images/homepage-signed-in.png)
-
-The homepage features:
-- Clean, dark navy background (`bg-[#0A1A2F]`)
-- Modern navigation bar with:
-  - Logo Gallery branding with development environment indicator
-  - Main navigation links (Gallery, Vote)
-  - Upload Logo button (primary blue)
-  - User controls (Test User, Logout)
-  - Dark mode toggle
-- Centered content layout with:
-  - "Welcome to Logo Gallery" main heading
-  - "Discover and share beautiful logos from around the world" subtitle
-  - Latest Uploads section with personalized welcome message
-  - "Welcome back, Test User!" greeting
-- Consistent typography using Inter font
-- Responsive design that adapts to all screen sizes
-
-### Gallery
-
-![Gallery](./images/gallery.png)
-*Logo gallery with grid layout and search functionality*
-
-### Upload Page
-![Upload Page](./images/UploadLogo.png)
-
-The upload page features:
-- Clean, dark mode interface with proper contrast
-- Form fields for:
-  - Logo Name (required)
-  - Description (required)
-  - Logo URL (website or source)
-  - Image upload with two options:
-    - File upload with drag-and-drop support
-    - Direct URL input
-  - Tags (comma-separated)
-- Real-time image preview
-- Upload progress indicator
-- Validation feedback
-- Responsive layout that adapts to screen size
-- Authentication check with modal prompt if not signed in
-- Clear error messaging and loading states
-- File size limit (5MB) and type validation
-- Dark mode optimized with proper text contrast and visibility
-
-### Sign In Modal
-![Sign In](./images/auth-modal-blur.png)
-*Sign in modal with blur effect overlay*
-
-## 🎨 Color Palette
-
-![Color Palette](./images/colors.png)
-
-### Primary Colors
-- Primary Blue: `#2563eb` - Used for primary actions, links, and highlights
-- Primary Dark: `#1C1C1E` - Used for dark mode backgrounds
-- Primary White: `#FFFFFF` - Used for light mode backgrounds
-
-### Secondary Colors
-- Success Green: `#16a34a` - Used for success states and positive actions
-- Error Red: `#dc2626` - Used for error states and destructive actions
-- Warning Yellow: `#eab308` - Used for warning states and important notices
-
-### Gray Scale
-- Gray 900: `#111827` - Text in light mode
-- Gray 800: `#1f2937` - Dark mode background
-- Gray 700: `#374151` - Dark mode borders
-- Gray 500: `#6b7280` - Secondary text
-- Gray 400: `#9ca3af` - Disabled text
-- Gray 300: `#d1d5db` - Borders in light mode
-- Gray 200: `#e5e7eb` - Background accents
-- Gray 100: `#f3f4f6` - Light mode hover states
-
-## 📏 Typography
-
-### Font Family
-- Primary: `Inter` - Modern, clean sans-serif font for all text
-- Fallback: `system-ui, -apple-system, sans-serif`
-
-### Font Sizes
-- Heading 1: `2rem` (32px) - Main page titles
-- Heading 2: `1.5rem` (24px) - Section headers
-- Heading 3: `1.25rem` (20px) - Card titles
-- Body: `1rem` (16px) - Regular text
-- Small: `0.875rem` (14px) - Secondary information
-- Tiny: `0.75rem` (12px) - Meta information
-
-### Font Weights
-- Bold: 700 - Headers and emphasis
-- Semi-bold: 600 - Sub-headers and important text
-- Medium: 500 - Navigation and buttons
-- Regular: 400 - Body text
-
-## 🔲 Components
+## UI Components
 
 ### Buttons
-```jsx
-// Primary Button
-<button className="rounded-lg bg-blue-500 px-4 py-2 text-white hover:bg-blue-600 transition-colors">
-  Primary Action
-</button>
+```css
+/* Primary Button */
+.btn-primary {
+  @apply bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors;
+}
 
-// Secondary Button
-<button className="rounded-lg border-2 border-blue-500 px-4 py-2 text-blue-500 hover:bg-blue-500 hover:text-white transition-colors">
-  Secondary Action
-</button>
-
-// Danger Button
-<button className="rounded-lg bg-red-500 px-4 py-2 text-white hover:bg-red-600 transition-colors">
-  Destructive Action
-</button>
+/* Secondary Button */
+.btn-secondary {
+  @apply bg-gray-200 text-gray-900 dark:bg-gray-700 dark:text-white 
+         px-4 py-2 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 
+         transition-colors;
+}
 ```
 
-### Cards
-```jsx
-<div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm hover:shadow-md transition-shadow p-6">
-  <div className="space-y-4">
-    <h3 className="text-lg font-medium dark:text-white">Card Title</h3>
-    <p className="text-gray-600 dark:text-gray-400">Card content</p>
-  </div>
-</div>
+### Navigation Links
+```css
+.nav-link {
+  @apply text-gray-700 dark:text-gray-300 
+         hover:text-gray-900 dark:hover:text-white 
+         transition-colors;
+}
 ```
 
-### Form Inputs
-```jsx
-<input 
-  className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-  type="text"
-/>
-```
+### Theme Toggle
+- Positioned in navbar
+- SVG icons for sun/moon
+- Smooth color transitions
+- Accessible button with aria-labels
+- Hover effects matching theme
 
-## 📱 Responsive Design
+## Page Templates
+
+### Homepage
+- Centered content layout
+- Hero section with clear CTA
+- Responsive grid for featured content
+- Consistent section spacing
+
+### Gallery
+- Grid layout for logo cards
+- Responsive columns
+- Consistent card sizes
+- Proper spacing between items
+
+### Upload Form
+- Single column layout
+- Clear input grouping
+- Validation feedback
+- Preview functionality
+
+## Responsive Design
 
 ### Breakpoints
-- Mobile: < 640px
-- Tablet: 640px - 1024px
-- Desktop: > 1024px
-
-### Grid System
-- Mobile: 1 column
-- Tablet: 2 columns
-- Desktop: 3 columns
-
-```jsx
-<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-  {/* Grid items */}
-</div>
-```
-
-## 🌓 Dark Mode
-
-### Implementation
-- Uses Tailwind's dark mode with `dark:` prefix
-- Toggles based on user preference and manual selection
-- Persists user choice in local storage
-
-### Color Mapping
-- Background: `bg-white` → `dark:bg-gray-800`
-- Text: `text-gray-900` → `dark:text-white`
-- Borders: `border-gray-200` → `dark:border-gray-700`
-- Cards: `bg-white` → `dark:bg-gray-800`
-
-## 🎭 UI States
-
-### Interactive Elements
-- Hover: Slight opacity or color change
-- Focus: Blue ring with 2px width
-- Active: Darker shade of the base color
-- Disabled: Reduced opacity and gray color
-
-### Loading States
-```jsx
-// Loading Spinner
-<div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-
-// Skeleton Loading
-<div className="animate-pulse bg-gray-200 dark:bg-gray-700 rounded-lg h-[200px]"></div>
-```
-
-## 🎯 Accessibility
-
-### Focus Management
-- Visible focus rings on all interactive elements
-- Skip links for keyboard navigation
-- Proper tab order
-
-### Color Contrast
-- All text meets WCAG 2.1 AA standards
-- Interactive elements have sufficient contrast
-- No color-only information
-
-### ARIA Attributes
-- Proper roles and labels
-- Error messages linked to form fields
-- Modal and dialog management
-
-## 📏 Spacing System
-
-### Scale (in pixels)
-- 0: 0px
-- 1: 4px
-- 2: 8px
-- 3: 12px
-- 4: 16px
-- 6: 24px
-- 8: 32px
-- 12: 48px
-- 16: 64px
-
-### Usage
-```jsx
-// Margin and Padding
-<div className="m-4 p-6">
-  <div className="space-y-4">
-    {/* Content with vertical spacing */}
-  </div>
-</div>
-```
-
-## 🔄 Animations
-
-### Transitions
-- Duration: 150ms - 300ms
-- Timing: ease-in-out
-- Properties: opacity, colors, transform
-
-```jsx
-// Hover transition
-<div className="transition-all duration-200 ease-in-out hover:scale-105">
-  {/* Content */}
-</div>
-```
-
-### Loading Animations
-- Smooth spinner rotation
-- Subtle pulse effects
-- Progressive loading skeletons
-
-## 📦 Layout Structure
-
-### Page Layout
-```jsx
-<div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-  <Header />
-  <main className="container mx-auto px-4 py-8">
-    {/* Page content */}
-  </main>
-  <Footer />
-</div>
+```css
+- sm: 640px  /* Mobile landscape */
+- md: 768px  /* Tablets */
+- lg: 1024px /* Desktop */
+- xl: 1280px /* Large desktop */
 ```
 
 ### Container Widths
-- Default: `max-w-7xl`
-- Narrow: `max-w-5xl`
-- Wide: `max-w-full`
+```css
+.container {
+  @apply mx-auto px-4;
+  max-width: 1280px;
+}
+```
 
-## 🛠 Implementation Guidelines
+## Animation Guidelines
 
-1. Use Tailwind CSS classes consistently
-2. Follow component composition patterns
-3. Maintain dark mode compatibility
-4. Ensure responsive design
-5. Keep accessibility in mind
-6. Use consistent spacing
-7. Implement smooth transitions
-8. Follow established color patterns 
+### Transitions
+- Duration: 150ms
+- Timing: ease-in-out
+- Used for: hover states, theme changes, modal open/close
 
-## 📏 Layout Examples
+### Loading States
+- Skeleton loaders for content
+- Spinner for actions
+- Smooth opacity transitions
 
-### Desktop Layout (>1024px)
-![Desktop Layout](./images/layout-desktop.png)
-*3-column grid layout for desktop screens*
+## Accessibility
 
-### Tablet Layout (640px-1024px)
-![Tablet Layout](./images/layout-tablet.png)
-*2-column grid layout for tablet screens*
+### Color Contrast
+- Minimum 4.5:1 for normal text
+- Minimum 3:1 for large text
+- Tested in both light and dark modes
 
-### Mobile Layout (<640px)
-![Mobile Layout](./images/layout-mobile.png)
-*Single column layout for mobile screens*
+### Interactive Elements
+- Clear focus states
+- Proper aria-labels
+- Keyboard navigation support
 
-## 🔤 Typography Examples
+## Best Practices
 
-![Typography Scale](./images/typography.png)
-*Visual representation of typography scale* 
+1. **Consistency**
+   - Use utility classes defined in globals.css
+   - Follow established color patterns
+   - Maintain spacing rhythm
+
+2. **Dark Mode**
+   - Test all components in both modes
+   - Use CSS variables for theme colors
+   - Ensure proper contrast
+
+3. **Performance**
+   - Lazy load images
+   - Optimize SVG icons
+   - Minimize layout shifts
+
+4. **Maintenance**
+   - Document new patterns
+   - Update this guide when adding new components
+   - Keep CSS organized in layers

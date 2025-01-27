@@ -1,8 +1,10 @@
 'use client'
 
-import Image from 'next/image'
 import { formatDistanceToNow } from 'date-fns'
-import { Star, User } from 'lucide-react'
+import { Star } from 'lucide-react'
+import Link from 'next/link'
+import { useSession } from 'next-auth/react'
+import { useState } from 'react'
 
 interface LogoCardProps {
   name: string
@@ -15,6 +17,7 @@ interface LogoCardProps {
   isRadioStyle?: boolean
   priority?: boolean
   ownerName: string
+  ownerId?: string
 }
 
 export default function LogoCard({ 
@@ -27,8 +30,13 @@ export default function LogoCard({
   onVote,
   isRadioStyle = false,
   priority = false,
-  ownerName
+  ownerName,
+  ownerId
 }: LogoCardProps) {
+  const { data: session } = useSession()
+  const isOwner = session?.user?.id === ownerId
+  const [imageError, setImageError] = useState(false)
+
   const handleVote = () => {
     if (onVote) {
       onVote();
@@ -52,25 +60,30 @@ export default function LogoCard({
     ? rating.toFixed(1) 
     : '0.0';
 
+  // Ensure the image URL is absolute and properly formatted
+  const fullImageUrl = imageUrl.startsWith('http') 
+    ? imageUrl 
+    : imageUrl.startsWith('/') 
+      ? `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}${imageUrl}`
+      : `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/uploads/${imageUrl}`;
+
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden transition-transform duration-200 hover:scale-[1.02]">
       <div className="relative aspect-video">
-        {imageUrl ? (
-          <Image
-            src={imageUrl}
+        {!imageError ? (
+          <img
+            src={fullImageUrl}
             alt={name}
-            fill
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-            className="object-cover"
+            className="w-full h-full object-cover"
             loading={priority ? "eager" : "lazy"}
-            priority={priority}
-            quality={75}
-            placeholder="blur"
-            blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADb/2wBDABQODxIPDRQSEBIXFRQdHx0fHRsdHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR3/2wBDAR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR3/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAb/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k="
+            onError={() => setImageError(true)}
           />
         ) : (
           <div className="w-full h-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
-            <span className="text-gray-400">No image</span>
+            <div className="text-center">
+              <span className="text-gray-400 block">Image not available</span>
+              <span className="text-gray-500 text-sm block mt-1">ID: {imageUrl.split('/').pop()}</span>
+            </div>
           </div>
         )}
       </div>
@@ -79,9 +92,13 @@ export default function LogoCard({
           {name}
         </h3>
         <div className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-300 mb-2">
-          <div className="flex items-center space-x-1">
-            <User className="h-4 w-4 text-gray-400" />
-            <span>{ownerName}</span>
+          <div className="text-sm text-gray-600 dark:text-gray-400">
+            <Link 
+              href={`/profile/${ownerId}`}
+              className="hover:text-primary-blue dark:hover:text-blue-400 transition-colors"
+            >
+              {ownerName}{isOwner && " (You)"}
+            </Link>
           </div>
         </div>
         <div className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-300">

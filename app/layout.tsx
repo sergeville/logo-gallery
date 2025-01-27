@@ -7,7 +7,9 @@
 import './globals.css'
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
-import { Providers } from './providers'
+import { ThemeProvider } from './components/ThemeProvider'
+import { SessionProvider } from './components/SessionProvider'
+import Navbar from './components/Navbar'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -34,9 +36,23 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        <Providers>{children}</Providers>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <SessionProvider>
+            <div className="min-h-screen flex flex-col">
+              <Navbar />
+              <main className="flex-grow">
+                {children}
+              </main>
+            </div>
+          </SessionProvider>
+        </ThemeProvider>
       </body>
     </html>
   )

@@ -2,17 +2,164 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Tailwind UI inspired theme variables */
 :root {
-  --foreground-rgb: 0, 0, 0;
-  --background-rgb: 255, 255, 255;
+  /* Brand colors */
+  --color-primary: 79, 70, 229;  /* indigo-600 */
+  --color-primary-dark: 67, 56, 202;  /* indigo-700 */
+  --color-secondary: 99, 102, 241;  /* indigo-500 */
+  
+  /* Text colors */
+  --text-primary: 17, 24, 39;  /* gray-900 */
+  --text-secondary: 55, 65, 81;  /* gray-700 */
+  --text-tertiary: 107, 114, 128;  /* gray-500 */
+  
+  /* Background colors */
+  --bg-primary: 255, 255, 255;  /* white */
+  --bg-secondary: 249, 250, 251;  /* gray-50 */
+  --bg-tertiary: 243, 244, 246;  /* gray-100 */
+  
+  /* Border colors */
+  --border-primary: 229, 231, 235;  /* gray-200 */
+  --border-secondary: 243, 244, 246;  /* gray-100 */
+  
+  /* Shadow */
+  --shadow-color: 0, 0, 0;
+  --shadow-strength: 0.1;
 }
 
-.dark {
-  --foreground-rgb: 255, 255, 255;
-  --background-rgb: 0, 0, 0;
+/* Dark theme - Tailwind UI dark mode colors */
+[data-theme='dark'] {
+  /* Brand colors - slightly adjusted for dark mode */
+  --color-primary: 129, 140, 248;  /* indigo-400 */
+  --color-primary-dark: 99, 102, 241;  /* indigo-500 */
+  --color-secondary: 165, 180, 252;  /* indigo-300 */
+  
+  /* Text colors */
+  --text-primary: 255, 255, 255;  /* white */
+  --text-secondary: 209, 213, 219;  /* gray-300 */
+  --text-tertiary: 156, 163, 175;  /* gray-400 */
+  
+  /* Background colors */
+  --bg-primary: 17, 24, 39;  /* gray-900 */
+  --bg-secondary: 31, 41, 55;  /* gray-800 */
+  --bg-tertiary: 55, 65, 81;  /* gray-700 */
+  
+  /* Border colors */
+  --border-primary: 75, 85, 99;  /* gray-600 */
+  --border-secondary: 55, 65, 81;  /* gray-700 */
+  
+  /* Shadow */
+  --shadow-strength: 0.3;
 }
 
+/* Base styles */
 body {
-  color: rgb(var(--foreground-rgb));
-  background: rgb(var(--background-rgb));
+  @apply antialiased;
+  color: rgb(var(--text-primary));
+  background: rgb(var(--bg-primary));
+}
+
+.min-h-screen {
+  background: rgb(var(--bg-primary));
+}
+
+/* Component styles using Tailwind UI patterns */
+.btn {
+  @apply inline-flex items-center px-4 py-2 rounded-md font-medium shadow-sm
+  transition-colors duration-200 ease-in-out;
+  background-color: rgb(var(--color-primary));
+  color: rgb(255, 255, 255);
+}
+
+.btn:hover {
+  background-color: rgb(var(--color-primary-dark));
+}
+
+.btn-secondary {
+  @apply bg-white border;
+  color: rgb(var(--text-primary));
+  border-color: rgb(var(--border-primary));
+}
+
+.btn-secondary:hover {
+  background-color: rgb(var(--bg-tertiary));
+}
+
+/* Form elements */
+input, select, textarea {
+  @apply block w-full rounded-md border-0 py-1.5 shadow-sm ring-1 ring-inset 
+  transition duration-200 ease-in-out;
+  background-color: rgb(var(--bg-secondary));
+  color: rgb(var(--text-primary));
+  ring-color: rgb(var(--border-primary));
+}
+
+input:focus, select:focus, textarea:focus {
+  @apply ring-2 ring-inset;
+  ring-color: rgb(var(--color-primary));
+}
+
+/* Cards */
+.card {
+  @apply rounded-lg border shadow-sm;
+  background-color: rgb(var(--bg-secondary));
+  border-color: rgb(var(--border-primary));
+}
+
+/* Navigation */
+nav {
+  @apply border-b;
+  background-color: rgb(var(--bg-secondary));
+  border-color: rgb(var(--border-primary));
+}
+
+.nav-link {
+  @apply px-3 py-2 rounded-md text-sm font-medium;
+  color: rgb(var(--text-secondary));
+}
+
+.nav-link:hover {
+  color: rgb(var(--text-primary));
+  background-color: rgb(var(--bg-tertiary));
+}
+
+.nav-link.active {
+  color: rgb(var(--color-primary));
+  background-color: rgba(var(--color-primary), 0.1);
+}
+
+/* Transitions */
+.transition-theme {
+  @apply transition-all duration-200 ease-in-out;
+}
+
+/* Typography */
+h1 {
+  @apply text-3xl font-bold;
+  color: rgb(var(--text-primary));
+}
+
+h2 {
+  @apply text-2xl font-semibold;
+  color: rgb(var(--text-primary));
+}
+
+h3 {
+  @apply text-xl font-semibold;
+  color: rgb(var(--text-primary));
+}
+
+p {
+  color: rgb(var(--text-secondary));
+}
+
+/* Links */
+a {
+  color: rgb(var(--color-primary));
+  @apply transition-colors duration-200;
+}
+
+a:hover {
+  color: rgb(var(--color-primary-dark));
 }

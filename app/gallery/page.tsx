@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { debounce } from 'lodash-es';
-import Navbar from '../components/Navbar';
 import LogoCard from '../components/LogoCard';
 import { Search, Filter, SortAsc, SortDesc } from 'lucide-react';
 
@@ -136,7 +135,6 @@ export default function GalleryPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <Navbar />
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="flex justify-between items-center mb-8">
           <div>

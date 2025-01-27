@@ -1,5 +1,11 @@
 import { ObjectId } from 'mongodb';
 
+/**
+ * Core types for the Logo Gallery application.
+ * For detailed information about the ownership model and relationships between
+ * users and logos, see docs/OWNERSHIP.md
+ */
+
 export interface User {
   id?: string;
   name: string;
@@ -53,6 +59,11 @@ export interface Logo {
   updatedAt: Date;
 }
 
+/**
+ * Client-side logo representation.
+ * The ownerId field establishes the ownership relationship with a user.
+ * See docs/OWNERSHIP.md for detailed information about the ownership model.
+ */
 export interface ClientLogo {
   id: string;
   name: string;

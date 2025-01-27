@@ -68,9 +68,30 @@ logo-gallery/
 │   │   └── test-observer.ts  # Test reporting
 │   └── migrations/           # Database migrations
 ├── docs/                     # Documentation
+│   ├── OWNERSHIP.md         # Logo ownership model documentation
+│   └── API.md               # API documentation
 ├── CHANGELOG.md             # Change history
 └── README.md               # This file
 ```
+
+## Documentation
+
+The project includes comprehensive documentation:
+
+- [OWNERSHIP.md](docs/OWNERSHIP.md): Details the ownership model between users and logos
+- API.md: API endpoints and usage
+- This README: Overview and setup instructions
+
+## Ownership Model
+
+The application implements a robust ownership model for logos. Each logo is associated with a user through the `ownerId` field. For detailed information about the ownership model, including:
+
+- Core concepts
+- Implementation details
+- Security implications
+- Testing considerations
+
+Please refer to [OWNERSHIP.md](docs/OWNERSHIP.md).
 
 ## Testing
 

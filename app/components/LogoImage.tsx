@@ -14,7 +14,10 @@ export default function LogoImage({ src, alt, className = '' }: LogoImageProps) 
 
   if (error) {
     return (
-      <div className={`flex items-center justify-center bg-gray-100 dark:bg-gray-700 min-h-[200px] ${className}`}>
+      <div 
+        data-testid="logo-image-error"
+        className={`flex items-center justify-center bg-gray-100 dark:bg-gray-700 min-h-[200px] ${className}`}
+      >
         <span className="text-gray-400">Image not available</span>
       </div>
     );
@@ -23,7 +26,10 @@ export default function LogoImage({ src, alt, className = '' }: LogoImageProps) 
   const imageUrl = src.startsWith('http') || src.startsWith('/') ? src : `/${src}`;
 
   return (
-    <div className="relative w-full aspect-square">
+    <div 
+      data-testid="logo-image"
+      className="relative w-full aspect-square"
+    >
       <Image
         src={imageUrl}
         alt={alt}

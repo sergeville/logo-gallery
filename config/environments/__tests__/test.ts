@@ -19,11 +19,11 @@ describe('Test Environment Configuration', () => {
     expect(config.storage.allowedFormats).toEqual(['image/png', 'image/jpeg', 'image/svg+xml']);
 
     // API configuration
-    expect(config.api.baseUrl).toBe('http://localhost:3001');
+    expect(config.api.baseUrl).toBe('http://localhost:3000');
     expect(config.api.timeout).toBe(5000);
 
     // Auth configuration
-    expect(config.auth.nextAuthUrl).toBe('http://localhost:3001');
+    expect(config.auth.nextAuthUrl).toBe('http://localhost:3000');
     expect(config.auth.nextAuthSecret).toBe('test-secret');
     expect(config.auth.jwtSecret).toBe('test-jwt-secret');
 

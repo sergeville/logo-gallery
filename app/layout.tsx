@@ -10,6 +10,7 @@ import { Inter } from 'next/font/google'
 import { ThemeProvider } from './components/ThemeProvider'
 import { SessionProvider } from './components/SessionProvider'
 import Navbar from './components/Navbar'
+import Footer from './components/Footer'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -50,6 +51,7 @@ export default function RootLayout({
               <main className="flex-grow">
                 {children}
               </main>
+              <Footer />
             </div>
           </SessionProvider>
         </ThemeProvider>

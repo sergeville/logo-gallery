@@ -1,0 +1,1593 @@
+{
+  "config": {
+    "configFile": "/Users/sergevilleneuve/Desktop/logo-gallery/playwright.visual.config.ts",
+    "rootDir": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "html",
+        {
+          "open": "never",
+          "outputFolder": "visual-test-results"
+        }
+      ],
+      [
+        "json",
+        {
+          "outputFile": "visual-test-results/results.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 15000
+    },
+    "quiet": false,
+    "projects": [
+      {
+        "outputDir": "/Users/sergevilleneuve/Desktop/logo-gallery/test-results",
+        "repeatEach": 1,
+        "retries": 1,
+        "metadata": {},
+        "id": "Desktop Chrome",
+        "name": "Desktop Chrome",
+        "testDir": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.visual.spec.ts"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "/Users/sergevilleneuve/Desktop/logo-gallery/test-results",
+        "repeatEach": 1,
+        "retries": 1,
+        "metadata": {},
+        "id": "Desktop Chrome Dark",
+        "name": "Desktop Chrome Dark",
+        "testDir": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.visual.spec.ts"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "/Users/sergevilleneuve/Desktop/logo-gallery/test-results",
+        "repeatEach": 1,
+        "retries": 1,
+        "metadata": {},
+        "id": "Mobile Chrome",
+        "name": "Mobile Chrome",
+        "testDir": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.visual.spec.ts"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "/Users/sergevilleneuve/Desktop/logo-gallery/test-results",
+        "repeatEach": 1,
+        "retries": 1,
+        "metadata": {},
+        "id": "Mobile Chrome Dark",
+        "name": "Mobile Chrome Dark",
+        "testDir": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.visual.spec.ts"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "/Users/sergevilleneuve/Desktop/logo-gallery/test-results",
+        "repeatEach": 1,
+        "retries": 1,
+        "metadata": {},
+        "id": "Tablet Safari",
+        "name": "Tablet Safari",
+        "testDir": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.visual.spec.ts"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "shard": null,
+    "updateSnapshots": "all",
+    "version": "1.49.1",
+    "workers": 1,
+    "webServer": {
+      "command": "npm run dev",
+      "url": "http://localhost:3000",
+      "reuseExistingServer": true,
+      "timeout": 180000,
+      "stdout": "pipe",
+      "stderr": "pipe"
+    }
+  },
+  "suites": [
+    {
+      "title": "components.visual.spec.ts",
+      "file": "components.visual.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Visual Regression Tests - Components",
+          "file": "components.visual.spec.ts",
+          "line": 11,
+          "column": 6,
+          "specs": [
+            {
+              "title": "Button component states",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Desktop Chrome",
+                  "projectName": "Desktop Chrome",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "status": "passed",
+                      "duration": 8260,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-01-28T23:10:43.056Z",
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "99b47709ad32662f2642-5f09c994a42083e5463a",
+              "file": "components.visual.spec.ts",
+              "line": 16,
+              "column": 7
+            },
+            {
+              "title": "Input field states",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Desktop Chrome",
+                  "projectName": "Desktop Chrome",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "status": "passed",
+                      "duration": 4633,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-01-28T23:10:51.551Z",
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "99b47709ad32662f2642-ee9230afef355594a4e4",
+              "file": "components.visual.spec.ts",
+              "line": 62,
+              "column": 7
+            },
+            {
+              "title": "Responsive layout",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Desktop Chrome",
+                  "projectName": "Desktop Chrome",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "status": "passed",
+                      "duration": 5857,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Desktop-Chrome/gallery-responsive.png is re-generated, writing actual.\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-01-28T23:10:56.191Z",
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "99b47709ad32662f2642-a8b9d11c3fef5d98b6a8",
+              "file": "components.visual.spec.ts",
+              "line": 107,
+              "column": 7
+            },
+            {
+              "title": "Dark mode",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Desktop Chrome",
+                  "projectName": "Desktop Chrome",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "status": "passed",
+                      "duration": 5888,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Desktop-Chrome/gallery-light.png is re-generated, writing actual.\n"
+                        },
+                        {
+                          "text": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Desktop-Chrome/gallery-dark.png is re-generated, writing actual.\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-01-28T23:11:02.055Z",
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "99b47709ad32662f2642-766e343608e9b4ad2eea",
+              "file": "components.visual.spec.ts",
+              "line": 125,
+              "column": 7
+            },
+            {
+              "title": "Loading states",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Desktop Chrome",
+                  "projectName": "Desktop Chrome",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "status": "passed",
+                      "duration": 3619,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-01-28T23:11:07.949Z",
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "99b47709ad32662f2642-2ef5ef9b381a646573cc",
+              "file": "components.visual.spec.ts",
+              "line": 147,
+              "column": 7
+            },
+            {
+              "title": "Button component states",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Desktop Chrome Dark",
+                  "projectName": "Desktop Chrome Dark",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "99b47709ad32662f2642-8cd9806d8ee912af5967",
+              "file": "components.visual.spec.ts",
+              "line": 16,
+              "column": 7
+            },
+            {
+              "title": "Input field states",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Desktop Chrome Dark",
+                  "projectName": "Desktop Chrome Dark",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "99b47709ad32662f2642-751137e3680b1181a550",
+              "file": "components.visual.spec.ts",
+              "line": 62,
+              "column": 7
+            },
+            {
+              "title": "Responsive layout",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Desktop Chrome Dark",
+                  "projectName": "Desktop Chrome Dark",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "99b47709ad32662f2642-a1470459c502a6700b95",
+              "file": "components.visual.spec.ts",
+              "line": 107,
+              "column": 7
+            },
+            {
+              "title": "Dark mode",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Desktop Chrome Dark",
+                  "projectName": "Desktop Chrome Dark",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "99b47709ad32662f2642-774f00da1b518139113b",
+              "file": "components.visual.spec.ts",
+              "line": 125,
+              "column": 7
+            },
+            {
+              "title": "Loading states",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Desktop Chrome Dark",
+                  "projectName": "Desktop Chrome Dark",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "99b47709ad32662f2642-33b1cdfec232685e5de1",
+              "file": "components.visual.spec.ts",
+              "line": 147,
+              "column": 7
+            },
+            {
+              "title": "Button component states",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome",
+                  "projectName": "Mobile Chrome",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "99b47709ad32662f2642-472f9f88d65ce7f78b3e",
+              "file": "components.visual.spec.ts",
+              "line": 16,
+              "column": 7
+            },
+            {
+              "title": "Input field states",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome",
+                  "projectName": "Mobile Chrome",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "99b47709ad32662f2642-5a15e7e162edf3acf2e6",
+              "file": "components.visual.spec.ts",
+              "line": 62,
+              "column": 7
+            },
+            {
+              "title": "Responsive layout",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome",
+                  "projectName": "Mobile Chrome",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "99b47709ad32662f2642-e6ecf5e860a525fd823b",
+              "file": "components.visual.spec.ts",
+              "line": 107,
+              "column": 7
+            },
+            {
+              "title": "Dark mode",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome",
+                  "projectName": "Mobile Chrome",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "99b47709ad32662f2642-3aa869ea6baab465397b",
+              "file": "components.visual.spec.ts",
+              "line": 125,
+              "column": 7
+            },
+            {
+              "title": "Loading states",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome",
+                  "projectName": "Mobile Chrome",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "99b47709ad32662f2642-e4ad7aa6e79771e22a98",
+              "file": "components.visual.spec.ts",
+              "line": 147,
+              "column": 7
+            },
+            {
+              "title": "Button component states",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome Dark",
+                  "projectName": "Mobile Chrome Dark",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "99b47709ad32662f2642-aa4552d9a44a8fc0d4c4",
+              "file": "components.visual.spec.ts",
+              "line": 16,
+              "column": 7
+            },
+            {
+              "title": "Input field states",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome Dark",
+                  "projectName": "Mobile Chrome Dark",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "99b47709ad32662f2642-61dbcd871f2954d84305",
+              "file": "components.visual.spec.ts",
+              "line": 62,
+              "column": 7
+            },
+            {
+              "title": "Responsive layout",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome Dark",
+                  "projectName": "Mobile Chrome Dark",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "99b47709ad32662f2642-7269cfcbeb2512d81bc0",
+              "file": "components.visual.spec.ts",
+              "line": 107,
+              "column": 7
+            },
+            {
+              "title": "Dark mode",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome Dark",
+                  "projectName": "Mobile Chrome Dark",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "99b47709ad32662f2642-d64f988c8e52f9506a0d",
+              "file": "components.visual.spec.ts",
+              "line": 125,
+              "column": 7
+            },
+            {
+              "title": "Loading states",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome Dark",
+                  "projectName": "Mobile Chrome Dark",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "99b47709ad32662f2642-ee96266cb79b00173cf7",
+              "file": "components.visual.spec.ts",
+              "line": 147,
+              "column": 7
+            },
+            {
+              "title": "Button component states",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Tablet Safari",
+                  "projectName": "Tablet Safari",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "99b47709ad32662f2642-44ef8c8ddf45aedcca7b",
+              "file": "components.visual.spec.ts",
+              "line": 16,
+              "column": 7
+            },
+            {
+              "title": "Input field states",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Tablet Safari",
+                  "projectName": "Tablet Safari",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "99b47709ad32662f2642-ebbf926a3988ec4a89d1",
+              "file": "components.visual.spec.ts",
+              "line": 62,
+              "column": 7
+            },
+            {
+              "title": "Responsive layout",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Tablet Safari",
+                  "projectName": "Tablet Safari",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "99b47709ad32662f2642-8d102419670dd3962d16",
+              "file": "components.visual.spec.ts",
+              "line": 107,
+              "column": 7
+            },
+            {
+              "title": "Dark mode",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Tablet Safari",
+                  "projectName": "Tablet Safari",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "99b47709ad32662f2642-64ae899eae291001676c",
+              "file": "components.visual.spec.ts",
+              "line": 125,
+              "column": 7
+            },
+            {
+              "title": "Loading states",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Tablet Safari",
+                  "projectName": "Tablet Safari",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "99b47709ad32662f2642-34249a0945f54bb24aff",
+              "file": "components.visual.spec.ts",
+              "line": 147,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "layout.visual.spec.ts",
+      "file": "layout.visual.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Visual Regression Tests - Layout",
+          "file": "layout.visual.spec.ts",
+          "line": 9,
+          "column": 6,
+          "specs": [
+            {
+              "title": "Homepage layout",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Desktop Chrome",
+                  "projectName": "Desktop Chrome",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "status": "passed",
+                      "duration": 1012,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Desktop-Chrome/homepage.png is re-generated, writing actual.\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-01-28T23:11:11.585Z",
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "4f4cd04ed96c9f93656a-b8f271cb30fbaf29e3de",
+              "file": "layout.visual.spec.ts",
+              "line": 14,
+              "column": 7
+            },
+            {
+              "title": "Gallery page responsive layout",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Desktop Chrome",
+                  "projectName": "Desktop Chrome",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "status": "passed",
+                      "duration": 7939,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Desktop-Chrome/gallery-375x667.png is re-generated, writing actual.\n"
+                        },
+                        {
+                          "text": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Desktop-Chrome/gallery-768x1024.png is re-generated, writing actual.\n"
+                        },
+                        {
+                          "text": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Desktop-Chrome/gallery-1280x720.png is re-generated, writing actual.\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-01-28T23:11:12.601Z",
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "4f4cd04ed96c9f93656a-36b4e4483a7d8ed7f3ee",
+              "file": "layout.visual.spec.ts",
+              "line": 23,
+              "column": 7
+            },
+            {
+              "title": "Vote page responsive layout",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Desktop Chrome",
+                  "projectName": "Desktop Chrome",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "status": "passed",
+                      "duration": 6616,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Desktop-Chrome/vote-375x667.png is re-generated, writing actual.\n"
+                        },
+                        {
+                          "text": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Desktop-Chrome/vote-768x1024.png is re-generated, writing actual.\n"
+                        },
+                        {
+                          "text": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Desktop-Chrome/vote-1280x720.png is re-generated, writing actual.\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-01-28T23:11:20.546Z",
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "4f4cd04ed96c9f93656a-bf6fd800fdc9c011ddda",
+              "file": "layout.visual.spec.ts",
+              "line": 42,
+              "column": 7
+            },
+            {
+              "title": "Navigation menu states",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Desktop Chrome",
+                  "projectName": "Desktop Chrome",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "status": "passed",
+                      "duration": 1667,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-01-28T23:11:27.170Z",
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "4f4cd04ed96c9f93656a-d9228a40b5993dc75822",
+              "file": "layout.visual.spec.ts",
+              "line": 61,
+              "column": 7
+            },
+            {
+              "title": "Footer layout",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Desktop Chrome",
+                  "projectName": "Desktop Chrome",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "status": "passed",
+                      "duration": 1173,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "A snapshot doesn't exist at /Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Desktop-Chrome/footer.png, writing actual.\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-01-28T23:11:28.842Z",
+                      "attachments": [
+                        {
+                          "name": "footer-expected.png",
+                          "contentType": "image/png",
+                          "path": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Desktop-Chrome/footer.png"
+                        },
+                        {
+                          "name": "footer-actual.png",
+                          "contentType": "image/png",
+                          "path": "/Users/sergevilleneuve/Desktop/logo-gallery/test-results/layout.visual-Visual-Regression-Tests---Layout-Footer-layout-Desktop-Chrome/footer-actual.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "4f4cd04ed96c9f93656a-c3020110e367c36153dc",
+              "file": "layout.visual.spec.ts",
+              "line": 85,
+              "column": 7
+            },
+            {
+              "title": "Grid layout",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Desktop Chrome",
+                  "projectName": "Desktop Chrome",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "status": "interrupted",
+                      "duration": 20081,
+                      "error": {
+                        "message": "Error: expect.toHaveScreenshot(grid-mobile.png): Test ended.\nCall log:\n\u001b[2m  - expect.toHaveScreenshot(grid-mobile.png) with timeout 30000ms\u001b[22m\n\u001b[2m    - verifying given screenshot expectation\u001b[22m\n\u001b[2m  - waiting for locator('.grid')\u001b[22m\n\u001b[2m  - failed to take screenshot - Error: strict mode violation: locator('.grid') resolved to 2 elements:\u001b[22m\n\u001b[2m    1) <div class=\"grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6\">…</div> aka locator('div').filter({ hasText: '0Claude 3.5 SonnetUse' }).nth(2)\u001b[22m\n\u001b[2m    2) <div class=\"grid grid-cols-1 md:grid-cols-3 gap-8\">…</div> aka locator('div').filter({ hasText: 'Logo GalleryA curated' }).nth(2)\u001b[22m\n\u001b[2m  - waiting 100ms before taking screenshot\u001b[22m\n\u001b[2m  - waiting for locator('.grid')\u001b[22m\n\u001b[2m  - failed to take screenshot - Error: strict mode violation: locator('.grid') resolved to 2 elements:\u001b[22m\n\u001b[2m    1) <div class=\"grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6\">…</div> aka locator('div').filter({ hasText: '0Claude 3.5 SonnetUse' }).nth(2)\u001b[22m\n\u001b[2m    2) <div class=\"grid grid-cols-1 md:grid-cols-3 gap-8\">…</div> aka locator('div').filter({ hasText: 'Logo GalleryA curated' }).nth(2)\u001b[22m\n\u001b[2m  - waiting 250ms before taking screenshot\u001b[22m\n\u001b[2m  - waiting for locator('.grid')\u001b[22m\n\u001b[2m  - failed to take screenshot - Error: strict mode violation: locator('.grid') resolved to 2 elements:\u001b[22m\n\u001b[2m    1) <div class=\"grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6\">…</div> aka locator('div').filter({ hasText: '0Claude 3.5 SonnetUse' }).nth(2)\u001b[22m\n\u001b[2m    2) <div class=\"grid grid-cols-1 md:grid-cols-3 gap-8\">…</div> aka locator('div').filter({ hasText: 'Logo GalleryA curated' }).nth(2)\u001b[22m\n\u001b[2m  - waiting 500ms before taking screenshot\u001b[22m\n\u001b[2m  3781 × waiting for locator('.grid')\u001b[22m\n\u001b[2m       - failed to take screenshot - Error: strict mode violation: locator('.grid') resolved to 2 elements:\u001b[22m\n\u001b[2m    1) <div class=\"grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6\">…</div> aka locator('div').filter({ hasText: '0Claude 3.5 SonnetUse' }).nth(2)\u001b[22m\n\u001b[2m    2) <div class=\"grid grid-cols-1 md:grid-cols-3 gap-8\">…</div> aka locator('div').filter({ hasText: 'Logo GalleryA curated' }).nth(2)\u001b[22m\n\u001b[2m       - waiting 1000ms before taking screenshot\u001b[22m\n\u001b[2m  - waiting for locator('.grid')\u001b[22m\n",
+                        "stack": "Error: expect.toHaveScreenshot(grid-mobile.png): Test ended.\nCall log:\n\u001b[2m  - expect.toHaveScreenshot(grid-mobile.png) with timeout 30000ms\u001b[22m\n\u001b[2m    - verifying given screenshot expectation\u001b[22m\n\u001b[2m  - waiting for locator('.grid')\u001b[22m\n\u001b[2m  - failed to take screenshot - Error: strict mode violation: locator('.grid') resolved to 2 elements:\u001b[22m\n\u001b[2m    1) <div class=\"grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6\">…</div> aka locator('div').filter({ hasText: '0Claude 3.5 SonnetUse' }).nth(2)\u001b[22m\n\u001b[2m    2) <div class=\"grid grid-cols-1 md:grid-cols-3 gap-8\">…</div> aka locator('div').filter({ hasText: 'Logo GalleryA curated' }).nth(2)\u001b[22m\n\u001b[2m  - waiting 100ms before taking screenshot\u001b[22m\n\u001b[2m  - waiting for locator('.grid')\u001b[22m\n\u001b[2m  - failed to take screenshot - Error: strict mode violation: locator('.grid') resolved to 2 elements:\u001b[22m\n\u001b[2m    1) <div class=\"grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6\">…</div> aka locator('div').filter({ hasText: '0Claude 3.5 SonnetUse' }).nth(2)\u001b[22m\n\u001b[2m    2) <div class=\"grid grid-cols-1 md:grid-cols-3 gap-8\">…</div> aka locator('div').filter({ hasText: 'Logo GalleryA curated' }).nth(2)\u001b[22m\n\u001b[2m  - waiting 250ms before taking screenshot\u001b[22m\n\u001b[2m  - waiting for locator('.grid')\u001b[22m\n\u001b[2m  - failed to take screenshot - Error: strict mode violation: locator('.grid') resolved to 2 elements:\u001b[22m\n\u001b[2m    1) <div class=\"grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6\">…</div> aka locator('div').filter({ hasText: '0Claude 3.5 SonnetUse' }).nth(2)\u001b[22m\n\u001b[2m    2) <div class=\"grid grid-cols-1 md:grid-cols-3 gap-8\">…</div> aka locator('div').filter({ hasText: 'Logo GalleryA curated' }).nth(2)\u001b[22m\n\u001b[2m  - waiting 500ms before taking screenshot\u001b[22m\n\u001b[2m  3781 × waiting for locator('.grid')\u001b[22m\n\u001b[2m       - failed to take screenshot - Error: strict mode violation: locator('.grid') resolved to 2 elements:\u001b[22m\n\u001b[2m    1) <div class=\"grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6\">…</div> aka locator('div').filter({ hasText: '0Claude 3.5 SonnetUse' }).nth(2)\u001b[22m\n\u001b[2m    2) <div class=\"grid grid-cols-1 md:grid-cols-3 gap-8\">…</div> aka locator('div').filter({ hasText: 'Logo GalleryA curated' }).nth(2)\u001b[22m\n\u001b[2m       - waiting 1000ms before taking screenshot\u001b[22m\n\u001b[2m  - waiting for locator('.grid')\u001b[22m\n\n    at /Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/layout.visual.spec.ts:108:7",
+                        "location": {
+                          "file": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/layout.visual.spec.ts",
+                          "column": 7,
+                          "line": 108
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 106 |\u001b[39m       \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39msetViewportSize(viewport)\u001b[33m;\u001b[39m\n \u001b[90m 107 |\u001b[39m       \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForTimeout(\u001b[35m500\u001b[39m)\u001b[33m;\u001b[39m \u001b[90m// Wait for layout to adjust\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 108 |\u001b[39m       \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'.grid'\u001b[39m))\u001b[33m.\u001b[39mtoHaveScreenshot(\u001b[32m`grid-${viewport.name}.png`\u001b[39m\u001b[33m,\u001b[39m {\n \u001b[90m     |\u001b[39m       \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 109 |\u001b[39m         timeout\u001b[33m:\u001b[39m \u001b[35m30000\u001b[39m\u001b[33m,\u001b[39m\n \u001b[90m 110 |\u001b[39m       })\u001b[33m;\u001b[39m\n \u001b[90m 111 |\u001b[39m     }\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/layout.visual.spec.ts",
+                            "column": 7,
+                            "line": 108
+                          },
+                          "message": "Error: expect.toHaveScreenshot(grid-mobile.png): Test ended.\nCall log:\n\u001b[2m  - expect.toHaveScreenshot(grid-mobile.png) with timeout 30000ms\u001b[22m\n\u001b[2m    - verifying given screenshot expectation\u001b[22m\n\u001b[2m  - waiting for locator('.grid')\u001b[22m\n\u001b[2m  - failed to take screenshot - Error: strict mode violation: locator('.grid') resolved to 2 elements:\u001b[22m\n\u001b[2m    1) <div class=\"grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6\">…</div> aka locator('div').filter({ hasText: '0Claude 3.5 SonnetUse' }).nth(2)\u001b[22m\n\u001b[2m    2) <div class=\"grid grid-cols-1 md:grid-cols-3 gap-8\">…</div> aka locator('div').filter({ hasText: 'Logo GalleryA curated' }).nth(2)\u001b[22m\n\u001b[2m  - waiting 100ms before taking screenshot\u001b[22m\n\u001b[2m  - waiting for locator('.grid')\u001b[22m\n\u001b[2m  - failed to take screenshot - Error: strict mode violation: locator('.grid') resolved to 2 elements:\u001b[22m\n\u001b[2m    1) <div class=\"grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6\">…</div> aka locator('div').filter({ hasText: '0Claude 3.5 SonnetUse' }).nth(2)\u001b[22m\n\u001b[2m    2) <div class=\"grid grid-cols-1 md:grid-cols-3 gap-8\">…</div> aka locator('div').filter({ hasText: 'Logo GalleryA curated' }).nth(2)\u001b[22m\n\u001b[2m  - waiting 250ms before taking screenshot\u001b[22m\n\u001b[2m  - waiting for locator('.grid')\u001b[22m\n\u001b[2m  - failed to take screenshot - Error: strict mode violation: locator('.grid') resolved to 2 elements:\u001b[22m\n\u001b[2m    1) <div class=\"grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6\">…</div> aka locator('div').filter({ hasText: '0Claude 3.5 SonnetUse' }).nth(2)\u001b[22m\n\u001b[2m    2) <div class=\"grid grid-cols-1 md:grid-cols-3 gap-8\">…</div> aka locator('div').filter({ hasText: 'Logo GalleryA curated' }).nth(2)\u001b[22m\n\u001b[2m  - waiting 500ms before taking screenshot\u001b[22m\n\u001b[2m  3781 × waiting for locator('.grid')\u001b[22m\n\u001b[2m       - failed to take screenshot - Error: strict mode violation: locator('.grid') resolved to 2 elements:\u001b[22m\n\u001b[2m    1) <div class=\"grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6\">…</div> aka locator('div').filter({ hasText: '0Claude 3.5 SonnetUse' }).nth(2)\u001b[22m\n\u001b[2m    2) <div class=\"grid grid-cols-1 md:grid-cols-3 gap-8\">…</div> aka locator('div').filter({ hasText: 'Logo GalleryA curated' }).nth(2)\u001b[22m\n\u001b[2m       - waiting 1000ms before taking screenshot\u001b[22m\n\u001b[2m  - waiting for locator('.grid')\u001b[22m\n\n\n\u001b[0m \u001b[90m 106 |\u001b[39m       \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39msetViewportSize(viewport)\u001b[33m;\u001b[39m\n \u001b[90m 107 |\u001b[39m       \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForTimeout(\u001b[35m500\u001b[39m)\u001b[33m;\u001b[39m \u001b[90m// Wait for layout to adjust\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 108 |\u001b[39m       \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'.grid'\u001b[39m))\u001b[33m.\u001b[39mtoHaveScreenshot(\u001b[32m`grid-${viewport.name}.png`\u001b[39m\u001b[33m,\u001b[39m {\n \u001b[90m     |\u001b[39m       \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 109 |\u001b[39m         timeout\u001b[33m:\u001b[39m \u001b[35m30000\u001b[39m\u001b[33m,\u001b[39m\n \u001b[90m 110 |\u001b[39m       })\u001b[33m;\u001b[39m\n \u001b[90m 111 |\u001b[39m     }\u001b[0m\n\u001b[2m    at /Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/layout.visual.spec.ts:108:7\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-01-28T23:11:30.020Z",
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/Users/sergevilleneuve/Desktop/logo-gallery/test-results/layout.visual-Visual-Regression-Tests---Layout-Grid-layout-Desktop-Chrome/test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "/Users/sergevilleneuve/Desktop/logo-gallery/test-results/layout.visual-Visual-Regression-Tests---Layout-Grid-layout-Desktop-Chrome/video.webm"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "/Users/sergevilleneuve/Desktop/logo-gallery/test-results/layout.visual-Visual-Regression-Tests---Layout-Grid-layout-Desktop-Chrome/trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/layout.visual.spec.ts",
+                        "column": 7,
+                        "line": 108
+                      }
+                    }
+                  ],
+                  "status": "skipped"
+                }
+              ],
+              "id": "4f4cd04ed96c9f93656a-bee98cbe4c1e771bee12",
+              "file": "layout.visual.spec.ts",
+              "line": 94,
+              "column": 7
+            },
+            {
+              "title": "Theme switching",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Desktop Chrome",
+                  "projectName": "Desktop Chrome",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "4f4cd04ed96c9f93656a-e3e261b372db7f981003",
+              "file": "layout.visual.spec.ts",
+              "line": 114,
+              "column": 7
+            },
+            {
+              "title": "Homepage layout",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Desktop Chrome Dark",
+                  "projectName": "Desktop Chrome Dark",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "4f4cd04ed96c9f93656a-b28bb9fbd2f70342c626",
+              "file": "layout.visual.spec.ts",
+              "line": 14,
+              "column": 7
+            },
+            {
+              "title": "Gallery page responsive layout",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Desktop Chrome Dark",
+                  "projectName": "Desktop Chrome Dark",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "4f4cd04ed96c9f93656a-3ac4a36020e80dc0de75",
+              "file": "layout.visual.spec.ts",
+              "line": 23,
+              "column": 7
+            },
+            {
+              "title": "Vote page responsive layout",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Desktop Chrome Dark",
+                  "projectName": "Desktop Chrome Dark",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "4f4cd04ed96c9f93656a-2a2369fc5e6b2f9bdf23",
+              "file": "layout.visual.spec.ts",
+              "line": 42,
+              "column": 7
+            },
+            {
+              "title": "Navigation menu states",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Desktop Chrome Dark",
+                  "projectName": "Desktop Chrome Dark",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "4f4cd04ed96c9f93656a-207174d0884037863607",
+              "file": "layout.visual.spec.ts",
+              "line": 61,
+              "column": 7
+            },
+            {
+              "title": "Footer layout",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Desktop Chrome Dark",
+                  "projectName": "Desktop Chrome Dark",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "4f4cd04ed96c9f93656a-06c7e5309022c14cf2cd",
+              "file": "layout.visual.spec.ts",
+              "line": 85,
+              "column": 7
+            },
+            {
+              "title": "Grid layout",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Desktop Chrome Dark",
+                  "projectName": "Desktop Chrome Dark",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "4f4cd04ed96c9f93656a-be25e1862c1d906c99b3",
+              "file": "layout.visual.spec.ts",
+              "line": 94,
+              "column": 7
+            },
+            {
+              "title": "Theme switching",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Desktop Chrome Dark",
+                  "projectName": "Desktop Chrome Dark",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "4f4cd04ed96c9f93656a-2d9a041e7c2f19df9ef6",
+              "file": "layout.visual.spec.ts",
+              "line": 114,
+              "column": 7
+            },
+            {
+              "title": "Homepage layout",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome",
+                  "projectName": "Mobile Chrome",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "4f4cd04ed96c9f93656a-0b3ae5a5d22b6b00ed74",
+              "file": "layout.visual.spec.ts",
+              "line": 14,
+              "column": 7
+            },
+            {
+              "title": "Gallery page responsive layout",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome",
+                  "projectName": "Mobile Chrome",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "4f4cd04ed96c9f93656a-5c507a28e3e38b5002bb",
+              "file": "layout.visual.spec.ts",
+              "line": 23,
+              "column": 7
+            },
+            {
+              "title": "Vote page responsive layout",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome",
+                  "projectName": "Mobile Chrome",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "4f4cd04ed96c9f93656a-f117cb8304be7737e8b8",
+              "file": "layout.visual.spec.ts",
+              "line": 42,
+              "column": 7
+            },
+            {
+              "title": "Navigation menu states",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome",
+                  "projectName": "Mobile Chrome",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "4f4cd04ed96c9f93656a-56d36f6fa3c7f4b31e59",
+              "file": "layout.visual.spec.ts",
+              "line": 61,
+              "column": 7
+            },
+            {
+              "title": "Footer layout",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome",
+                  "projectName": "Mobile Chrome",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "4f4cd04ed96c9f93656a-ff0c06b59fac2c127870",
+              "file": "layout.visual.spec.ts",
+              "line": 85,
+              "column": 7
+            },
+            {
+              "title": "Grid layout",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome",
+                  "projectName": "Mobile Chrome",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "4f4cd04ed96c9f93656a-bab943604918d29c446d",
+              "file": "layout.visual.spec.ts",
+              "line": 94,
+              "column": 7
+            },
+            {
+              "title": "Theme switching",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome",
+                  "projectName": "Mobile Chrome",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "4f4cd04ed96c9f93656a-b5544b37fbf0ecca5986",
+              "file": "layout.visual.spec.ts",
+              "line": 114,
+              "column": 7
+            },
+            {
+              "title": "Homepage layout",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome Dark",
+                  "projectName": "Mobile Chrome Dark",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "4f4cd04ed96c9f93656a-ea014bf9f3e344236dde",
+              "file": "layout.visual.spec.ts",
+              "line": 14,
+              "column": 7
+            },
+            {
+              "title": "Gallery page responsive layout",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome Dark",
+                  "projectName": "Mobile Chrome Dark",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "4f4cd04ed96c9f93656a-133c7c23632878e4628c",
+              "file": "layout.visual.spec.ts",
+              "line": 23,
+              "column": 7
+            },
+            {
+              "title": "Vote page responsive layout",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome Dark",
+                  "projectName": "Mobile Chrome Dark",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "4f4cd04ed96c9f93656a-9a012cf858bf0bfcf043",
+              "file": "layout.visual.spec.ts",
+              "line": 42,
+              "column": 7
+            },
+            {
+              "title": "Navigation menu states",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome Dark",
+                  "projectName": "Mobile Chrome Dark",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "4f4cd04ed96c9f93656a-10120ef9ef6d50703e05",
+              "file": "layout.visual.spec.ts",
+              "line": 61,
+              "column": 7
+            },
+            {
+              "title": "Footer layout",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome Dark",
+                  "projectName": "Mobile Chrome Dark",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "4f4cd04ed96c9f93656a-b9e191d53d79d0b3a9d6",
+              "file": "layout.visual.spec.ts",
+              "line": 85,
+              "column": 7
+            },
+            {
+              "title": "Grid layout",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome Dark",
+                  "projectName": "Mobile Chrome Dark",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "4f4cd04ed96c9f93656a-939ded809a9483afea70",
+              "file": "layout.visual.spec.ts",
+              "line": 94,
+              "column": 7
+            },
+            {
+              "title": "Theme switching",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome Dark",
+                  "projectName": "Mobile Chrome Dark",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "4f4cd04ed96c9f93656a-062a046583bb4499101c",
+              "file": "layout.visual.spec.ts",
+              "line": 114,
+              "column": 7
+            },
+            {
+              "title": "Homepage layout",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Tablet Safari",
+                  "projectName": "Tablet Safari",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "4f4cd04ed96c9f93656a-a32b7d2cb67849b5afd6",
+              "file": "layout.visual.spec.ts",
+              "line": 14,
+              "column": 7
+            },
+            {
+              "title": "Gallery page responsive layout",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Tablet Safari",
+                  "projectName": "Tablet Safari",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "4f4cd04ed96c9f93656a-b33696e7d84a203a671f",
+              "file": "layout.visual.spec.ts",
+              "line": 23,
+              "column": 7
+            },
+            {
+              "title": "Vote page responsive layout",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Tablet Safari",
+                  "projectName": "Tablet Safari",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "4f4cd04ed96c9f93656a-5566f2f9a5c0fd078eb4",
+              "file": "layout.visual.spec.ts",
+              "line": 42,
+              "column": 7
+            },
+            {
+              "title": "Navigation menu states",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Tablet Safari",
+                  "projectName": "Tablet Safari",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "4f4cd04ed96c9f93656a-b06d8dbfa0165dc12c85",
+              "file": "layout.visual.spec.ts",
+              "line": 61,
+              "column": 7
+            },
+            {
+              "title": "Footer layout",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Tablet Safari",
+                  "projectName": "Tablet Safari",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "4f4cd04ed96c9f93656a-bdd7cff6341ce952fc7a",
+              "file": "layout.visual.spec.ts",
+              "line": 85,
+              "column": 7
+            },
+            {
+              "title": "Grid layout",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Tablet Safari",
+                  "projectName": "Tablet Safari",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "4f4cd04ed96c9f93656a-03d5d31e40a6ccf5706f",
+              "file": "layout.visual.spec.ts",
+              "line": 94,
+              "column": 7
+            },
+            {
+              "title": "Theme switching",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Tablet Safari",
+                  "projectName": "Tablet Safari",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "4f4cd04ed96c9f93656a-1b453810a01e93e103a3",
+              "file": "layout.visual.spec.ts",
+              "line": 114,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2025-01-28T23:10:35.913Z",
+    "duration": 74488.421,
+    "expected": 10,
+    "skipped": 50,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

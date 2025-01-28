@@ -13,6 +13,7 @@ moduleNameMapper: {
     '^@/lib/(.*)$': '<rootDir>/app/lib/$1',
     '^@/contexts/(.*)$': '<rootDir>/app/contexts/$1',
     '^@/types/(.*)$': '<rootDir>/app/types/$1',
+    '^@/config/(.*)$': '<rootDir>/config/$1',
     '^mongodb$': '<rootDir>/node_modules/mongodb',
     '^mongoose$': '<rootDir>/node_modules/mongoose'
 },

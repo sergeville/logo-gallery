@@ -36,7 +36,7 @@ const LogoGallery = () => {
   };
 
   return (
-    <div className={`min-h-screen ${darkMode ? 'dark bg-black' : 'bg-[#F2F2F7]'}`}>
+    <div className={`min-h-screen ${darkMode ? 'dark bg-black' : 'bg-[#F2F2F7]'}`} data-testid="logo-gallery">
       {/* Header */}
       <header className="fixed w-full backdrop-blur-lg bg-white/70 dark:bg-black/70 h-16 flex items-center px-4 border-b border-gray-200 dark:border-gray-800">
         <div className="flex items-center justify-between w-full max-w-7xl mx-auto">
@@ -48,6 +48,7 @@ const LogoGallery = () => {
                 type="search"
                 placeholder="Search logos..."
                 className="pl-10 pr-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-800 dark:text-white"
+                data-testid="search-input"
               />
               <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
             </div>
@@ -55,11 +56,17 @@ const LogoGallery = () => {
             <button
               onClick={() => setDarkMode(!darkMode)}
               className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
+              data-testid="theme-toggle"
+              aria-label="Toggle dark mode"
             >
               {darkMode ? <Sun className="text-white" /> : <Moon />}
             </button>
             
-            <button className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800">
+            <button 
+              className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
+              data-testid="user-button"
+              aria-label="User menu"
+            >
               <User className="dark:text-white" />
             </button>
           </div>
@@ -67,7 +74,7 @@ const LogoGallery = () => {
       </header>
 
       {/* Main Content */}
-      <main className="pt-24 px-4 pb-8">
+      <main className="pt-24 px-4 pb-8" data-testid="main-content">
         <div className="max-w-7xl mx-auto">
           {/* Responsive grid layout */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -75,15 +82,17 @@ const LogoGallery = () => {
               <div
                 key={logo.id}
                 className="bg-white dark:bg-[#1C1C1E] rounded-xl shadow-sm hover:shadow-md transition-shadow p-4"
+                data-testid="logo-card"
               >
                 {/* Logo image container with error handling */}
-                <div className="relative h-[320px] mb-4 bg-gray-100 dark:bg-gray-700 rounded-lg">
+                <div className="relative h-[320px] mb-4 bg-gray-100 dark:bg-gray-700 rounded-lg" data-testid="logo-image-container">
                   <Image
                     src={logo.url}
                     alt={logo.name}
                     fill
                     className="object-contain p-4"
                     onError={handleImageError}
+                    data-testid="logo-image"
                   />
                 </div>
                 
@@ -94,7 +103,10 @@ const LogoGallery = () => {
 
                 {/* Action buttons */}
                 <div className="mt-4 flex gap-2">
-                  <button className="flex-1 border border-[#007AFF] text-[#007AFF] dark:text-white py-2 rounded-lg hover:bg-[#007AFF] hover:text-white transition-colors">
+                  <button 
+                    className="flex-1 border border-[#007AFF] text-[#007AFF] dark:text-white py-2 rounded-lg hover:bg-[#007AFF] hover:text-white transition-colors"
+                    data-testid="details-button"
+                  >
                     Details
                   </button>
                 </div>

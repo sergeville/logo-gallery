@@ -15,11 +15,11 @@ export const testConfig = {
     allowedFormats: ['image/png', 'image/jpeg', 'image/svg+xml']
   },
   api: {
-    baseUrl: 'http://localhost:3001',
+    baseUrl: 'http://localhost:3000',
     timeout: 5000
   },
   auth: {
-    nextAuthUrl: 'http://localhost:3001',
+    nextAuthUrl: 'http://localhost:3000',
     nextAuthSecret: 'test-secret',
     jwtSecret: 'test-jwt-secret'
   },

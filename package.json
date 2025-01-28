@@ -13,7 +13,10 @@
     "db:populate": "NODE_ENV=test ts-node --project tsconfig.test.json scripts/test-data/populate-db.ts",
     "db:validate": "NODE_ENV=test ts-node --project tsconfig.test.json scripts/test-data/validate-db.ts",
     "db:test-data:validate": "NODE_ENV=test ts-node --project tsconfig.test.json scripts/test-data/validate-test-data.ts",
-    "test:seed": "jest scripts/seed/__tests__"
+    "test:seed": "jest scripts/seed/__tests__",
+    "test:visual": "playwright test --config=playwright.visual.config.ts",
+    "test:visual:update": "playwright test --config=playwright.visual.config.ts --update-snapshots",
+    "test:visual:ui": "playwright test --config=playwright.visual.config.ts --ui"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.0",

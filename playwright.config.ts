@@ -1,6 +1,7 @@
 import { defineConfig, devices } from '@playwright/test'
 import path from 'path'
 import dotenv from 'dotenv'
+import { LOCALHOST_URL } from '@/config/constants'
 
 // Load environment variables based on NODE_ENV
 const env = process.env.NODE_ENV || 'development'
@@ -12,9 +13,9 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 1,
   workers: process.env.CI ? 1 : undefined,
-  reporter: 'html',
+  reporter: [['html', { open: 'never' }]],
   use: {
-    baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001',
+    baseURL: process.env.NEXT_PUBLIC_API_URL || LOCALHOST_URL,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
@@ -32,12 +33,17 @@ export default defineConfig({
   ],
   webServer: {
     command: 'npm run dev',
-    url: 'http://localhost:3001',
+    url: LOCALHOST_URL,
     reuseExistingServer: !process.env.CI,
     timeout: 120000,
     env: {
       NODE_ENV: env,
       MONGODB_URI: process.env.MONGODB_URI || `mongodb://localhost:27017/LogoGallery${env.charAt(0).toUpperCase() + env.slice(1)}DB`,
     },
+  },
+  globalSetup: require.resolve('./e2e/global-setup'),
+  globalTeardown: require.resolve('./e2e/global-teardown'),
+  typescript: {
+    config: path.join(__dirname, 'tsconfig.e2e.json'),
   },
 }) 

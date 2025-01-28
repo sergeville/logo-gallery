@@ -18,6 +18,7 @@ export default function ThemeToggle() {
       onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
       className="p-2 rounded-lg hover:bg-gray-700 transition-colors"
       aria-label="Toggle theme"
+      data-testid="theme-toggle"
     >
       {theme === 'dark' ? (
         <Sun className="h-5 w-5 text-gray-300" />

@@ -4,6 +4,7 @@ import dbConnect from '@/app/lib/db-config';
 import { readFile } from 'fs/promises';
 import path from 'path';
 import { isValidObjectId } from 'mongoose';
+import { imageCacheService } from '@/app/lib/services/ImageCacheService';
 
 const contentTypes: Record<string, string> = {
   'png': 'image/png',
@@ -90,30 +91,42 @@ export async function GET(
       return new NextResponse('Unsupported image format', { status: 400 });
     }
 
+    // Get image processing options from query parameters
+    const url = new URL(request.url);
+    const width = url.searchParams.get('w') ? parseInt(url.searchParams.get('w')!) : undefined;
+    const height = url.searchParams.get('h') ? parseInt(url.searchParams.get('h')!) : undefined;
+    const quality = url.searchParams.get('q') ? parseInt(url.searchParams.get('q')!) : undefined;
+    const format = url.searchParams.get('f') as 'jpeg' | 'png' | 'webp' | undefined;
+
     try {
-      console.log('Reading image file...');
-      const imageBuffer = await readFile(imagePath);
-      console.log('Image file read successfully:', {
-        size: imageBuffer.length,
-        path: imagePath
-      });
-      
-      // Set cache headers for better performance
-      const headers = new Headers({
-        'Content-Type': contentType,
-        'Cache-Control': 'public, max-age=31536000, immutable', // Cache for 1 year
-        'Content-Length': imageBuffer.length.toString()
+      console.log('Getting image from cache or processing...');
+      const result = await imageCacheService.getImage(imagePath, {
+        width,
+        height,
+        quality,
+        format
       });
 
-      return new NextResponse(imageBuffer, { headers });
+      if (!result) {
+        console.error('Failed to process or retrieve image:', { path: imagePath });
+        return new NextResponse('Error processing image', { status: 500 });
+      }
+
+      const headers = new Headers({
+        'Content-Type': result.contentType,
+        'Cache-Control': 'public, max-age=31536000, immutable', // Cache for 1 year
+        'Content-Length': result.buffer.length.toString()
+      });
+
+      return new NextResponse(result.buffer, { headers });
     } catch (error) {
-      console.error('Error reading image file:', {
+      console.error('Error serving image:', {
         name: error.name,
         message: error.message,
         stack: error.stack,
         path: imagePath
       });
-      return new NextResponse('Image file not found', { status: 404 });
+      return new NextResponse('Error serving image', { status: 500 });
     }
   } catch (error) {
     console.error('Unhandled error serving logo image:', {

@@ -62,10 +62,16 @@ export default function LogoCard({ logo, showDelete = false }: LogoCardProps) {
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
-      <div className="relative">
+    <div 
+      data-testid="logo-card"
+      className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden"
+    >
+      <div className="relative" data-testid="logo-card">
         {/* Vote count overlay */}
-        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-10 bg-black bg-opacity-50 rounded-full px-4 py-2">
+        <div 
+          data-testid="vote-count"
+          className="absolute top-4 left-1/2 transform -translate-x-1/2 z-10 bg-black bg-opacity-50 rounded-full px-4 py-2"
+        >
           <span className="text-3xl font-bold text-white">
             {logo.totalVotes || 0}
           </span>
@@ -73,18 +79,28 @@ export default function LogoCard({ logo, showDelete = false }: LogoCardProps) {
         <LogoImage
           src={getImageUrl()}
           alt={`Logo: ${logo.title} - ${logo.description}`}
+          data-testid="logo-image"
         />
       </div>
 
       <div className="p-4">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+        <h3 
+          data-testid="logo-title"
+          className="text-lg font-semibold text-gray-900 dark:text-white mb-2"
+        >
           {logo.title}
         </h3>
-        <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">
+        <p 
+          data-testid="logo-description"
+          className="text-gray-600 dark:text-gray-400 text-sm mb-4"
+        >
           {logo.description}
         </p>
         <div className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-300">
-          <span className="text-gray-500 dark:text-gray-400">
+          <span 
+            data-testid="upload-date"
+            className="text-gray-500 dark:text-gray-400"
+          >
             {getUploadedDate()}
           </span>
         </div>
@@ -92,6 +108,7 @@ export default function LogoCard({ logo, showDelete = false }: LogoCardProps) {
           <Link
             href={`/logos/${logo._id}`}
             className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 text-sm font-medium"
+            data-testid="view-details-link"
           >
             View Details
           </Link>

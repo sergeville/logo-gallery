@@ -1,4 +1,5 @@
 import path from 'path';
+import { API_BASE_URL, AUTH_URL } from '@/config/constants';
 
 export const testConfig = {
   mongodb: {
@@ -15,11 +16,11 @@ export const testConfig = {
     allowedFormats: ['image/png', 'image/jpeg', 'image/svg+xml']
   },
   api: {
-    baseUrl: 'http://localhost:3001',
+    baseUrl: API_BASE_URL,
     timeout: 5000
   },
   auth: {
-    nextAuthUrl: 'http://localhost:3001',
+    nextAuthUrl: AUTH_URL,
     nextAuthSecret: 'test-secret',
     jwtSecret: 'test-jwt-secret'
   },

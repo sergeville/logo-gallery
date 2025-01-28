@@ -12,6 +12,7 @@ A modern web application for managing and sharing logo designs with comprehensiv
 - Comprehensive validation
 - MongoDB integration
 - Extensive test coverage
+- Visual regression testing
 
 ## Tech Stack
 
@@ -21,7 +22,18 @@ A modern web application for managing and sharing logo designs with comprehensiv
 - NextAuth.js for authentication
 - Tailwind CSS for styling
 - Jest for testing
+- Playwright for visual testing
 - Image optimization with next/image
+
+## Development
+
+We follow strict development guidelines to ensure code quality and maintainability. Please read our [Contributing Guidelines](docs/CONTRIBUTING.md) before starting development. These guidelines include:
+
+- Easy to follow steps with clear examples
+- Technically thorough implementations
+- Best practices and coding standards
+- Long-term code quality focus
+- Multiple solution considerations
 
 ## Getting Started
 
@@ -88,12 +100,21 @@ The project includes comprehensive documentation in the `docs` directory:
 - **[MongoDB Setup](docs/mongodb-setup.md)**: Step-by-step guide for setting up MongoDB
 - **[Test Data](docs/test-data.md)**: Documentation for test data generation and usage
 - **[Database Testing](docs/database-testing.md)**: Guide for database testing procedures
+- **[Visual Testing](docs/guides/VISUAL_TESTING.md)**: Guide for visual regression testing
 - **[Validation Checklist](docs/VALIDATION_CHECKLIST.md)**: Complete list of input validation rules
 - **[Development Roadmap](docs/TODO.md)**: Planned features and improvements
+- **[Contributing Guidelines](docs/CONTRIBUTING.md)**
+- **[Changelog](docs/CHANGELOG.md)**
+- **[API Documentation](docs/API.md)**
+- **[Path Aliases](docs/PATH_ALIASES.md)**: Guide for using path aliases and import configurations
 
 ## Testing
 
 The project includes comprehensive tests covering:
+- Unit tests with Jest
+- Integration tests
+- End-to-end tests with Playwright
+- Visual regression tests
 - Input validation
 - Data relationships
 - Edge cases
@@ -102,7 +123,17 @@ The project includes comprehensive tests covering:
 
 Run tests with:
 ```bash
-npm run test:seed
+# Run unit and integration tests
+npm run test
+
+# Run visual regression tests
+npm run test:visual
+
+# Update visual test snapshots
+npm run test:visual:update
+
+# Run visual tests with UI
+npm run test:visual:ui
 ```
 
 Current test coverage:
@@ -110,6 +141,7 @@ Current test coverage:
 - Branches: 84.71%
 - Functions: 94.48%
 - Lines: 94.52%
+- Visual Components: 100%
 
 ## Validation Rules
 

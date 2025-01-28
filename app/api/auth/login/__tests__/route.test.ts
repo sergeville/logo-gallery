@@ -3,6 +3,7 @@ import { POST } from '../route'
 import { connectToDatabase } from '@/app/lib/db'
 import { Db, Collection, Document } from 'mongodb'
 import bcrypt from 'bcrypt'
+import { LOCALHOST_URL } from '@/config/constants'
 
 jest.mock('@/app/lib/db')
 jest.mock('bcrypt')
@@ -37,15 +38,15 @@ beforeEach(() => {
 })
 
 describe('Login API', () => {
-  const mockRequest = (body: any) => {
-    return new NextRequest('http://localhost:3000/api/auth/login', {
+  function createMockRequest(body: any) {
+    return new NextRequest(`${LOCALHOST_URL}/api/auth/login`, {
       method: 'POST',
-      body: JSON.stringify(body)
-    })
+      body: JSON.stringify(body),
+    });
   }
 
   it('returns 400 if email is missing', async () => {
-    const req = mockRequest({ password: 'password123' })
+    const req = createMockRequest({ password: 'password123' })
     const response = await POST(req)
     expect(response.status).toBe(400)
     const data = await response.json()
@@ -53,7 +54,7 @@ describe('Login API', () => {
   })
 
   it('returns 400 if password is missing', async () => {
-    const req = mockRequest({ email: 'test@example.com' })
+    const req = createMockRequest({ email: 'test@example.com' })
     const response = await POST(req)
     expect(response.status).toBe(400)
     const data = await response.json()
@@ -62,7 +63,7 @@ describe('Login API', () => {
 
   it('returns 401 if user is not found', async () => {
     mockCollection.findOne.mockResolvedValueOnce(null)
-    const req = mockRequest({ email: 'test@example.com', password: 'password123' })
+    const req = createMockRequest({ email: 'test@example.com', password: 'password123' })
     const response = await POST(req)
     expect(response.status).toBe(401)
     const data = await response.json()
@@ -80,7 +81,7 @@ describe('Login API', () => {
     mockCollection.findOne.mockResolvedValueOnce(mockUser)
     ;(bcrypt.compare as jest.Mock).mockResolvedValueOnce(true)
 
-    const req = mockRequest({ email: 'test@example.com', password: 'password123' })
+    const req = createMockRequest({ email: 'test@example.com', password: 'password123' })
     const response = await POST(req)
     expect(response.status).toBe(200)
     const data = await response.json()

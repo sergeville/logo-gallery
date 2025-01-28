@@ -1,7 +1,8 @@
 import { test, expect } from '@playwright/test'
+import { LOCALHOST_URL } from '@/config/constants'
 
 test('basic test', async ({ page }) => {
-  await page.goto('http://localhost:3001')
+  await page.goto(LOCALHOST_URL)
   
   // Wait for the page to be loaded
   await page.waitForLoadState('networkidle')

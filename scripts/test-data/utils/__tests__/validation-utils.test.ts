@@ -1,5 +1,6 @@
 import { validateEmail, validateUrl, validateObjectId, validateDateRange, validateField, ValidationRule } from '../validation-utils';
 import { ObjectId } from 'mongodb';
+import { LOCALHOST_URL } from '@/config/constants';
 
 describe('Validation Utilities', () => {
   describe('validateEmail', () => {
@@ -18,8 +19,9 @@ describe('Validation Utilities', () => {
 
   describe('validateUrl', () => {
     it('validates correct URL formats', () => {
+      expect(validateUrl(LOCALHOST_URL)).toBe(true);
       expect(validateUrl('https://example.com')).toBe(true);
-      expect(validateUrl('http://localhost:3000')).toBe(true);
+      expect(validateUrl(LOCALHOST_URL)).toBe(true);
     });
 
     it('invalidates incorrect URL formats', () => {

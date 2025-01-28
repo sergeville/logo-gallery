@@ -179,6 +179,7 @@ export default function GalleryPage() {
                 type="button"
                 onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
                 className="p-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                data-testid="sort-order-button"
               >
                 {sortOrder === 'asc' ? <SortAsc size={20} /> : <SortDesc size={20} />}
               </button>

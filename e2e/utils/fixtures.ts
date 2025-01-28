@@ -1,5 +1,6 @@
 import { test as base } from '@playwright/test'
 import { TestData, TestUser, TestLogo } from './test-data'
+import { LOCALHOST_URL } from '@/config/constants'
 
 // Extend the base test type with our fixtures
 type Fixtures = {
@@ -21,7 +22,7 @@ export const test = base.extend<Fixtures>({
 
     try {
       // Ensure page is loaded before creating user
-      await page.goto('http://localhost:3001/', { 
+      await page.goto(`${LOCALHOST_URL}/`, { 
         waitUntil: 'networkidle',
         timeout: 30000 
       })
@@ -53,7 +54,7 @@ export const test = base.extend<Fixtures>({
 
     try {
       // Ensure page is loaded before creating logo
-      await page.goto('http://localhost:3001/', { 
+      await page.goto(`${LOCALHOST_URL}/`, { 
         waitUntil: 'networkidle',
         timeout: 30000 
       })

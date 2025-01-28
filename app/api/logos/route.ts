@@ -6,8 +6,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '../auth/[...nextauth]/options';
-import connectDB from '@/app/lib/db';
+import { authOptions } from '../auth/[...nextauth]/route';
+import dbConnect from '@/app/lib/db-config';
 import { Logo } from '@/app/lib/models/logo';
 import mongoose from 'mongoose';
 
@@ -21,17 +21,32 @@ export async function GET(request: NextRequest) {
     const tag = searchParams.get('tag');
     const search = searchParams.get('search');
     const userId = searchParams.get('userId');
+    const isVotePage = searchParams.get('votePage') === 'true';
 
     const skip = (page - 1) * limit;
 
-    await connectDB();
+    await dbConnect();
+
+    // Get the current user's session if we're on the vote page
+    let currentUserId = null;
+    if (isVotePage) {
+      const session = await getServerSession(authOptions);
+      if (session?.user?.id) {
+        currentUserId = session.user.id;
+      }
+    }
 
     // Build query
     let query: any = {};
 
     // Add user filter if userId is provided
     if (userId) {
-      query.ownerId = userId;
+      query.userId = userId;
+    }
+
+    // For vote page, exclude user's own logos
+    if (isVotePage && currentUserId) {
+      query.userId = { $ne: currentUserId };
     }
 
     // Add tag filter
@@ -42,14 +57,14 @@ export async function GET(request: NextRequest) {
     // Add search filter
     if (search) {
       const searchQuery = [
-        { name: { $regex: search, $options: 'i' } },
+        { title: { $regex: search, $options: 'i' } },
         { description: { $regex: search, $options: 'i' } },
         { tags: { $regex: search, $options: 'i' } },
         { ownerName: { $regex: search, $options: 'i' } }
       ];
 
       query = userId 
-        ? { $and: [{ ownerId: userId }, { $or: searchQuery }] }
+        ? { $and: [{ userId }, { $or: searchQuery }] }
         : { $or: searchQuery };
     }
 
@@ -58,12 +73,13 @@ export async function GET(request: NextRequest) {
     if (sortBy === 'date') {
       sortOptions.uploadedAt = sortOrder === 'asc' ? 1 : -1;
     } else if (sortBy === 'rating') {
-      sortOptions.averageRating = sortOrder === 'asc' ? 1 : -1;
+      sortOptions.totalVotes = sortOrder === 'asc' ? 1 : -1;
     }
 
     // Execute query with pagination
     const [logos, total] = await Promise.all([
       Logo.find(query)
+        .select('_id title description imageUrl thumbnailUrl userId ownerName totalVotes')
         .sort(sortOptions)
         .skip(skip)
         .limit(limit)
@@ -71,12 +87,24 @@ export async function GET(request: NextRequest) {
       Logo.countDocuments(query)
     ]);
 
+    // Transform the data to match the frontend interface
+    const transformedLogos = logos.map(logo => ({
+      _id: logo._id,
+      name: logo.title, // Map title to name
+      description: logo.description,
+      imageUrl: logo.imageUrl,
+      thumbnailUrl: logo.thumbnailUrl,
+      userId: logo.userId,
+      ownerName: logo.ownerName,
+      totalVotes: logo.totalVotes || 0
+    }));
+
     // Calculate pagination info
     const totalPages = Math.ceil(total / limit);
     const hasMore = page < totalPages;
 
     return NextResponse.json({
-      logos,
+      logos: transformedLogos,
       pagination: {
         current: page,
         total: totalPages,
@@ -113,21 +141,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    await connectDB();
+    await dbConnect();
 
     const logo = new Logo({
       _id: new mongoose.Types.ObjectId(),
-      name,
-      description,
+      title: name.trim(),
+      description: description?.trim() || 'No description provided',
       imageUrl,
       thumbnailUrl,
       dimensions,
       fileSize,
       fileType,
-      category,
-      tags,
-      ownerId: session.user.id,
+      userId: session.user.id.toString(),
       ownerName: session.user.name,
+      category: category || 'uncategorized',
+      tags: tags || [],
       uploadedAt: new Date()
     });
 

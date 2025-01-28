@@ -1,70 +1,81 @@
 'use client'
 
-import { formatDistanceToNow } from 'date-fns'
+import React from 'react'
+import { formatDistanceToNow, isValid, parseISO } from 'date-fns'
 import Link from 'next/link'
 import { useSession } from 'next-auth/react'
-import { useState } from 'react'
-import Image from 'next/image'
 import DeleteLogoButton from './DeleteLogoButton'
+import LogoImage from './LogoImage'
+
+interface Logo {
+  _id: string
+  title: string
+  description: string
+  imageUrl: string
+  userId: string
+  createdAt: string | Date
+  totalVotes?: number
+}
 
 interface LogoCardProps {
-  logo: {
-    _id: string
-    title: string
-    description: string
-    imageUrl: string
-    userId: string
-    createdAt: string
-  }
+  logo: Logo
   showDelete?: boolean
 }
 
 export default function LogoCard({ logo, showDelete = false }: LogoCardProps) {
   const { data: session } = useSession()
   const isOwner = session?.user?.id === logo.userId
-  const [imageError, setImageError] = useState(false)
 
   const getUploadedDate = () => {
     try {
-      const date = typeof logo.createdAt === 'string' ? new Date(logo.createdAt) : new Date(logo.createdAt)
-      if (!(date instanceof Date) || isNaN(date.getTime())) {
-        return 'Invalid date'
+      if (!logo.createdAt) {
+        return 'Unknown date'
       }
+
+      let date: Date
+      if (typeof logo.createdAt === 'string') {
+        date = parseISO(logo.createdAt)
+      } else {
+        date = logo.createdAt
+      }
+
+      if (!isValid(date)) {
+        return 'Unknown date'
+      }
+
       return formatDistanceToNow(date, { addSuffix: true })
     } catch (error) {
-      console.error('Error parsing date:', error)
-      return 'Invalid date'
+      console.error('Error formatting date:', error)
+      return 'Unknown date'
     }
   }
 
-  // Ensure the image URL is absolute and properly formatted
-  const fullImageUrl = logo.imageUrl.startsWith('http') 
-    ? logo.imageUrl 
-    : logo.imageUrl.startsWith('/') 
-      ? `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}${logo.imageUrl}`
-      : `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/uploads/${logo.imageUrl}`
+  const getImageUrl = () => {
+    if (logo.imageUrl.startsWith('http')) {
+      return logo.imageUrl;
+    }
+    // Ensure the URL starts with a forward slash
+    const normalizedPath = logo.imageUrl.startsWith('/') ? logo.imageUrl : `/${logo.imageUrl}`;
+    // Use the base URL from environment or default to empty string (relative path)
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || '';
+    return `${baseUrl}${normalizedPath}`;
+  }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden relative group">
-      <div className="aspect-w-16 aspect-h-9 relative">
-        {!imageError ? (
-          <Image
-            src={fullImageUrl}
-            alt={logo.title}
-            fill
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-            className="object-contain"
-            onError={() => setImageError(true)}
-          />
-        ) : (
-          <div className="w-full h-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
-            <div className="text-center">
-              <span className="text-gray-400 block">Image not available</span>
-              <span className="text-gray-500 text-sm block mt-1">ID: {logo.imageUrl.split('/').pop()}</span>
-            </div>
-          </div>
-        )}
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
+      <div className="relative">
+        {/* Vote count overlay */}
+        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-10 bg-black bg-opacity-50 rounded-full px-4 py-2">
+          <span className="text-3xl font-bold text-white">
+            {logo.totalVotes || 0}
+          </span>
+        </div>
+        <LogoImage
+          src={getImageUrl()}
+          alt={`Logo: ${logo.title} - ${logo.description}`}
+        />
       </div>
+
       <div className="p-4">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
           {logo.title}

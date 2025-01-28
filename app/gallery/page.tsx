@@ -12,8 +12,10 @@ interface Logo {
   name: string;
   imageUrl: string;
   description: string;
+  userId: string;
   tags: string[];
-  uploadedAt: string;
+  uploadedAt?: string;
+  createdAt: string;
   ownerName: string;
 }
 
@@ -231,10 +233,15 @@ export default function GalleryPage() {
                 ref={index === logos.length - 1 ? lastLogoElementRef : undefined}
               >
                 <LogoCard
-                  name={logo.name}
-                  imageUrl={logo.imageUrl}
-                  uploadedAt={logo.uploadedAt}
-                  ownerName={logo.ownerName}
+                  logo={{
+                    _id: logo._id,
+                    title: logo.name,
+                    description: logo.description,
+                    imageUrl: logo.imageUrl,
+                    userId: logo.userId,
+                    createdAt: logo.uploadedAt || logo.createdAt
+                  }}
+                  showDelete={false}
                 />
               </div>
             ))}

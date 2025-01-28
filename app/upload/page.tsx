@@ -9,7 +9,8 @@ export default function UploadPage() {
   const router = useRouter()
   const { data: session } = useSession()
   const [file, setFile] = useState<File | null>(null)
-  const [title, setTitle] = useState('')
+  const [preview, setPreview] = useState<string | null>(null)
+  const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string>('')
@@ -24,16 +25,16 @@ export default function UploadPage() {
         throw new Error('Please sign in to upload logos')
       }
 
-      if (!file || !title || !description) {
+      if (!file || !name || !description) {
         throw new Error('Please fill in all required fields')
       }
 
       const formData = new FormData()
       formData.append('file', file)
-      formData.append('title', title)
+      formData.append('name', name)
       formData.append('description', description)
 
-      const response = await fetch('/api/upload', {
+      const response = await fetch('/api/logos/upload', {
         method: 'POST',
         body: formData
       })
@@ -41,7 +42,7 @@ export default function UploadPage() {
       const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to upload logo')
+        throw new Error(data.message || 'Failed to upload logo')
       }
 
       router.push('/gallery')
@@ -69,7 +70,7 @@ export default function UploadPage() {
       setError('')
       const reader = new FileReader()
       reader.onloadend = () => {
-        // setPreview(reader.result as string)
+        setPreview(reader.result as string)
       }
       reader.readAsDataURL(file)
     }
@@ -109,16 +110,16 @@ export default function UploadPage() {
           )}
 
           <div>
-            <label htmlFor="title" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-              Title
+            <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              Name
             </label>
             <input
               type="text"
-              id="title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              id="name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
               className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:focus:border-indigo-400 dark:focus:ring-indigo-400 sm:text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-              placeholder="Enter logo title"
+              placeholder="Enter logo name"
               required
               minLength={3}
               maxLength={60}
@@ -154,20 +155,32 @@ export default function UploadPage() {
             </label>
             <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 dark:border-gray-700 border-dashed rounded-md">
               <div className="space-y-1 text-center">
-                <svg
-                  className="mx-auto h-12 w-12 text-gray-400"
-                  stroke="currentColor"
-                  fill="none"
-                  viewBox="0 0 48 48"
-                  aria-hidden="true"
-                >
-                  <path
-                    d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
-                    strokeWidth={2}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
+                {preview ? (
+                  <div className="mb-4">
+                    <Image
+                      src={preview}
+                      alt="Logo preview - Selected image to be uploaded"
+                      width={200}
+                      height={200}
+                      className="mx-auto object-contain"
+                    />
+                  </div>
+                ) : (
+                  <svg
+                    className="mx-auto h-12 w-12 text-gray-400"
+                    stroke="currentColor"
+                    fill="none"
+                    viewBox="0 0 48 48"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+                      strokeWidth={2}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                )}
                 <div className="flex text-sm text-gray-600 dark:text-gray-400">
                   <label
                     htmlFor="file-upload"
@@ -179,7 +192,7 @@ export default function UploadPage() {
                       name="file-upload"
                       type="file"
                       className="sr-only"
-                      accept="image/jpeg,image/png,image/gif,image/webp"
+                      accept="image/jpeg,image/png,image/svg+xml"
                       onChange={handleFileChange}
                       required
                     />
@@ -187,7 +200,7 @@ export default function UploadPage() {
                   <p className="pl-1">or drag and drop</p>
                 </div>
                 <p className="text-xs text-gray-500 dark:text-gray-400">
-                  PNG, JPG, GIF, WebP up to 10MB
+                  PNG, JPG, SVG up to 5MB
                 </p>
                 {file && (
                   <p className="text-sm text-gray-500 dark:text-gray-400">

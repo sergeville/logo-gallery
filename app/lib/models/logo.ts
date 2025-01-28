@@ -1,15 +1,31 @@
 import mongoose, { Document, Model } from 'mongoose';
 
+interface Vote {
+  userId: string;
+  timestamp: Date;
+}
+
 // Define the Logo interface
 export interface ILogo extends Document {
   title: string;
+  name: string; // Alias for title
   description: string;
   imageUrl: string;
+  thumbnailUrl: string;
   userId: string;
   ownerName?: string;
+  dimensions?: {
+    width: number;
+    height: number;
+  };
+  fileSize: number;
+  fileType: string;
   createdAt: Date;
   updatedAt: Date;
+  uploadedAt?: Date;
   fullImageUrl: string; // Virtual property
+  votes: Vote[];
+  totalVotes: number;
   isOwnedBy(userId: string): boolean;
   updateTitle(newTitle: string): Promise<void>;
 }
@@ -20,6 +36,17 @@ interface ILogoModel extends Model<ILogo> {
   searchByTitle(query: string): Promise<ILogo[]>;
   safeDelete(id: string, userId: string): Promise<{ success: boolean; error?: string }>;
 }
+
+const voteSchema = new mongoose.Schema({
+  userId: {
+    type: String,
+    required: true
+  },
+  timestamp: {
+    type: Date,
+    default: Date.now
+  }
+});
 
 const logoSchema = new mongoose.Schema({
   title: {
@@ -41,9 +68,19 @@ const logoSchema = new mongoose.Schema({
     required: [true, 'Please provide an image URL for your logo'],
     validate: {
       validator: function(v: string) {
-        return /^\/uploads\/.*\.(png|jpg|jpeg|gif|webp)$/i.test(v);
+        return /^\/uploads\/.*\.(png|jpg|jpeg|gif|webp|svg)$/i.test(v) || v.startsWith('http');
       },
       message: 'Image URL must be a valid path to an image file'
+    }
+  },
+  thumbnailUrl: {
+    type: String,
+    required: [true, 'Please provide a thumbnail URL for your logo'],
+    validate: {
+      validator: function(v: string) {
+        return /^\/uploads\/.*\.(png|jpg|jpeg|gif|webp|svg)$/i.test(v) || v.startsWith('http');
+      },
+      message: 'Thumbnail URL must be a valid path to an image file'
     }
   },
   userId: {
@@ -53,6 +90,7 @@ const logoSchema = new mongoose.Schema({
   },
   ownerName: {
     type: String,
+    required: [true, 'Please provide the owner name'],
     trim: true
   },
   createdAt: {
@@ -63,6 +101,36 @@ const logoSchema = new mongoose.Schema({
   updatedAt: {
     type: Date,
     default: Date.now
+  },
+  category: {
+    type: String,
+    default: 'uncategorized'
+  },
+  tags: [{
+    type: String,
+    trim: true
+  }],
+  dimensions: {
+    width: Number,
+    height: Number
+  },
+  fileSize: {
+    type: Number,
+    required: [true, 'Please provide the file size']
+  },
+  fileType: {
+    type: String,
+    required: [true, 'Please provide the file type']
+  },
+  votes: [voteSchema],
+  totalVotes: {
+    type: Number,
+    default: 0,
+    min: 0
+  },
+  uploadedAt: {
+    type: Date,
+    default: Date.now
   }
 }, {
   timestamps: true,
@@ -70,8 +138,34 @@ const logoSchema = new mongoose.Schema({
   toObject: { virtuals: true }
 });
 
+// Add a pre-save middleware to update totalVotes
+logoSchema.pre('save', function(next) {
+  if (this.isModified('votes')) {
+    this.totalVotes = this.votes?.length || 0;
+  }
+  next();
+});
+
+// Add a pre-findOneAndUpdate middleware to update totalVotes
+logoSchema.pre('findOneAndUpdate', function(next) {
+  const update = this.getUpdate() as any;
+  if (update?.$push?.votes) {
+    update.$inc = update.$inc || {};
+    update.$inc.totalVotes = 1;
+  }
+  next();
+});
+
+// Virtual for name (alias for title)
+logoSchema.virtual('name').get(function(this: ILogo) {
+  return this.title;
+});
+
 // Virtual for full image URL
 logoSchema.virtual('fullImageUrl').get(function(this: ILogo) {
+  if (this.imageUrl.startsWith('http')) {
+    return this.imageUrl;
+  }
   return `${process.env.NEXT_PUBLIC_BASE_URL || ''}${this.imageUrl}`;
 });
 
@@ -125,6 +219,7 @@ logoSchema.statics.safeDelete = async function(id: string, userId: string): Prom
 logoSchema.index({ title: 'text', description: 'text' });
 logoSchema.index({ userId: 1, title: 1 });
 logoSchema.index({ createdAt: -1 });
+logoSchema.index({ 'votes.userId': 1 });
 
 // Pre-save middleware
 logoSchema.pre('save', function(next) {
@@ -150,16 +245,15 @@ function initializeModel(): ILogoModel {
     const model = mongoose.model<ILogo, ILogoModel>('Logo', logoSchema);
     console.log('Logo model created successfully');
     return model;
-  } catch (error: unknown) {
-    const err = error as Error;
+  } catch (err) {
     console.error('Error creating Logo model:', {
       name: err.name,
       message: err.message,
       stack: err.stack
     });
-    throw error;
+    throw err;
   }
 }
 
-// Export the initialized model
+// Export the model
 export const Logo = initializeModel(); 

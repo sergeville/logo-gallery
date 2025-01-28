@@ -25,8 +25,8 @@ export default async function Profile() {
     };
   };
 
-  // Convert session.user.id to ObjectId
-  const userId = session.user.id;
+  // Convert session.user.id to string
+  const userId = session.user.id.toString();
   const logos = await Logo.find({ userId })
     .sort({ createdAt: -1 })
     .lean() as Array<{

@@ -10,10 +10,11 @@ const contentTypes: Record<string, string> = {
   'jpg': 'image/jpeg',
   'jpeg': 'image/jpeg',
   'gif': 'image/gif',
-  'webp': 'image/webp'
+  'webp': 'image/webp',
+  'svg': 'image/svg+xml'
 };
 
-const ALLOWED_EXTENSIONS = new Set(['png', 'jpg', 'jpeg', 'gif', 'webp']);
+const ALLOWED_EXTENSIONS = new Set(['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg']);
 
 export async function GET(
   request: Request,
@@ -23,8 +24,9 @@ export async function GET(
 
   try {
     // Validate MongoDB ID format
-    if (!isValidObjectId(params.id)) {
-      console.warn('Invalid logo ID format:', params.id);
+    const logoId = await Promise.resolve(params.id);
+    if (!isValidObjectId(logoId)) {
+      console.warn('Invalid logo ID format:', logoId);
       return new NextResponse('Invalid logo ID format', { status: 400 });
     }
 
@@ -41,20 +43,10 @@ export async function GET(
       return new NextResponse('Database connection error', { status: 503 });
     }
 
-    // Check if Logo model is available
-    if (!Logo || typeof Logo.findById !== 'function') {
-      console.error('Logo model not properly initialized:', {
-        model: !!Logo,
-        findById: !!(Logo && Logo.findById),
-        modelType: Logo ? typeof Logo : 'undefined'
-      });
-      return new NextResponse('Internal server error', { status: 500 });
-    }
-
     let logo;
     try {
       console.log('Querying database for logo...');
-      logo = await Logo.findById(params.id).select('imageUrl').lean<Pick<ILogo, '_id' | 'imageUrl'>>();
+      logo = await Logo.findById(logoId).select('imageUrl').lean<Pick<ILogo, '_id' | 'imageUrl'>>();
       console.log('Database query completed:', { found: !!logo });
     } catch (error) {
       console.error('Error querying logo:', {
@@ -66,13 +58,18 @@ export async function GET(
     }
 
     if (!logo) {
-      console.warn('Logo not found:', params.id);
+      console.warn('Logo not found:', logoId);
       return new NextResponse('Logo not found', { status: 404 });
     }
 
     if (!logo.imageUrl) {
-      console.error('Logo found but imageUrl is missing:', { logoId: params.id });
+      console.error('Logo found but imageUrl is missing:', { logoId });
       return new NextResponse('Image URL not found', { status: 404 });
+    }
+
+    // Handle both local and external URLs
+    if (logo.imageUrl.startsWith('http')) {
+      return NextResponse.redirect(logo.imageUrl);
     }
 
     const imagePath = path.join(process.cwd(), 'public', logo.imageUrl);

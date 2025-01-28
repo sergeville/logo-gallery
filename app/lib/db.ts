@@ -1,24 +1,37 @@
+import mongoose from 'mongoose';
 import { MongoClient } from 'mongodb';
 
-let client: MongoClient | null = null;
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/LogoGalleryDevelopmentDB';
 
-export async function connectToDatabase() {
-  if (!client) {
-    const uri = process.env.MONGODB_URI || 'mongodb://localhost:27017/test_db';
-    client = new MongoClient(uri);
-    await client.connect();
+if (!MONGODB_URI) {
+  throw new Error('Please define the MONGODB_URI environment variable inside .env.local');
+}
+
+let cachedClient: MongoClient | null = null;
+
+async function connectDB() {
+  try {
+    if (cachedClient) {
+      console.log('Using existing database connection');
+      return { db: cachedClient.db() };
+    }
+
+    console.log('Connecting to MongoDB...');
+    const client = await MongoClient.connect(MONGODB_URI);
+    cachedClient = client;
+    console.log('Connected to MongoDB successfully');
+    return { db: client.db() };
+  } catch (error) {
+    console.error('Error connecting to MongoDB:', error);
+    throw error;
   }
-  return { client, db: client.db() };
 }
 
 export async function disconnectFromDatabase() {
-  if (client) {
-    await client.close();
-    client = null;
+  if (cachedClient) {
+    await cachedClient.close();
+    cachedClient = null;
   }
 }
 
-export default {
-  connectToDatabase,
-  disconnectFromDatabase
-};
+export default connectDB;

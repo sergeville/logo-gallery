@@ -18,16 +18,22 @@ export default function Navbar() {
 
           {/* Right side - All navigation items */}
           <div className="flex items-center space-x-8">
-            <Link 
+            <Link
               href="/gallery"
-              className="text-gray-300 hover:text-white text-sm font-medium transition-colors"
+              className="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
             >
               Gallery
             </Link>
-            {session?.user && (
-              <Link 
-                href="/mylogos"
-                className="text-gray-300 hover:text-white text-sm font-medium transition-colors"
+            <Link
+              href="/vote"
+              className="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
+            >
+              Vote
+            </Link>
+            {session && (
+              <Link
+                href="/profile"
+                className="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
               >
                 My Logos
               </Link>

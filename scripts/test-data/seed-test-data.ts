@@ -1,5 +1,5 @@
 import { MongoClient, ObjectId } from 'mongodb';
-import { connectToDatabase, disconnectFromDatabase } from '../../app/lib/db';
+import connectToDatabase, { disconnectFromDatabase } from '../../app/lib/db';
 import { hashPassword } from '../../app/lib/auth';
 import { validateUser, validateLogo } from './utils/model-validators';
 import chalk from 'chalk';

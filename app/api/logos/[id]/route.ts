@@ -6,11 +6,35 @@ import dbConnect from '@/app/lib/db-config';
 import { unlink } from 'fs/promises';
 import path from 'path';
 
+export async function GET(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
+  const id = await Promise.resolve(params.id);
+  try {
+    console.log('Fetching logo with ID:', id);
+    await dbConnect();
+
+    const logo = await Logo.findById(id).lean();
+    
+    if (!logo) {
+      console.log('Logo not found:', id);
+      return new NextResponse('Logo not found', { status: 404 });
+    }
+
+    return NextResponse.json(logo);
+  } catch (error) {
+    console.error('Error fetching logo:', error);
+    return new NextResponse('Internal Server Error', { status: 500 });
+  }
+}
+
 export async function DELETE(
   request: Request,
   { params }: { params: { id: string } }
 ) {
-  console.log('Starting logo deletion for ID:', params.id);
+  const id = await Promise.resolve(params.id);
+  console.log('Starting logo deletion for ID:', id);
   
   try {
     const session = await getServerSession(authOptions);
@@ -23,11 +47,11 @@ export async function DELETE(
     await dbConnect();
 
     // Find and validate the logo first
-    console.log('Finding logo with ID:', params.id);
-    const logo = await Logo.findById(params.id).lean();
+    console.log('Finding logo with ID:', id);
+    const logo = await Logo.findById(id).lean();
     
     if (!logo) {
-      console.log('Logo not found:', params.id);
+      console.log('Logo not found:', id);
       return new NextResponse('Logo not found', { status: 404 });
     }
 
@@ -51,9 +75,9 @@ export async function DELETE(
     }
 
     // Delete from database
-    console.log('Deleting logo from database:', params.id);
-    await Logo.findByIdAndDelete(params.id);
-    console.log('Successfully deleted logo:', params.id);
+    console.log('Deleting logo from database:', id);
+    await Logo.findByIdAndDelete(id);
+    console.log('Successfully deleted logo:', id);
     
     return new NextResponse(null, { status: 204 });
   } catch (error) {

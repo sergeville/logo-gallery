@@ -16,12 +16,6 @@ export interface User {
   updatedAt: Date;
 }
 
-export interface Vote {
-  userId: string;
-  rating: number;
-  createdAt: Date;
-}
-
 export interface Logo {
   _id: string;
   name: string;
@@ -37,8 +31,6 @@ export interface Logo {
   };
   fileSize: number;
   fileType: string;
-  votes: Vote[];
-  averageRating: number;
   createdAt: Date;
   updatedAt: Date;
 }

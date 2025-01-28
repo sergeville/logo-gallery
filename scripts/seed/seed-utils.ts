@@ -19,22 +19,9 @@ export function generateMockLogo(userId: ObjectId, index: number): ILogo {
     dimensions: { width: 800, height: 600 },
     fileSize: 256 * 1024,
     fileType: 'png',
-    votes: [],
-    totalVotes: 0,
     createdAt,
     updatedAt: createdAt
   };
-
-  // Generate random votes
-  const numVotes = Math.floor(Math.random() * 10);
-  const votes = Array.from({ length: numVotes }, () => ({
-    userId: new ObjectId(),
-    rating: Math.floor(Math.random() * 5) + 1,
-    timestamp: new Date(createdAt.getTime() + Math.random() * 86400000)
-  }));
-
-  logo.votes = votes;
-  logo.totalVotes = votes.length;
 
   return logo;
 }

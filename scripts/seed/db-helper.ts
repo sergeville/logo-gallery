@@ -1,5 +1,5 @@
 import { MongoClient, Db, ObjectId } from 'mongodb';
-import { User, Comment, Collection, Favorite, Relationships, TestDataOptions, TestData, Logo } from './types';
+import { User, Comment, Collection, Relationships, TestDataOptions, TestData, Logo } from './types';
 import { faker } from '@faker-js/faker';
 import '@testing-library/jest-dom'
 
@@ -28,11 +28,7 @@ export class DatabaseHelper {
       NAME_MIN_LENGTH: 3,
       NAME_MAX_LENGTH: 100,
       DESCRIPTION_MAX_LENGTH: 1000,
-      TAGS_MAX_COUNT: 10,
-      MIN_RATING: 1,
-      MAX_RATING: 5,
-      RATING_MIN: 1,
-      RATING_MAX: 5
+      TAGS_MAX_COUNT: 10
     },
     relationships: {
       MAX_COMMENT_DEPTH: 5,
@@ -401,60 +397,14 @@ export class DatabaseHelper {
     maxRepliesPerComment?: number;
     collectionsPerUser?: number;
     logosPerCollection?: number;
-    favoritesPerUser?: number;
     commentMentions?: boolean;
     sharedCollections?: boolean;
     sharingStrategy?: (collection: Collection, availableUsers: User[]) => ObjectId[];
   }): Promise<Relationships> {
-    const rules = DatabaseHelper.rules.relationships;
-
-    // Validate input limits
-    if (options.commentsPerLogo && options.commentsPerLogo > rules.MAX_COMMENT_DEPTH) {
-      throw new Error(`Cannot create more than ${rules.MAX_COMMENT_DEPTH} comments per logo`);
-    }
-    if (options.maxRepliesPerComment && options.maxRepliesPerComment > rules.MAX_REPLY_DEPTH) {
-      throw new Error(`Cannot create more than ${rules.MAX_REPLY_DEPTH} levels of replies`);
-    }
-    if (options.favoritesPerUser && options.favoritesPerUser > rules.MAX_FAVORITES_PER_USER) {
-      throw new Error(`Cannot create more than ${rules.MAX_FAVORITES_PER_USER} favorites per user`);
-    }
-    if (options.collectionsPerUser && options.collectionsPerUser > rules.MAX_COLLECTIONS_PER_USER) {
-      throw new Error(`Cannot create more than ${rules.MAX_COLLECTIONS_PER_USER} collections per user`);
-    }
-    if (options.logosPerCollection && options.logosPerCollection > rules.MAX_LOGOS_PER_COLLECTION) {
-      throw new Error(`Cannot have more than ${rules.MAX_LOGOS_PER_COLLECTION} logos in a collection`);
-    }
-
-    const relationships: Relationships = {
+    const relationships = {
       comments: [],
-      collections: [],
-      favorites: []
+      collections: []
     };
-
-    // Generate comments
-    if (options.commentsPerLogo) {
-      for (const logo of options.logos) {
-        for (let i = 0; i < options.commentsPerLogo; i++) {
-          const comment: Comment = {
-            _id: new ObjectId(),
-            logoId: new ObjectId(logo._id),
-            userId: new ObjectId(options.users[i % options.users.length]._id),
-            content: `Comment ${i} on ${logo.name}`,
-            createdAt: new Date(),
-            likes: 0
-          };
-          relationships.comments.push(comment);
-
-          // Generate replies if specified
-          if (options.maxRepliesPerComment) {
-            this.generateReplies(comment, {
-              users: options.users,
-              maxRepliesPerComment: options.maxRepliesPerComment
-            }, relationships.comments);
-          }
-        }
-      }
-    }
 
     // Generate collections
     if (options.collectionsPerUser) {
@@ -485,32 +435,6 @@ export class DatabaseHelper {
           relationships.collections.push(collection);
         }
       }
-    }
-
-    // Generate favorites
-    if (options.favoritesPerUser) {
-      for (const user of options.users) {
-        const userFavorites = options.logos
-          .slice(0, Math.min(options.favoritesPerUser, options.logos.length))
-          .map(logo => ({
-            _id: new ObjectId(),
-            userId: user._id,
-            logoId: new ObjectId(logo._id),
-            createdAt: new Date()
-          }));
-        relationships.favorites.push(...userFavorites);
-      }
-    }
-
-    // Save to database
-    if (relationships.comments.length > 0) {
-      await this.db.collection('comments').insertMany(relationships.comments);
-    }
-    if (relationships.collections.length > 0) {
-      await this.db.collection('collections').insertMany(relationships.collections);
-    }
-    if (relationships.favorites.length > 0) {
-      await this.db.collection('favorites').insertMany(relationships.favorites);
     }
 
     return relationships;
@@ -728,8 +652,7 @@ export class DatabaseHelper {
       commentsPerLogo: options.commentsPerLogo || 3,
       maxRepliesPerComment: options.maxRepliesPerComment || 2,
       collectionsPerUser: options.collectionsPerUser || 2,
-      logosPerCollection: options.logosPerCollection || 3,
-      favoritesPerUser: options.favoritesPerUser || 3
+      logosPerCollection: options.logosPerCollection || 3
     });
 
     return {

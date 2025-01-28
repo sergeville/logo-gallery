@@ -17,6 +17,7 @@ interface TestLogo {
   _id: ObjectId;
   name: string;
   url: string;
+  description: string;
   userId: ObjectId;
   createdAt: Date;
 }
@@ -29,6 +30,23 @@ async function seedTestData() {
   // Clear existing data
   await usersCollection.deleteMany({});
   await logosCollection.deleteMany({});
+
+  // Create test user
+  const testUser = {
+    _id: new ObjectId(),
+    email: 'test@example.com',
+    password: await hashPassword('Test123!'),
+    name: 'Test User',
+    role: 'user',
+    createdAt: new Date(),
+    profile: {
+      avatarUrl: '/default-avatar.svg',
+      bio: 'Test user for development'
+    }
+  };
+
+  await usersCollection.insertOne(testUser);
+  console.log(chalk.green(`Created test user: ${testUser.email}`));
 
   // Create test users
   const users: TestUser[] = [];
@@ -64,6 +82,7 @@ async function seedTestData() {
         _id: new ObjectId(),
         name: `Test Logo ${i} for ${user.name}`,
         url: `https://example.com/logos/logo${i}.png`,
+        description: `A beautiful test logo number ${i} created by ${user.name}`,
         userId: user._id,
         createdAt: new Date()
       };

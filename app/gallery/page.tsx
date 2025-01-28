@@ -14,8 +14,6 @@ interface Logo {
   description: string;
   tags: string[];
   uploadedAt: string;
-  averageRating: number;
-  totalVotes: number;
   ownerName: string;
 }
 
@@ -26,7 +24,7 @@ export default function GalleryPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortBy, setSortBy] = useState<'date' | 'rating'>('date');
+  const [sortBy, setSortBy] = useState<'date'>('date');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [selectedTag, setSelectedTag] = useState<string>('');
   const [tags, setTags] = useState<string[]>([]);
@@ -170,11 +168,10 @@ export default function GalleryPage() {
             <div className="flex items-center gap-2">
               <select
                 value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as 'date' | 'rating')}
+                onChange={(e) => setSortBy(e.target.value as 'date')}
                 className="rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white py-2 pl-3 pr-10"
               >
                 <option key="date" value="date">Date</option>
-                <option key="rating" value="rating">Rating</option>
               </select>
               <button
                 type="button"
@@ -237,8 +234,6 @@ export default function GalleryPage() {
                   name={logo.name}
                   imageUrl={logo.imageUrl}
                   uploadedAt={logo.uploadedAt}
-                  rating={logo.averageRating}
-                  totalVotes={logo.totalVotes}
                   ownerName={logo.ownerName}
                 />
               </div>

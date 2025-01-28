@@ -68,4 +68,10 @@ export const TEST_CONFIG = {
     operation: 2000,
     cleanup: 3000
   }
-}; 
+};
+
+describe('Test Configuration', () => {
+  it('has required environment variables', () => {
+    expect(process.env.MONGODB_URI || process.env.MONGODB_TEST_URI).toBeDefined();
+  });
+}); 

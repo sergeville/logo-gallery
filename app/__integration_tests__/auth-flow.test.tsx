@@ -12,7 +12,6 @@ describe('Authentication Flow Integration', () => {
     description: 'Test Logo',
     ownerId: '456',
     tags: ['test'],
-    totalVotes: 0,
     createdAt: new Date('2025-01-14')
   };
 
@@ -26,22 +25,22 @@ describe('Authentication Flow Integration', () => {
     (signIn as jest.Mock).mockClear();
   });
 
-  it('shows auth modal when unauthenticated user tries to vote', async () => {
+  it('shows auth modal when unauthenticated user tries to access protected feature', async () => {
     render(
       <AuthProvider>
         <GalleryPage />
       </AuthProvider>
     );
 
-    const voteButton = await screen.findByRole('button', { name: /set as favorite/i });
-    fireEvent.click(voteButton);
+    const actionButton = await screen.findByRole('button', { name: /add to collection/i });
+    fireEvent.click(actionButton);
 
     const modal = await screen.findByRole('dialog');
     expect(modal).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Sign In' })).toBeInTheDocument();
   });
 
-  it('allows voting after authentication', async () => {
+  it('allows protected actions after authentication', async () => {
     (signIn as jest.Mock).mockResolvedValueOnce({ ok: true });
 
     render(
@@ -50,8 +49,8 @@ describe('Authentication Flow Integration', () => {
       </AuthProvider>
     );
 
-    const voteButton = await screen.findByRole('button', { name: /set as favorite/i });
-    fireEvent.click(voteButton);
+    const actionButton = await screen.findByRole('button', { name: /add to collection/i });
+    fireEvent.click(actionButton);
 
     const emailInput = await screen.findByLabelText(/email/i);
     const passwordInput = await screen.findByLabelText(/password/i);

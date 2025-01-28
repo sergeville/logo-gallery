@@ -1,52 +1,71 @@
 import { NextResponse } from 'next/server';
-import bcrypt from 'bcryptjs';
-import connectDB from '@/app/lib/db';
+import dbConnect from '@/app/lib/db-config';
 import { User } from '@/app/lib/models/user';
-import mongoose from 'mongoose';
+import bcrypt from 'bcryptjs';
 
 export async function POST(request: Request) {
   try {
-    const { email, password, name } = await request.json();
+    const { name, email, password } = await request.json();
 
-    if (!email || !password || !name) {
+    // Validate input
+    if (!name || !email || !password) {
       return NextResponse.json(
-        { error: 'Missing required fields' },
+        { error: 'Name, email and password are required' },
         { status: 400 }
       );
     }
 
-    await connectDB();
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return NextResponse.json(
+        { error: 'Invalid email format' },
+        { status: 400 }
+      );
+    }
 
+    // Validate password strength
+    if (password.length < 8) {
+      return NextResponse.json(
+        { error: 'Password must be at least 8 characters long' },
+        { status: 400 }
+      );
+    }
+
+    await dbConnect();
+
+    // Check if user already exists
     const existingUser = await User.findOne({ email });
-
     if (existingUser) {
       return NextResponse.json(
         { error: 'Email already registered' },
-        { status: 400 }
+        { status: 409 }
       );
     }
 
+    // Hash password
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    const newUser = new User({
-      _id: new mongoose.Types.ObjectId(),
+    // Create user
+    const user = await User.create({
+      name,
       email,
       password: hashedPassword,
-      name,
       createdAt: new Date(),
       updatedAt: new Date()
     });
 
-    await newUser.save();
+    // Remove password from response
+    const { password: _, ...userWithoutPassword } = user.toObject();
 
     return NextResponse.json(
-      { message: 'User created successfully' },
+      { message: 'User registered successfully', user: userWithoutPassword },
       { status: 201 }
     );
   } catch (error) {
     console.error('Registration error:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'An error occurred during registration' },
       { status: 500 }
     );
   }

@@ -4,10 +4,7 @@ import { Logo } from '@/app/types';
 interface LogoSeedOptions {
   count: number;
   perUser?: number;
-  withRatings?: boolean;
   userIds: ObjectId[]; // Required user IDs to associate logos with
-  minVotes?: number;
-  maxVotes?: number;
 }
 
 const SAMPLE_TAGS = [
@@ -46,11 +43,10 @@ function generateLogo(index: number, userId: ObjectId, options: LogoSeedOptions)
 
   return {
     _id: new ObjectId(),
+    name: `Test Logo ${index}`,
     url: `https://example.com/logos/logo-${index}.png`,
     description: generateDescription(style, tags),
-    ownerId: userId,
-    tags,
-    totalVotes: 0,
+    userId,
     createdAt: now,
     updatedAt: now
   };
@@ -82,5 +78,5 @@ export async function createTestLogo(userId: ObjectId, overrides: Partial<Logo> 
 }
 
 // Example usage:
-// const logos = await seedLogos({ count: 10, userIds: existingUserIds, withRatings: true });
+// const logos = await seedLogos({ count: 10, userIds: existingUserIds });
 // const testLogo = await createTestLogo(userId, { name: 'Custom Logo' }); 

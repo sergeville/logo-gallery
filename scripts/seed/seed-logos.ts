@@ -34,8 +34,6 @@ async function seedLogos() {
           dimensions: { width: 600, height: 400 },
           fileSize: 256 * 1024,
           fileType: 'png',
-          totalVotes: 0,
-          votes: [],
           createdAt: timestamp,
           updatedAt: timestamp
         },
@@ -53,8 +51,6 @@ async function seedLogos() {
           dimensions: { width: 600, height: 400 },
           fileSize: 192 * 1024,
           fileType: 'png',
-          totalVotes: 0,
-          votes: [],
           createdAt: timestamp,
           updatedAt: timestamp
         },
@@ -72,8 +68,6 @@ async function seedLogos() {
           dimensions: { width: 600, height: 400 },
           fileSize: 224 * 1024,
           fileType: 'png',
-          totalVotes: 0,
-          votes: [],
           createdAt: timestamp,
           updatedAt: timestamp
         }

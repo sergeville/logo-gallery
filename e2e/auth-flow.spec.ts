@@ -1,14 +1,14 @@
 import { test, expect } from './utils/fixtures'
 
 test.describe('Authentication Flow', () => {
-  test('shows login modal when clicking vote without authentication', async ({ page, testLogo }) => {
+  test('shows login modal when clicking protected action without authentication', async ({ page, testLogo }) => {
     await page.goto('/')
     
-    // Find and click the first star rating button
+    // Find and click the add to collection button
     const logoCard = await page.locator(`[data-testid="logo-card"]:has-text("${testLogo.name}")`)
     await expect(logoCard).toBeVisible()
-    const ratingButton = await logoCard.locator('[aria-label="Rate 1 stars"]')
-    await ratingButton.click()
+    const actionButton = await logoCard.locator('[aria-label="Add to collection"]')
+    await actionButton.click()
 
     // Verify login modal appears
     const modal = await page.locator('[data-testid="auth-modal"]')

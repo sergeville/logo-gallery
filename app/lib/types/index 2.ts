@@ -11,12 +11,6 @@ export interface LogoDimensions {
   height: number;
 }
 
-export interface Vote {
-  userId: string;
-  rating: number;
-  timestamp: Date;
-}
-
 export interface User {
   _id: string;
   name: string;
@@ -30,5 +24,4 @@ export interface Logo {
   name: string;
   url: string;
   dimensions: LogoDimensions;
-  votes: Vote[];
 } 

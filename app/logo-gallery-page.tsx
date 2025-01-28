@@ -6,13 +6,12 @@ interface Logo {
   id: number;
   name: string;
   url: string;
-  rating: number;
 }
 
 /**
  * Logo Gallery Page Component
  * Displays a responsive grid of logo cards with interactive features.
- * Includes logo display, rating system, and action buttons.
+ * Includes logo display and action buttons.
  */
 
 /**
@@ -20,17 +19,16 @@ interface Logo {
  * Features:
  * - Responsive grid layout (1-3 columns based on screen size)
  * - Logo cards with image display and error handling
- * - Rating display and voting functionality
- * - Action buttons for voting and details
+ * - Action buttons for details
  */
 const LogoGallery = () => {
   const [darkMode, setDarkMode] = useState(false);
   
   // Sample logo data
   const logos: Logo[] = [
-    { id: 1, name: 'Logo 1', url: '/placeholder/200/200', rating: 4.5 },
-    { id: 2, name: 'Logo 2', url: '/placeholder/200/200', rating: 3.8 },
-    { id: 3, name: 'Logo 3', url: '/placeholder/200/200', rating: 4.2 }
+    { id: 1, name: 'Logo 1', url: '/placeholder/200/200' },
+    { id: 2, name: 'Logo 2', url: '/placeholder/200/200' },
+    { id: 3, name: 'Logo 3', url: '/placeholder/200/200' }
   ];
 
   const handleImageError = (event: React.SyntheticEvent<HTMLImageElement>) => {
@@ -89,22 +87,13 @@ const LogoGallery = () => {
                   />
                 </div>
                 
-                {/* Logo information and rating section */}
+                {/* Logo information section */}
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-medium dark:text-white">{logo.name}</h3>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-600 dark:text-gray-300">
-                      {logo.rating}
-                    </span>
-                    <button className="text-2xl">⭐️</button>
-                  </div>
                 </div>
-                
+
                 {/* Action buttons */}
                 <div className="mt-4 flex gap-2">
-                  <button className="flex-1 bg-[#007AFF] text-white py-2 rounded-lg hover:opacity-90">
-                    Vote
-                  </button>
                   <button className="flex-1 border border-[#007AFF] text-[#007AFF] dark:text-white py-2 rounded-lg hover:bg-[#007AFF] hover:text-white transition-colors">
                     Details
                   </button>

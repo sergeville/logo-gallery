@@ -24,12 +24,6 @@ export interface Logo {
   description?: string;
   userId: ObjectId;
   tags: string[];
-  rating?: number;
-  votes?: Array<{
-    userId: ObjectId;
-    rating: number;
-    timestamp: Date;
-  }>;
   createdAt: Date;
   updatedAt?: Date;
 }
@@ -57,17 +51,9 @@ export interface Collection {
   createdAt: Date;
 }
 
-export interface Favorite {
-  _id: ObjectId;
-  userId: ObjectId;
-  logoId: ObjectId;
-  createdAt: Date;
-}
-
 export interface Relationships {
   comments: Comment[];
   collections: Collection[];
-  favorites: Favorite[];
 }
 
 export interface TestDataOptions {
@@ -76,7 +62,6 @@ export interface TestDataOptions {
   maxRepliesPerComment?: number;
   collectionsPerUser?: number;
   logosPerCollection?: number;
-  favoritesPerUser?: number;
 }
 
 export interface TestData {
@@ -84,5 +69,4 @@ export interface TestData {
   logos: Logo[];
   comments: Comment[];
   collections: Collection[];
-  favorites: Favorite[];
 } 

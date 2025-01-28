@@ -14,11 +14,4 @@ export interface Logo {
   fileType: string;
   createdAt: Date;
   updatedAt: Date;
-  averageRating: number;
-  totalVotes: number;
-  votes?: Array<{
-    userId: string;
-    rating: number;
-    createdAt: Date;
-  }>;
 } 

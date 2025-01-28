@@ -46,17 +46,13 @@ const testUser = await createTestUser({
 interface LogoSeedOptions {
   count: number;
   perUser?: number;
-  withRatings?: boolean;
   userIds: ObjectId[];
-  minVotes?: number;
-  maxVotes?: number;
 }
 
 // Generate multiple logos
 const logos = await seedLogos({
   count: 10,
   userIds: existingUserIds,
-  withRatings: true,
   perUser: 2
 });
 
@@ -74,7 +70,6 @@ interface RelationshipSeedOptions {
   commentsPerLogo?: number;
   collectionsPerUser?: number;
   logosPerCollection?: number;
-  favoritesPerUser?: number;
   maxRepliesPerComment?: number;
 }
 
@@ -83,14 +78,8 @@ const relationships = await seedRelationships({
   users: existingUsers,
   logos: existingLogos,
   commentsPerLogo: 3,
-  collectionsPerUser: 2,
-  favoritesPerUser: 5
+  collectionsPerUser: 2
 });
-
-// Or generate specific relationships
-const comments = await seedComments({ users, logos });
-const collections = await seedCollections({ users, logos });
-const favorites = await seedFavorites({ users, logos });
 ```
 
 ## Data Models
@@ -125,12 +114,6 @@ interface Logo {
   description: string;
   userId: ObjectId;
   tags: string[];
-  averageRating: number;
-  votes: Array<{
-    userId: ObjectId;
-    rating: number;
-    timestamp: Date;
-  }>;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -164,16 +147,6 @@ interface Collection {
 }
 ```
 
-### Favorites Collection
-```typescript
-interface Favorite {
-  _id: ObjectId;
-  userId: ObjectId;
-  logoId: ObjectId;
-  createdAt: Date;
-}
-```
-
 ## Features
 
 ### User Generation
@@ -186,7 +159,6 @@ interface Favorite {
 ### Logo Generation
 - Style-based naming
 - Tag system with predefined categories
-- Rating and voting system
 - Even distribution among users
 - Dynamic description generation
 - Timestamp management
@@ -194,8 +166,6 @@ interface Favorite {
 ### Relationship Generation
 - Nested comment structure with replies
 - Public and private collections
-- Like counts for comments
-- Even distribution of favorites
 - Realistic content generation
 - Timestamp management for all relationships
 

@@ -92,7 +92,7 @@ const logoValidationRules: Record<string, ValidationRule[]> = {
     field: 'userId',
     message: 'Invalid user ID',
     code: 'INVALID_USER_ID',
-    validate: (value: string) => ObjectId.isValid(value)
+    validate: (value: any) => value instanceof ObjectId || (typeof value === 'string' && ObjectId.isValid(value))
   }],
   tags: [{
     field: 'tags',
@@ -118,15 +118,16 @@ export function validateUser(user: any): ValidationResult {
   const result = createValidationResult();
 
   // Required fields
-  const requiredFields = ['email', 'name', 'password', 'createdAt'];
+  const requiredFields = ['email', 'name', 'password'];
   for (const field of requiredFields) {
     if (!user[field]) {
-      result.errors.push({
+      const error = {
         field,
         message: `${field} is required`,
         code: 'REQUIRED_FIELD'
-      });
-      continue;
+      };
+      result.errors.push(error);
+      throw new Error(error.message);
     }
 
     // Apply validation rules
@@ -135,6 +136,7 @@ export function validateUser(user: any): ValidationResult {
         const error = validateField(user[field], rule);
         if (error) {
           result.errors.push(error);
+          throw new Error(error.message);
         }
       }
     }
@@ -144,29 +146,39 @@ export function validateUser(user: any): ValidationResult {
 }
 
 export function validateLogo(logo: any): ValidationResult {
-  const result = createValidationResult();
+  const result: ValidationResult = { errors: [] };
+  const requiredFields = ['name', 'url', 'description', 'userId'];
 
-  // Required fields
-  const requiredFields = ['name', 'url', 'userId', 'createdAt'];
+  // Check required fields first
   for (const field of requiredFields) {
     if (!logo[field]) {
-      result.errors.push({
+      const error = {
         field,
-        message: `${field} is required`,
-        code: 'REQUIRED_FIELD'
-      });
-      continue;
+        message: `${field} is required`
+      };
+      result.errors.push(error);
+      throw new Error(error.message);
     }
+  }
 
-    // Apply validation rules
-    if (logoValidationRules[field]) {
-      for (const rule of logoValidationRules[field]) {
-        const error = validateField(logo[field], rule);
-        if (error) {
-          result.errors.push(error);
-        }
-      }
-    }
+  // Validate URL format
+  if (!/^https?:\/\/.+/.test(logo.url)) {
+    const error = {
+      field: 'url',
+      message: 'Invalid URL format'
+    };
+    result.errors.push(error);
+    throw new Error(error.message);
+  }
+
+  // Validate description length
+  if (logo.description.length < 10) {
+    const error = {
+      field: 'description',
+      message: 'Description must be at least 10 characters long'
+    };
+    result.errors.push(error);
+    throw new Error(error.message);
   }
 
   return result;

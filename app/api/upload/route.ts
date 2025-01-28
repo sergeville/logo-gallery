@@ -6,6 +6,7 @@ import { join } from 'path'
 import sharp from 'sharp'
 import connectDB from '@/app/lib/db'
 import { Logo } from '@/app/lib/models/logo'
+import dbConnect from '@/app/lib/db-config'
 
 const UPLOAD_DIR = join(process.cwd(), 'public', 'uploads')
 const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
@@ -17,20 +18,34 @@ export async function POST(request: NextRequest) {
     
     if (!session?.user) {
       return NextResponse.json(
-        { error: 'Unauthorized' },
+        { error: 'You must be signed in to upload logos' },
         { status: 401 }
       )
     }
 
     const formData = await request.formData()
     const file = formData.get('file') as File
-    const name = formData.get('name') as string
+    const title = formData.get('title') as string
     const description = formData.get('description') as string
     const tags = (formData.get('tags') as string || '').split(',').map(tag => tag.trim()).filter(Boolean)
 
-    if (!file || !name) {
+    if (!file) {
       return NextResponse.json(
-        { error: 'File and name are required' },
+        { error: 'No file uploaded' },
+        { status: 400 }
+      )
+    }
+
+    if (!title || title.length < 3 || title.length > 60) {
+      return NextResponse.json(
+        { error: 'Title must be between 3 and 60 characters' },
+        { status: 400 }
+      )
+    }
+
+    if (!description || description.length < 10 || description.length > 200) {
+      return NextResponse.json(
+        { error: 'Description must be between 10 and 200 characters' },
         { status: 400 }
       )
     }
@@ -44,7 +59,7 @@ export async function POST(request: NextRequest) {
 
     if (!ALLOWED_TYPES.includes(file.type)) {
       return NextResponse.json(
-        { error: 'Invalid file type' },
+        { error: 'Invalid file type. Please upload a JPEG, PNG, SVG, or WebP image.' },
         { status: 400 }
       )
     }
@@ -54,8 +69,8 @@ export async function POST(request: NextRequest) {
 
     // Generate unique filename
     const timestamp = Date.now()
-    const filename = `${session.user.id}-${timestamp}-${file.name}`
-    const thumbnailFilename = `${session.user.id}-${timestamp}-thumb-${file.name}`
+    const filename = `${timestamp}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '')}`
+    const thumbnailFilename = `${timestamp}-thumb-${file.name.replace(/[^a-zA-Z0-9.-]/g, '')}`
 
     // Save original file
     const filePath = join(UPLOAD_DIR, filename)
@@ -75,8 +90,8 @@ export async function POST(request: NextRequest) {
 
     await connectDB()
     const logo = new Logo({
-      name,
-      description,
+      title: title.trim(),
+      description: description.trim(),
       imageUrl: `/uploads/${filename}`,
       thumbnailUrl: `/uploads/${thumbnailFilename}`,
       ownerId: session.user.id,
@@ -89,10 +104,7 @@ export async function POST(request: NextRequest) {
       },
       fileSize: file.size,
       fileType: file.type,
-      uploadedAt: new Date(),
-      totalVotes: 0,
-      averageRating: 0,
-      votes: []
+      uploadedAt: new Date()
     })
 
     await logo.save()
@@ -100,15 +112,19 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       message: 'Logo uploaded successfully',
       logo: {
-        id: logo._id,
-        name: logo.name,
-        imageUrl: logo.imageUrl
+        _id: logo._id,
+        title: logo.title,
+        description: logo.description,
+        imageUrl: logo.imageUrl,
+        userId: logo.userId,
+        createdAt: logo.createdAt
       }
     }, { status: 201 })
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Upload error:', error)
+    const message = error instanceof Error ? error.message : 'Failed to upload logo'
     return NextResponse.json(
-      { error: 'Failed to upload logo' },
+      { error: message },
       { status: 500 }
     )
   }

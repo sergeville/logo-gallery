@@ -1,7 +1,7 @@
 import NextAuth, { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import type { User as AuthUser } from 'next-auth';
-import connectDB from '@/app/lib/db';
+import dbConnect from '@/app/lib/db-config';
 import { User } from '@/app/lib/models/user';
 
 export const authOptions: NextAuthOptions = {
@@ -18,7 +18,7 @@ export const authOptions: NextAuthOptions = {
         }
 
         try {
-          await connectDB();
+          await dbConnect();
           
           const user = await User.findOne({ email: credentials.email });
 
@@ -65,6 +65,7 @@ export const authOptions: NextAuthOptions = {
       return session;
     },
   },
+  debug: process.env.NODE_ENV === 'development',
 };
 
 const handler = NextAuth(authOptions);

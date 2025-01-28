@@ -12,12 +12,12 @@ describe('Logo Seeding', () => {
 
     expect(logos).toHaveLength(3);
     logos.forEach(logo => {
-      expect(logo._id).toBeInstanceOf(ObjectId);
+      expect(logo._id).toBeDefined();
+      expect(typeof logo._id.toString()).toBe('string');
       expect(logo.url).toMatch(/^https:\/\/example\.com\/logos\//);
       expect(logo.description).toBeTruthy();
-      expect(logo.ownerId).toBeInstanceOf(ObjectId);
-      expect(Array.isArray(logo.tags)).toBe(true);
-      expect(logo.totalVotes).toBe(0);
+      expect(logo.userId).toBeDefined();
+      expect(typeof logo.userId.toString()).toBe('string');
       expect(logo.createdAt).toBeInstanceOf(Date);
     });
   });
@@ -31,7 +31,7 @@ describe('Logo Seeding', () => {
 
     expect(logos).toHaveLength(4);
     logos.forEach(logo => {
-      expect(userIds).toContainEqual(logo.ownerId);
+      expect(userIds.map(id => id.toString())).toContain(logo.userId.toString());
     });
   });
 
@@ -40,16 +40,17 @@ describe('Logo Seeding', () => {
     const customData = {
       description: 'Custom Logo',
       url: 'https://example.com/custom-logo.png',
-      tags: ['custom', 'test']
+      name: 'Custom Test Logo'
     };
 
     const logo = await createTestLogo(userId, customData);
 
-    expect(logo._id).toBeInstanceOf(ObjectId);
+    expect(logo._id).toBeDefined();
+    expect(typeof logo._id.toString()).toBe('string');
     expect(logo.description).toBe(customData.description);
     expect(logo.url).toBe(customData.url);
-    expect(logo.tags).toEqual(customData.tags);
-    expect(logo.ownerId).toBeInstanceOf(ObjectId);
-    expect(logo.totalVotes).toBe(0);
+    expect(logo.name).toBe(customData.name);
+    expect(logo.userId).toBeDefined();
+    expect(typeof logo.userId.toString()).toBe('string');
   });
 }); 

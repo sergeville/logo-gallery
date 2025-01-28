@@ -32,13 +32,6 @@ test.describe('Critical User Flows', () => {
     // 4. Verify logo appears in gallery
     await expect(page.locator('[data-testid="logo-card"]:has-text("Test Logo")')).toBeVisible()
     
-    // 5. Rate the logo
-    const logoCard = page.locator('[data-testid="logo-card"]:has-text("Test Logo")')
-    await logoCard.locator('[aria-label="Rate 5 stars"]').click()
-    
-    // 6. Verify rating was applied
-    await expect(logoCard.locator('[data-testid="average-rating"]')).toContainText('5.0')
-    
     // Clean up
     await testData.cleanupTestUser(user)
   })

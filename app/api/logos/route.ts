@@ -128,10 +128,7 @@ export async function POST(request: NextRequest) {
       tags,
       ownerId: session.user.id,
       ownerName: session.user.name,
-      uploadedAt: new Date(),
-      totalVotes: 0,
-      averageRating: 0,
-      votes: []
+      uploadedAt: new Date()
     });
 
     await logo.save();

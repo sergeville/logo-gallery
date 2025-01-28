@@ -14,7 +14,6 @@ interface Logo {
   url: string
   description?: string
   userId: string | ObjectId
-  votes?: number
   createdAt?: Date
 }
 

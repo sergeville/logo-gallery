@@ -25,20 +25,12 @@ export interface Collection {
   collaborators?: ObjectId[];
 }
 
-export interface Favorite {
-  _id: ObjectId;
-  userId: ObjectId;
-  logoId: ObjectId;
-  createdAt: Date;
-}
-
 interface RelationshipSeedOptions {
   users: { _id: ObjectId }[];
   logos: { _id: ObjectId }[];
   commentsPerLogo?: number;
   collectionsPerUser?: number;
   logosPerCollection?: number;
-  favoritesPerUser?: number;
   maxRepliesPerComment?: number;
   maxLikesPerComment?: number;
   commentMentions?: boolean;
@@ -60,8 +52,7 @@ const SAMPLE_COMMENTS = [
 ];
 
 const COLLECTION_NAMES = [
-  'Favorite Designs',
-  'Inspiration',
+  'Design Inspiration',
   'Client Projects',
   'Modern Logos',
   'Minimalist Collection',
@@ -69,12 +60,13 @@ const COLLECTION_NAMES = [
   'Typography Focus',
   'Brand Identity',
   'Creative Concepts',
-  'Portfolio Picks'
+  'Portfolio Picks',
+  'Project Archive'
 ];
 
 const COLLECTION_TAGS = [
   'client-work', 'inspiration', 'portfolio', 'work-in-progress',
-  'favorites', 'archived', 'featured', 'case-study'
+  'archived', 'featured', 'case-study', 'branding'
 ];
 
 const COMMENT_TEMPLATES = [
@@ -162,18 +154,6 @@ function generateCollection(
 }
 
 /**
- * Generates a favorite
- */
-function generateFavorite(userId: ObjectId, logoId: ObjectId): Favorite {
-  return {
-    _id: new ObjectId(),
-    userId,
-    logoId,
-    createdAt: new Date(Date.now() - Math.random() * 60 * 24 * 60 * 60 * 1000) // Random date within last 60 days
-  };
-}
-
-/**
  * Seeds comments with enhanced features
  */
 export async function seedComments(options: RelationshipSeedOptions): Promise<Comment[]> {
@@ -225,41 +205,18 @@ export async function seedCollections(options: RelationshipSeedOptions): Promise
 }
 
 /**
- * Seeds favorites for users
- */
-export async function seedFavorites(options: RelationshipSeedOptions): Promise<Favorite[]> {
-  const favorites: Favorite[] = [];
-  const favoritesPerUser = options.favoritesPerUser || 5;
-
-  for (const user of options.users) {
-    // Randomly select logos to favorite
-    const shuffledLogos = [...options.logos].sort(() => 0.5 - Math.random());
-    const selectedLogos = shuffledLogos.slice(0, Math.min(favoritesPerUser, shuffledLogos.length));
-
-    for (const logo of selectedLogos) {
-      const favorite = generateFavorite(user._id, logo._id);
-      favorites.push(favorite);
-    }
-  }
-
-  return favorites;
-}
-
-/**
  * Seeds all relationships
  */
 export async function seedRelationships(options: RelationshipSeedOptions): Promise<{
   comments: Comment[];
   collections: Collection[];
-  favorites: Favorite[];
 }> {
-  const [comments, collections, favorites] = await Promise.all([
+  const [comments, collections] = await Promise.all([
     seedComments(options),
-    seedCollections(options),
-    seedFavorites(options)
+    seedCollections(options)
   ]);
 
-  return { comments, collections, favorites };
+  return { comments, collections };
 }
 
 // Example usage with new features:
@@ -268,7 +225,6 @@ export async function seedRelationships(options: RelationshipSeedOptions): Promi
 //   logos: existingLogos,
 //   commentsPerLogo: 3,
 //   collectionsPerUser: 2,
-//   favoritesPerUser: 5,
 //   commentMentions: true,
 //   collectionTags: true,
 //   sharedCollections: true

@@ -1,4 +1,5 @@
-import { MongoClient, Db, Collection, Document } from 'mongodb'
+import { MongoClient, Db, Collection, Document, WithId, Filter, OptionalUnlessRequiredId } from 'mongodb'
+import { Logger } from '../../../scripts/utils/logger'
 
 /**
  * Helper class for managing MongoDB test database connections and operations.
@@ -14,7 +15,7 @@ export class TestDbHelper {
    * @param uri - Optional MongoDB connection URI. Defaults to MONGODB_URI environment variable or localhost.
    */
   constructor(uri?: string) {
-    this.uri = uri || process.env.MONGODB_URI || 'mongodb://localhost:27017/test_db'
+    this.uri = uri || process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/test_db'
   }
 
   /**
@@ -22,10 +23,24 @@ export class TestDbHelper {
    * @throws Error if connection fails
    */
   async connect(): Promise<void> {
-    if (!this.client) {
-      this.client = new MongoClient(this.uri)
+    try {
+      this.client = new MongoClient(this.uri, {
+        serverApi: {
+          version: '1',
+          strict: true,
+          deprecationErrors: true,
+        },
+        monitorCommands: true,
+        directConnection: true
+      })
       await this.client.connect()
-      this.db = this.client.db(process.env.MONGODB_DB || 'test_db')
+      this.db = this.client.db('test_db')
+      // Simple connection test
+      await this.db.listCollections().toArray()
+      console.log('Connected to MongoDB successfully')
+    } catch (error) {
+      console.error('Failed to connect to MongoDB:', error)
+      throw error
     }
   }
 
@@ -34,9 +49,15 @@ export class TestDbHelper {
    */
   async disconnect(): Promise<void> {
     if (this.client) {
-      await this.client.close()
-      this.client = null
-      this.db = null
+      try {
+        await this.client.close()
+      } catch (error) {
+        console.error('Failed to disconnect from MongoDB:', error)
+        throw error
+      } finally {
+        this.client = null
+        this.db = null
+      }
     }
   }
 
@@ -48,9 +69,9 @@ export class TestDbHelper {
    */
   getCollection<T extends Document>(name: string): Collection<T> {
     if (!this.db) {
-      throw new Error('Database not connected. Call connect() first.')
+      throw new Error('Database not connected. Call connect() first.');
     }
-    return this.db.collection<T>(name)
+    return this.db.collection<T>(name);
   }
 
   /**
@@ -96,20 +117,28 @@ export class TestDbHelper {
   }
 
   /**
-   * Deletes all documents from the specified collection.
+   * Clears all documents from a collection.
    * @param name - The name of the collection to clear
    */
   async clearCollection(name: string): Promise<void> {
+    if (!this.db) {
+      throw new Error('Database not connected. Call connect() first.')
+    }
     const collection = this.getCollection(name)
     await collection.deleteMany({})
   }
 
   /**
-   * Deletes all documents from multiple collections.
-   * @param names - Array of collection names to clear
+   * Clears all documents from multiple collections.
+   * @param collections - Array of collection names to clear
    */
-  async clearCollections(names: string[]): Promise<void> {
-    await Promise.all(names.map(name => this.clearCollection(name)));
+  async clearCollections(collections: string[]): Promise<void> {
+    if (!Array.isArray(collections)) {
+      throw new Error('Collections must be an array')
+    }
+    for (const name of collections) {
+      await this.clearCollection(name)
+    }
   }
 
   /**
@@ -124,6 +153,14 @@ export class TestDbHelper {
   }
 
   /**
+   * Checks if the database connection is active.
+   * @returns true if connected, false otherwise
+   */
+  isConnected(): boolean {
+    return this.client !== null && this.db !== null;
+  }
+
+  /**
    * Gets the MongoDB client instance.
    * @returns The MongoDB client
    */
@@ -135,15 +172,57 @@ export class TestDbHelper {
    * Gets the MongoDB database instance.
    * @returns The MongoDB database
    */
-  async getDb(): Promise<Db | null> {
+  getDb(): Db | null {
     return this.db;
   }
 
-  async isConnected(): Promise<boolean> {
+  async insertMany<T extends Document>(collectionName: string, documents: Omit<T, '_id'>[]): Promise<void> {
+    if (!this.db) {
+      throw new Error('Database not connected. Call connect() first.');
+    }
+
     try {
-      return this.client !== null && await this.client.db().command({ ping: 1 }).then(() => true).catch(() => false);
-    } catch {
-      return false;
+      const collection = this.getCollection<T>(collectionName);
+      
+      // Insert documents one by one, casting to the correct type
+      for (const doc of documents) {
+        await collection.insertOne(doc as OptionalUnlessRequiredId<T>);
+      }
+      Logger.info(`Inserted ${documents.length} documents into ${collectionName}`);
+
+      // Verify documents were inserted
+      const count = await collection.countDocuments();
+      Logger.info(`Collection ${collectionName} now has ${count} documents`);
+    } catch (error) {
+      console.error(`Error inserting documents into ${collectionName}:`, error);
+      throw error;
+    }
+  }
+
+  async find<T extends Document>(collectionName: string, query = {}): Promise<WithId<T>[]> {
+    if (!this.db) {
+      throw new Error('Database not connected. Call connect() first.');
+    }
+
+    try {
+      const collection = this.getCollection<T>(collectionName);
+      
+      // Use find() to get a cursor and convert to array
+      const cursor = collection.find(query as Filter<T>);
+      const documents = await cursor.toArray();
+      
+      Logger.info(`Retrieved ${documents.length} documents from ${collectionName}`);
+      
+      if (documents.length === 0) {
+        Logger.info(`No documents found in ${collectionName}, listing all collections...`);
+        const collections = await this.db.listCollections().toArray();
+        Logger.info(`Available collections: ${collections.map(c => c.name).join(', ')}`);
+      }
+      
+      return documents;
+    } catch (error) {
+      console.error(`Error finding documents in ${collectionName}:`, error);
+      throw error;
     }
   }
 }

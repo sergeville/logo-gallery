@@ -13,17 +13,6 @@ export default function LogoCardSkeleton() {
           <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded-full w-16" />
         </div>
 
-        {/* Rating skeleton */}
-        <div className="flex items-center justify-between">
-          <div className="flex space-x-1">
-            {[1, 2, 3, 4, 5].map((i) => (
-              <div key={i} className="w-6 h-6 bg-gray-200 dark:bg-gray-700 rounded-full" />
-            ))}
-          </div>
-          {/* Vote count skeleton */}
-          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-16" />
-        </div>
-
         {/* Date skeleton */}
         <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-24" />
       </div>

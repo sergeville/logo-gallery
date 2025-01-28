@@ -23,12 +23,6 @@ export interface LogoDimensions {
   height: number;
 }
 
-export interface Vote {
-  userId: ObjectId;
-  rating: number;
-  timestamp: Date;
-}
-
 export interface Logo {
   _id?: ObjectId;
   name: string;
@@ -39,8 +33,6 @@ export interface Logo {
   userId: ObjectId;
   ownerName: string;
   tags: string[];
-  totalVotes: number;
-  votes: Vote[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -84,12 +76,6 @@ export interface ClientLogo {
   userId: string;
   ownerName: string;
   tags: string[];
-  totalVotes: number;
-  votes: {
-    userId: string;
-    rating: number;
-    timestamp: string;
-  }[];
   createdAt: string;
   updatedAt: string;
 }

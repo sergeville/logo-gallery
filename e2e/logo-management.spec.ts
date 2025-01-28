@@ -18,18 +18,6 @@ test.describe('Logo Management', () => {
     await expect(page.locator(`text=${logo.description}`)).toBeVisible()
   })
 
-  test('allows rating a logo', async ({ page, testUser, testLogo, testData }) => {
-    // Login first
-    await testData.loginUser(testUser)
-
-    // Find logo card and rate it
-    const logoCard = await page.locator(`[data-testid="logo-card"]:has-text("${testLogo.name}")`)
-    await logoCard.locator('[aria-label="Rate 4 stars"]').click()
-
-    // Verify rating is updated
-    await expect(logoCard.locator('[data-testid="average-rating"]')).toContainText('4')
-  })
-
   test('allows filtering logos by tag', async ({ page, testLogo }) => {
     // Click tag filter
     await page.click('[data-testid="tag-filter"]')

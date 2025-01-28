@@ -7,7 +7,6 @@ A modern web application for managing and sharing logo designs with comprehensiv
 - User authentication with NextAuth.js
 - User profile management
 - Logo upload and management
-- Voting system with persistent tracking
 - Responsive image handling with fallbacks
 - Modern UI with horizontal navigation
 - Comprehensive validation
@@ -125,13 +124,11 @@ Current test coverage:
 ### Logos
 - Name: 3-100 chars, alphanumeric with spaces/dash/underscore
 - Tags: 1-50 tags, each 2-30 chars
-- Rating: 0-5 range
 - Description: Max 1000 chars
 
 ### Relationships
 - Comments: Max 1000 chars, max 10 mentions
 - Collections: Max 50 per user, max 1000 logos per collection
-- Favorites: Max 100 per user
 
 ## Contributing
 

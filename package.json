@@ -28,7 +28,9 @@
     "percy:update": "percy exec -- npx playwright test --config=playwright.percy.config.ts --update-snapshots",
     "check:imports": "ts-node scripts/import-checker.ts",
     "fix:imports": "ts-node scripts/fix-imports.ts",
-    "fix:imports:dry": "ts-node scripts/fix-imports.ts --dry-run"
+    "fix:imports:dry": "ts-node scripts/fix-imports.ts --dry-run",
+    "test:imports": "jest scripts/__tests__/import-checker.test.ts scripts/__tests__/fix-imports.test.ts",
+    "test:imports:watch": "jest scripts/__tests__/import-checker.test.ts scripts/__tests__/fix-imports.test.ts --watch"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.0",

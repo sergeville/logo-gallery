@@ -73,30 +73,34 @@ async function checkImportPaths(directory: string): Promise<ImportCheckResult> {
             issues.push(issue);
             if (issue.suggestedFix) fixableIssues++;
           }
-
-          // Check index imports
-          if (importPath.endsWith('/index')) {
-            issues.push({
-              file: path.relative(directory, file),
-              line: node.loc!.start.line,
-              column: node.loc!.start.column,
-              message: 'Index import used',
-              suggestedFix: importPath.replace('/index', ''),
-            });
-            fixableIssues++;
-          }
-
-          // Check src imports
-          if (importPath.startsWith('src/')) {
+          // Check src imports (handle index imports within src/ imports)
+          else if (importPath.startsWith('src/')) {
+            const cleanPath = importPath.slice(4);
+            const basePath = cleanPath.replace(/\/index(\.js|\.ts)?$/, '');
             const issue: ImportIssue = {
               file: path.relative(directory, file),
               line: node.loc!.start.line,
               column: node.loc!.start.column,
               message: 'src/ import used',
-              suggestedFix: importPath.replace('src/', '@/'),
+              suggestedFix: '@/' + basePath,
             };
             issues.push(issue);
             fixableIssues++;
+          }
+          // Check index imports (only for non-src imports)
+          else if (importPath.endsWith('/index') || importPath.endsWith('/index.js') || importPath.endsWith('/index.ts')) {
+            // Skip if it's a src/ import that was already handled
+            if (!importPath.startsWith('src/')) {
+              const basePath = importPath.replace(/\/index(\.js|\.ts)?$/, '');
+              issues.push({
+                file: path.relative(directory, file),
+                line: node.loc!.start.line,
+                column: node.loc!.start.column,
+                message: 'Index import used',
+                suggestedFix: basePath,
+              });
+              fixableIssues++;
+            }
           }
         }
       });
@@ -117,19 +121,24 @@ async function checkImportPaths(directory: string): Promise<ImportCheckResult> {
   };
 }
 
-function convertToAliasPath(importPath: string, currentFile: string, rootDir: string): string | undefined {
+function convertToAliasPath(importPath: string, currentFile: string, rootDir: string): string {
   const absolutePath = path.resolve(path.dirname(currentFile), importPath);
   const relativePath = path.relative(rootDir, absolutePath);
 
+  // Remove src/ prefix if present
+  const cleanPath = relativePath.startsWith('src/') ? relativePath.slice(4) : relativePath;
+
   // Check if the import maps to a known directory
   for (const [key, prefix] of Object.entries(VALID_IMPORT_PATTERNS)) {
-    if (relativePath.startsWith(key + '/')) {
-      return prefix + relativePath.slice(key.length + 1);
+    if (cleanPath.includes(`/${key}/`) || cleanPath.startsWith(`${key}/`)) {
+      const parts = cleanPath.split('/');
+      const keyIndex = parts.indexOf(key);
+      return prefix + parts.slice(keyIndex + 1).join('/');
     }
   }
 
   // If no specific mapping found, use general @/ alias
-  return '@/' + relativePath;
+  return '@/' + cleanPath;
 }
 
 async function generateReport(result: ImportCheckResult): Promise<void> {

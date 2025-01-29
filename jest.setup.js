@@ -34,22 +34,27 @@ jest.mock('next-auth/next', () => ({
   getServerSession: jest.fn(() => null),
 }))
 
-// Mock MongoDB client
-jest.mock('@/lib/db', () => ({
-  connectToDatabase: jest.fn(() => Promise.resolve({
-    db: jest.fn(() => ({
-      collection: jest.fn(() => ({
-        find: jest.fn(),
-        findOne: jest.fn(),
-        insertOne: jest.fn(),
-        updateOne: jest.fn(),
-        deleteOne: jest.fn(),
-      })),
-    })),
-  })),
-}))
-
 // Mock environment variables
 process.env.MONGODB_URI = 'mongodb://localhost:27017/test'
 process.env.NEXTAUTH_SECRET = 'test-secret'
 process.env.NEXTAUTH_URL = 'http://localhost:3000'
+
+// Mock chalk to prevent ESM issues
+jest.mock('chalk', () => ({
+  red: jest.fn(str => str),
+  green: jest.fn(str => str),
+  yellow: jest.fn(str => str),
+  blue: jest.fn(str => str),
+  bold: jest.fn(str => str),
+}));
+
+// Set test timeout
+jest.setTimeout(10000);
+
+// Mock console methods
+global.console = {
+  ...console,
+  log: jest.fn(),
+  error: jest.fn(),
+  warn: jest.fn(),
+};

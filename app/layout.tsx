@@ -4,6 +4,8 @@
  * Includes global providers, metadata, and common layout elements.
  */
 
+'use client';
+
 import './globals.css'
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
@@ -11,6 +13,7 @@ import { ThemeProvider } from './components/ThemeProvider'
 import { SessionProvider } from './components/SessionProvider'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
+import { usePerformanceMonitoring } from '@/hooks/usePerformanceMonitoring'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -36,6 +39,8 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
+  usePerformanceMonitoring();
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.className} min-h-screen bg-white text-gray-900 dark:bg-[#0f1524] dark:text-gray-100 transition-colors duration-300`}>

@@ -35,27 +35,18 @@ const eslintConfig = [
       "@typescript-eslint/no-explicit-any": "warn",
       "@typescript-eslint/no-non-null-assertion": "warn",
 
-      // Import rules
-      "import/order": [
+      // Enhanced Import Path Rules
+      "sort-imports": [
         "error",
         {
-          "groups": ["builtin", "external", "internal", "parent", "sibling", "index"],
-          "pathGroups": [
-            {
-              "pattern": "@/**",
-              "group": "internal",
-              "position": "after"
-            }
-          ],
-          "newlines-between": "always",
-          "alphabetize": {
-            "order": "asc",
-            "caseInsensitive": true
-          }
+          "ignoreCase": true,
+          "ignoreDeclarationSort": true,
+          "ignoreMemberSort": false,
+          "memberSyntaxSortOrder": ["none", "all", "multiple", "single"]
         }
       ],
 
-      // Path alias rules
+      // Path Alias Rules
       "no-restricted-imports": [
         "error",
         {
@@ -63,8 +54,29 @@ const eslintConfig = [
             {
               "group": ["../*"],
               "message": "Use @/ path alias instead of relative imports"
+            },
+            {
+              "group": ["./*"],
+              "message": "Use @/ path alias for imports from the same directory"
+            },
+            {
+              "group": ["@/components/**/index"],
+              "message": "Import component directly instead of using index"
+            },
+            {
+              "group": ["src/*"],
+              "message": "Use @/ path alias instead of src/"
             }
           ]
+        }
+      ],
+
+      // Import Organization
+      "@typescript-eslint/consistent-type-imports": [
+        "error",
+        {
+          "prefer": "type-imports",
+          "disallowTypeAnnotations": false
         }
       ],
 
@@ -78,7 +90,7 @@ const eslintConfig = [
         }
       ],
 
-      // Code style
+      // Code Style
       "no-console": ["warn", { "allow": ["warn", "error"] }],
       "no-debugger": "warn",
       "prefer-const": "error",

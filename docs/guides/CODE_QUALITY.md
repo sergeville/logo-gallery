@@ -188,4 +188,112 @@ The quality checks are integrated into the CI pipeline:
    - Automated code review comments
    - Performance regression detection
    - Automated fix suggestions
-   - Impact analysis reports 
+   - Impact analysis reports
+
+## Import Path Rules
+
+### Overview
+
+The project enforces strict rules for import paths to maintain consistency and improve code organization:
+
+1. **Path Alias Usage**
+   - Use `@/` path alias instead of relative imports
+   - Example: `import { Button } from '@/components/Button'`
+   - Avoid: `import { Button } from '../../components/Button'`
+
+2. **Import Organization**
+   - Imports are automatically sorted
+   - Type imports are separated from value imports
+   - Member imports are sorted alphabetically
+
+3. **Restricted Patterns**
+   ```typescript
+   // ❌ Don't use relative imports
+   import { utils } from '../utils'
+   
+   // ✅ Use path alias
+   import { utils } from '@/utils'
+   
+   // ❌ Don't use index imports
+   import { Button } from '@/components/Button/index'
+   
+   // ✅ Import directly
+   import { Button } from '@/components/Button'
+   
+   // ❌ Don't use src/ imports
+   import { config } from 'src/config'
+   
+   // ✅ Use @/ alias
+   import { config } from '@/config'
+   ```
+
+4. **Type Imports**
+   ```typescript
+   // ❌ Don't mix type and value imports
+   import { type User, getUser } from '@/types'
+   
+   // ✅ Separate type imports
+   import type { User } from '@/types'
+   import { getUser } from '@/types'
+   ```
+
+### Directory Structure
+
+The path alias `@/` maps to the project root, with the following structure:
+```
+src/
+├── components/     # React components
+├── hooks/         # Custom hooks
+├── lib/           # Core functionality
+├── types/         # TypeScript types
+├── utils/         # Utility functions
+└── styles/        # CSS and style files
+```
+
+### ESLint Rules
+
+The following ESLint rules are enforced:
+1. `no-restricted-imports`: Prevents relative imports
+2. `sort-imports`: Maintains consistent import ordering
+3. `no-duplicate-imports`: Prevents multiple imports from same module
+4. `@typescript-eslint/consistent-type-imports`: Enforces type import style
+
+### Best Practices
+
+1. **Organization**
+   - Keep imports grouped by type
+   - Place external imports before internal ones
+   - Use explicit imports over namespace imports
+
+2. **Path Aliases**
+   - Use `@/` for all internal imports
+   - Keep paths as short as possible
+   - Use proper directory structure
+
+3. **Types**
+   - Use separate type imports
+   - Define types close to their usage
+   - Export types from dedicated files
+
+4. **Performance**
+   - Avoid circular dependencies
+   - Use dynamic imports for code splitting
+   - Import only what's needed
+
+### Common Issues
+
+1. **ESLint Errors**
+   ```bash
+   # Fix import path issues
+   npm run lint:fix
+   ```
+
+2. **Path Resolution**
+   - Ensure tsconfig.json has correct path mappings
+   - Verify module resolution settings
+   - Check for correct file extensions
+
+3. **Type Imports**
+   - Use explicit type imports
+   - Keep type definitions organized
+   - Avoid mixing types and values 

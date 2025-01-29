@@ -134,4 +134,25 @@ Always respond in a way that follows these standards:
     - Performance monitoring
     - Error tracking
     - Regular backups
+
+17. Task Completion:
+    - Commit all changes after completing each task
+    - Use conventional commit messages:
+      ```
+      type(scope): description
+
+      [optional body]
+      [optional footer]
+      ```
+    - Types: feat, fix, docs, style, refactor, test, chore
+    - Scope should match the task area
+    - Description should be clear and concise
+    - Include task reference in body if applicable
+    - Example commits:
+      ```
+      feat(image): add CDN integration with Cloudflare
+      fix(cache): resolve memory leak in cache service
+      docs(api): update endpoint documentation
+      test(visual): add Percy.io integration
+      ```
 </custom_instructions> 

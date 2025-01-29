@@ -1,6 +1,6 @@
 import { faker } from '@faker-js/faker';
 import { ObjectId } from 'mongodb';
-import { IUser, IUserProfile } from '../../../src/lib/models/User';
+import { IUser, IUserProfile } from '@/lib/models/User';
 
 const COMPANIES = [
   'TechCorp',

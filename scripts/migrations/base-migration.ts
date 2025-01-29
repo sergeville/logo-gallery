@@ -1,5 +1,5 @@
 import { Collection } from 'mongodb';
-import { MigrationHelper, MigrationOptions } from './migration-helper';
+import { MigrationHelper, MigrationOptions } from '@/scripts/migrations/migration-helper';
 
 export abstract class BaseMigration {
   protected helper: MigrationHelper;

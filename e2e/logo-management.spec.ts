@@ -1,5 +1,5 @@
 import path from 'path'
-import { test, expect } from './utils/fixtures'
+import { test, expect } from '@/e2e/utils/fixtures'
 
 test.describe('Logo Management', () => {
   test('allows uploading a new logo', async ({ page, testUser, testData }) => {

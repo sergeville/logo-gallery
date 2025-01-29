@@ -1,6 +1,6 @@
 import { MongoClient, ObjectId } from 'mongodb';
-import { generateSpecificUsers, generateUsers, IUser } from './utils/user-generator';
-import { generateSpecificLogos, generateLogos, ILogo } from './utils/logo-generator';
+import { generateSpecificUsers, generateUsers, IUser } from '@/scripts/test-data/utils/user-generator';
+import { generateSpecificLogos, generateLogos, ILogo } from '@/scripts/test-data/utils/logo-generator';
 
 async function populateTestDatabase() {
   const uri = process.env.MONGODB_TEST_URI || 'mongodb://localhost:27017/LogoGalleryTest';

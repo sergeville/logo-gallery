@@ -1,7 +1,7 @@
 import { MongoClient } from 'mongodb';
-import { getConfig } from '../config/environments';
-import { User } from '../src/lib/models/User';
-import { Logo } from '../src/lib/models/Logo';
+import { getConfig } from '@/config/environments';
+import { User } from '@/lib/models/User';
+import { Logo } from '@/lib/models/Logo';
 
 async function validateDatabaseStructure() {
   const config = getConfig();

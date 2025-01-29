@@ -1,5 +1,5 @@
-import { connectToDatabase } from '../app/lib/db';
-import { Logo } from '../app/lib/types';
+import { connectToDatabase } from '@/app/lib/db';
+import { Logo } from '@/app/lib/types';
 import fs from 'fs/promises';
 import path from 'path';
 

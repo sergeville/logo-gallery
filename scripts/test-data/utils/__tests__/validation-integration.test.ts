@@ -1,4 +1,4 @@
-import { TestDbHelper } from '../test-db-helper'
+import { TestDbHelper } from '@/scripts/test-data/utils/test-db-helper'
 
 describe('Validation Integration Tests', () => {
   let testDb: TestDbHelper

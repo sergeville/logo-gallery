@@ -1,4 +1,4 @@
-import { validateUser, validateLogo } from '../../test-data/utils/model-validators';
+import { validateUser, validateLogo } from '@/scripts/test-data/utils/model-validators';
 import { ObjectId } from 'mongodb';
 
 describe('Edge Cases', () => {

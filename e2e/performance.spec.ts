@@ -1,4 +1,4 @@
-import { test, expect } from './utils/fixtures'
+import { test, expect } from '@/e2e/utils/fixtures'
 
 test.describe('Performance Tests', () => {
   test('page load performance', async ({ page }) => {

@@ -1,4 +1,4 @@
-import { validateEmail, validateUrl, validateObjectId, validateDateRange, validateField, ValidationRule } from '../validation-utils';
+import { validateEmail, validateUrl, validateObjectId, validateDateRange, validateField, ValidationRule } from '@/scripts/test-data/utils/validation-utils';
 import { ObjectId } from 'mongodb';
 import { LOCALHOST_URL } from '@/config/constants';
 

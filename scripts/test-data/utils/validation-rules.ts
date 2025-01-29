@@ -1,4 +1,4 @@
-import { ValidationRule } from './validation-utils';
+import { ValidationRule } from '@/scripts/test-data/utils/validation-utils';
 
 export const userValidationRules: Record<string, ValidationRule[]> = {
   _id: [{

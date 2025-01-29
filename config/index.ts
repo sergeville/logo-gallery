@@ -1,6 +1,6 @@
-import { developmentConfig } from './dev';
-import { testConfig } from './test';
-import { productionConfig } from './prod';
+import { developmentConfig } from '@/config/dev';
+import { testConfig } from '@/config/test';
+import { productionConfig } from '@/config/prod';
 
 type Environment = 'development' | 'test' | 'production';
 

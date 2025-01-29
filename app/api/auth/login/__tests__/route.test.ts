@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { POST } from '../route'
+import { POST } from '@/app/api/auth/login/route'
 import { connectToDatabase } from '@/app/lib/db'
 import { Db, Collection, Document } from 'mongodb'
 import bcrypt from 'bcrypt'

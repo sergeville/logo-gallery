@@ -1,4 +1,4 @@
-import { CDNProvider, CDNUploadOptions, CDNUploadResult, CDNTransformOptions } from '../CDNService';
+import { CDNProvider, CDNUploadOptions, CDNUploadResult, CDNTransformOptions } from '@/lib/services/cdn/CDNService';
 import { v2 as cloudinary } from 'cloudinary';
 import sharp from 'sharp';
 

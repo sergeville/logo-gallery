@@ -1,6 +1,6 @@
 'use client';
 
-import LogoGallery from '../logo-gallery-page';
+import LogoGallery from '@/app/logo-gallery-page';
 
 export default function LogosPage() {
   return <LogoGallery />;

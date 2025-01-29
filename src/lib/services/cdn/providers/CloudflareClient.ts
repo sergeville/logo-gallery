@@ -1,4 +1,4 @@
-import { CDNProvider, CDNUploadOptions, CDNUploadResult, CDNTransformOptions } from '../CDNService';
+import { CDNProvider, CDNUploadOptions, CDNUploadResult, CDNTransformOptions } from '@/lib/services/cdn/CDNService';
 import sharp from 'sharp';
 import fetch from 'node-fetch';
 

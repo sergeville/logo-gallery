@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import LogoCard from '../LogoCard';
+import LogoCard from '@/app/components/LogoCard';
 
 describe('LogoCard', () => {
   const mockProps = {

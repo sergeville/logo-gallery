@@ -1,4 +1,4 @@
-import { checkImportPaths } from '../import-checker';
+import { checkImportPaths } from '@/scripts/import-checker';
 import fs from 'fs/promises';
 import path from 'path';
 import os from 'os';

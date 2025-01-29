@@ -1,4 +1,4 @@
-import { test, expect } from '../utils/auth-setup';
+import { test, expect } from '@/e2e/utils/auth-setup';
 import { LOCALHOST_URL } from '@/config/constants';
 import {
   preparePageForVisualTest,

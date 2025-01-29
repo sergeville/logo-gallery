@@ -15,7 +15,7 @@ import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
-import LogoImage from '../components/LogoImage'
+import LogoImage from '@/app/components/LogoImage'
 
 // Define the Logo interface with all required properties
 interface Logo {

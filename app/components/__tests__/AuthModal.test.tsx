@@ -1,5 +1,5 @@
 import { render, screen, fireEvent } from '@testing-library/react';
-import { AuthModal } from '../AuthModal';
+import { AuthModal } from '@/app/components/AuthModal';
 import { signIn } from 'next-auth/react';
 
 jest.mock('next-auth/react');

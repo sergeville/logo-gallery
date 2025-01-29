@@ -1,4 +1,4 @@
-import { generateTestUser, generateTestLogo } from '../../test-data/utils/test-data-generator';
+import { generateTestUser, generateTestLogo } from '@/scripts/test-data/utils/test-data-generator';
 
 describe('Test Data Fixtures', () => {
   describe('User Fixtures', () => {

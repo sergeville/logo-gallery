@@ -1,6 +1,6 @@
 import { Collection, Db, DeleteResult } from 'mongodb'
 import { jest } from '@jest/globals'
-import { DELETE } from '../route'
+import { DELETE } from '@/app/api/user/delete/route'
 import { connectToDatabase } from '@/app/lib/db'
 import { getServerSession } from 'next-auth'
 import { User } from '@/app/lib/types'

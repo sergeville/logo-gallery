@@ -1,6 +1,6 @@
-import { ValidationFieldType } from '../types/validation-enums';
-import type { ValidationRule } from '../types/validation';
-import type { User, Logo, UserProfile, LogoDimensions, Vote } from '../types';
+import { ValidationFieldType } from '@/app/lib/types/validation-enums';
+import type { ValidationRule } from '@/app/lib/types/validation';
+import type { User, Logo, UserProfile, LogoDimensions, Vote } from '@/app/lib/types';
 
 export const profileValidationRules: Record<keyof UserProfile, ValidationRule> = {
   bio: {

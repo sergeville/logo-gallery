@@ -1,5 +1,5 @@
-import { POST as requestReset } from '../request-reset/route'
-import { POST as resetPassword } from '../reset/route'
+import { POST as requestReset } from '@/app/api/auth/password/request-reset/route'
+import { POST as resetPassword } from '@/app/api/auth/password/reset/route'
 import { connectToDatabase } from '@/app/lib/db'
 import { sendEmail } from '@/app/lib/email'
 import { Db } from 'mongodb'

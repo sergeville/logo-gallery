@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
-import Page from '../page';
-import { AuthProvider } from '../../contexts/AuthContext';
+import Page from '@/app/gallery/page';
+import { AuthProvider } from '@/app/contexts/AuthContext';
 
 describe('Gallery Page', () => {
   beforeEach(() => {

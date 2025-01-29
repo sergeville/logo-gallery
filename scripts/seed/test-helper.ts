@@ -1,7 +1,7 @@
 import { MongoClient, Db, Collection as MongoCollection } from 'mongodb';
-import { DatabaseHelper } from './db-helper';
-import { User, Logo, Comment, Collection } from './types';
-import { TEST_CONFIG } from './__tests__/test-config';
+import { DatabaseHelper } from '@/scripts/seed/db-helper';
+import { User, Logo, Comment, Collection } from '@/scripts/seed/types';
+import { TEST_CONFIG } from '@/scripts/seed/__tests__/test-config';
 import { performance } from 'perf_hooks';
 
 interface PerformanceMetrics {

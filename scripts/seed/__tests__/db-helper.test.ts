@@ -1,5 +1,5 @@
 import { MongoClient } from 'mongodb';
-import TestDbHelper from '../../test-data/utils/test-db-helper';
+import TestDbHelper from '@/scripts/test-data/utils/test-db-helper';
 
 describe('Test Database Helper', () => {
   let testDbHelper: TestDbHelper;

@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { POST } from '../route'
+import { POST } from '@/app/api/logos/[id]/vote/route'
 import { Logo } from '@/app/lib/models/logo'
 import { Types } from 'mongoose'
 import dbConnect from '@/app/lib/db-config'

@@ -1,8 +1,8 @@
 import { config } from 'dotenv';
 import path from 'path';
-import { databaseConfig } from './database';
-import { storageConfig } from './storage';
-import { securityConfig } from './security';
+import { databaseConfig } from '@/config/prod/database';
+import { storageConfig } from '@/config/prod/storage';
+import { securityConfig } from '@/config/prod/security';
 
 // Load production environment variables
 config({ path: path.join(process.cwd(), '.env.production') });

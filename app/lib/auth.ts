@@ -1,6 +1,6 @@
 import bcrypt from 'bcryptjs';
-import connectDB from './db';
-import { User } from './models/user';
+import connectDB from '@/app/lib/db';
+import { User } from '@/app/lib/models/user';
 
 export async function hashPassword(password: string): Promise<string> {
   return bcrypt.hash(password, 12);

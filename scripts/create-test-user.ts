@@ -1,6 +1,6 @@
 import { MongoClient, ObjectId } from 'mongodb';
-import { connectToDatabase, disconnectFromDatabase } from '../app/lib/db';
-import { hashPassword } from '../app/lib/auth';
+import { connectToDatabase, disconnectFromDatabase } from '@/app/lib/db';
+import { hashPassword } from '@/app/lib/auth';
 
 async function addUser(email: string, password: string, name: string) {
   const { db } = await connectToDatabase();

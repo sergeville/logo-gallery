@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { debounce } from 'lodash-es';
-import LogoCard from '../components/LogoCard';
+import LogoCard from '@/app/components/LogoCard';
 import { Search, Filter, SortAsc, SortDesc } from 'lucide-react';
 
 interface Logo {

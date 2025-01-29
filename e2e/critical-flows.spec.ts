@@ -1,4 +1,4 @@
-import { test, expect } from './utils/fixtures'
+import { test, expect } from '@/e2e/utils/fixtures'
 
 test.describe('Critical User Flows', () => {
   test('complete user journey from registration to logo upload', async ({ page, testData }) => {

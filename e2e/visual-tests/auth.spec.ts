@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { preparePageForVisualTest, testComponentStates } from './utils/visual-test-utils';
+import { preparePageForVisualTest, testComponentStates } from '@/e2e/visual-tests/utils/visual-test-utils';
 
 test.describe('Auth Visual Tests', () => {
   test('auth modal layout matches snapshot', async ({ page }) => {

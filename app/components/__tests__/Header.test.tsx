@@ -1,7 +1,7 @@
 import React from 'react'
 import { render, screen } from '@testing-library/react'
-import { useAuth } from '../../contexts/AuthContext'
-import Header from '../Header'
+import { useAuth } from '@/app/contexts/AuthContext'
+import Header from '@/app/components/Header'
 
 // Mock the AuthContext
 jest.mock('../../contexts/AuthContext')

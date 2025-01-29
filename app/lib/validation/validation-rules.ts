@@ -1,5 +1,5 @@
-import { ValidationFieldType, ValidationRule } from './index';
-import type { UserProfile } from '../types';
+import { ValidationFieldType, ValidationRule } from '.';
+import type { UserProfile } from '@/app/lib/types';
 
 export const profileValidationRules: Record<keyof UserProfile, ValidationRule> = {
   bio: {

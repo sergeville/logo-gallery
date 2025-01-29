@@ -1,4 +1,4 @@
-import { connectToDatabase } from '../app/lib/db';
+import { connectToDatabase } from '@/app/lib/db';
 import { unlink } from 'fs/promises';
 import { join } from 'path';
 import chalk from 'chalk';

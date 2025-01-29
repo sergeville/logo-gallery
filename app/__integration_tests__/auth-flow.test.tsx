@@ -1,7 +1,7 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { signIn } from 'next-auth/react';
-import { AuthProvider } from '../contexts/AuthContext';
-import GalleryPage from '../gallery/page';
+import { AuthProvider } from '@/app/contexts/AuthContext';
+import GalleryPage from '@/app/gallery/page';
 
 jest.mock('next-auth/react');
 

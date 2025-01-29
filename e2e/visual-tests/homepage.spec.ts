@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { preparePageForVisualTest } from './utils/visual-test-utils';
+import { preparePageForVisualTest } from '@/e2e/visual-tests/utils/visual-test-utils';
 
 test.describe('Homepage Visual Tests', () => {
   test('homepage layout matches snapshot', async ({ page }) => {

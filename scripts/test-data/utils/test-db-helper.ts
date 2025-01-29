@@ -1,5 +1,5 @@
 import { MongoClient, Db, Collection, Document, WithId, Filter, OptionalUnlessRequiredId } from 'mongodb'
-import { Logger } from '../../../scripts/utils/logger'
+import { Logger } from '@/scripts/utils/logger'
 
 /**
  * Helper class for managing MongoDB test database connections and operations.

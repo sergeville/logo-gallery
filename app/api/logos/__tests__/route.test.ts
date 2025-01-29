@@ -1,4 +1,4 @@
-import { GET } from '../route';
+import { GET } from '@/app/api/logos/route';
 import { connectToDatabase } from '@/app/lib/db';
 
 jest.mock('@/app/lib/db');

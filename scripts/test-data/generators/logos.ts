@@ -1,6 +1,6 @@
 import { faker } from '@faker-js/faker';
 import { ObjectId } from 'mongodb';
-import { ILogo, ILogoDimensions } from '../../../src/lib/models/Logo';
+import { ILogo, ILogoDimensions } from '@/lib/models/Logo';
 
 const LOGO_CATEGORIES = [
   'Technology',

@@ -1,5 +1,5 @@
 import { ObjectId } from 'mongodb';
-import { seedLogos, createTestLogo } from '../logos';
+import { seedLogos, createTestLogo } from '@/scripts/seed/logos';
 import { Logo } from '@/app/types';
 
 describe('Logo Seeding', () => {

@@ -4,7 +4,7 @@ import { ObjectId } from 'mongodb';
 import connectDB from '@/app/lib/db';
 import { validateUserProfile } from '@/app/lib/validation';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '../../auth/[...nextauth]/options';
+import { authOptions } from '@/app/api/auth/[...nextauth]/options';
 import { User } from '@/app/lib/models/user';
 import { Logo } from '@/app/lib/models/logo';
 

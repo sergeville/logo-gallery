@@ -1,7 +1,7 @@
 import { render, screen, fireEvent, waitFor, within, act } from '@testing-library/react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import VotePage from '../page'
+import VotePage from '@/app/vote/page'
 import { useState } from 'react'
 
 // Mock next-auth

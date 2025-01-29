@@ -1,6 +1,6 @@
 import { imageConfig } from '@/config/image.config';
-import { ImageCacheService } from './cache/ImageCacheService';
-import { CDNService, CDNUploadResult } from './cdn/CDNService';
+import { ImageCacheService } from '@/src/lib/services/cache/ImageCacheService';
+import { CDNService, CDNUploadResult } from '@/src/lib/services/cdn/CDNService';
 import sharp from 'sharp';
 import crypto from 'crypto';
 

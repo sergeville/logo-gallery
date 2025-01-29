@@ -1,5 +1,5 @@
-import { ImageOptimizationService } from './ImageOptimizationService';
-import { imageCacheService } from './ImageCacheService';
+import { ImageOptimizationService } from '@/app/lib/services/ImageOptimizationService';
+import { imageCacheService } from '@/app/lib/services/ImageCacheService';
 
 export const imageOptimizationService = new ImageOptimizationService();
 

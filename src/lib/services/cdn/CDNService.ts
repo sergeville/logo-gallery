@@ -1,6 +1,6 @@
 import { cdnConfig } from '@/config/cdn.config';
-import { CloudflareClient } from './providers/CloudflareClient';
-import { CloudinaryClient } from './providers/CloudinaryClient';
+import { CloudflareClient } from '@/src/lib/services/cdn/providers/CloudflareClient';
+import { CloudinaryClient } from '@/src/lib/services/cdn/providers/CloudinaryClient';
 
 export interface CDNProvider {
   uploadImage(buffer: Buffer, options: CDNUploadOptions): Promise<CDNUploadResult>;

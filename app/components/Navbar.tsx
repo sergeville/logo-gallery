@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useSession, signOut } from 'next-auth/react';
 import { Menu, X } from 'lucide-react';
-import ThemeToggle from './ThemeToggle';
+import ThemeToggle from '@/app/components/ThemeToggle';
 
 export default function Navbar() {
   const { data: session, status } = useSession();

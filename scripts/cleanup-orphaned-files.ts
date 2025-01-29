@@ -1,4 +1,4 @@
-import { generateSyncReport } from './check-logo-sync';
+import { generateSyncReport } from '@/scripts/check-logo-sync';
 import { unlink } from 'fs/promises';
 import { join } from 'path';
 import chalk from 'chalk';

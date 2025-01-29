@@ -1,4 +1,4 @@
-import { ValidationFieldType } from './validation-enums';
+import { ValidationFieldType } from '@/app/lib/types/validation-enums';
 
 export interface ValidationRule {
   type: typeof ValidationFieldType[keyof typeof ValidationFieldType];

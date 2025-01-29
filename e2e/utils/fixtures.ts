@@ -1,5 +1,5 @@
 import { test as base } from '@playwright/test'
-import { TestData, TestUser, TestLogo } from './test-data'
+import { TestData, TestUser, TestLogo } from '@/e2e/utils/test-data'
 import { LOCALHOST_URL } from '@/config/constants'
 
 // Extend the base test type with our fixtures

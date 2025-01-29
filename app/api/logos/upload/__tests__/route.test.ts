@@ -1,4 +1,4 @@
-import { POST } from '../route';
+import { POST } from '@/app/api/logos/upload/route';
 import { getServerSession } from 'next-auth';
 
 jest.mock('next-auth');

@@ -1,5 +1,5 @@
 import { MongoClient } from 'mongodb'
-import { TestDbHelper } from '../test-db-helper'
+import { TestDbHelper } from '@/scripts/test-data/utils/test-db-helper'
 
 jest.mock('mongodb')
 

@@ -1,6 +1,6 @@
 import { MongoClient } from 'mongodb'
 import type { Logo } from '@/lib/types'
-import { generateSyncReport } from './check-logo-sync';
+import { generateSyncReport } from '@/scripts/check-logo-sync';
 import { connectToDatabase } from '@/lib/mongodb';
 import { ObjectId } from 'mongodb';
 import { join } from 'path';

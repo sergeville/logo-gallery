@@ -1,7 +1,7 @@
 import { ObjectId } from 'mongodb';
-import { seedRelationships } from '../relationships';
-import { dbHelper } from '../dbHelper';
-import { Logger } from '../../../scripts/utils/logger';
+import { seedRelationships } from '@/scripts/seed/relationships';
+import { dbHelper } from '@/scripts/seed/dbHelper';
+import { Logger } from '@/scripts/utils/logger';
 
 interface User {
   _id: ObjectId;

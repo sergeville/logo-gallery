@@ -4,8 +4,8 @@ import React from 'react'
 import { formatDistanceToNow, isValid, parseISO } from 'date-fns'
 import Link from 'next/link'
 import { useSession } from 'next-auth/react'
-import DeleteLogoButton from './DeleteLogoButton'
-import LogoImage from './LogoImage'
+import DeleteLogoButton from '@/app/components/DeleteLogoButton'
+import LogoImage from '@/app/components/LogoImage'
 
 interface Logo {
   _id: string

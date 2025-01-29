@@ -1,4 +1,4 @@
-import { test, expect } from './utils/fixtures'
+import { test, expect } from '@/e2e/utils/fixtures'
 
 test.describe('Authentication Flow', () => {
   test('shows login modal when clicking protected action without authentication', async ({ page, testLogo }) => {

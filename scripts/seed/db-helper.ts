@@ -1,5 +1,5 @@
 import { MongoClient, Db, ObjectId } from 'mongodb';
-import { User, Comment, Collection, Relationships, TestDataOptions, TestData, Logo } from './types';
+import { User, Comment, Collection, Relationships, TestDataOptions, TestData, Logo } from '@/scripts/seed/types';
 import { faker } from '@faker-js/faker';
 import '@testing-library/jest-dom'
 

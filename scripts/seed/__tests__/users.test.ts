@@ -1,5 +1,5 @@
 import { ObjectId } from 'mongodb';
-import { seedUsers, createTestUser } from '../users';
+import { seedUsers, createTestUser } from '@/scripts/seed/users';
 import { User } from '@/app/types';
 
 describe('User Seeding', () => {

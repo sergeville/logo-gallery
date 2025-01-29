@@ -2,7 +2,7 @@ import { Collection, Document, MongoClient, WithId, ObjectId } from 'mongodb';
 import { User } from '@/app/lib/types';
 import { connectToDatabase } from '@/app/lib/db';
 import bcrypt from 'bcrypt';
-import { POST } from '../route';
+import { POST } from '@/app/api/auth/register/route';
 
 interface MockCollection {
   findOne: jest.MockedFunction<(filter?: any) => Promise<WithId<User> | null>>;

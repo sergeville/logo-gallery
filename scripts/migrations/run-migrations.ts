@@ -1,5 +1,5 @@
 import { config } from 'dotenv';
-import { UpdateCollectionSchemaMigration } from './001-update-collection-schema';
+import { UpdateCollectionSchemaMigration } from '@/scripts/migrations/001-update-collection-schema';
 
 // Load environment variables
 config();

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { connectToDatabase } from '../../../../lib/db-config';
-import { sendEmail } from '../../../../lib/email';
+import { connectToDatabase } from '@/app/lib/db-config';
+import { sendEmail } from '@/app/lib/email';
 import crypto from 'crypto';
 
 export async function POST(request: Request) {

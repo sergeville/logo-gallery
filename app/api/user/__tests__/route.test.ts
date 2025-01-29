@@ -1,6 +1,6 @@
 import { Collection, Db } from 'mongodb';
 import { jest } from '@jest/globals';
-import { GET } from '../route';
+import { GET } from '@/app/api/user/route';
 import { connectToDatabase } from '@/app/lib/db';
 import { getServerSession } from 'next-auth';
 import { User } from '@/app/lib/types';

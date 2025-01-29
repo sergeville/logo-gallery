@@ -1,5 +1,5 @@
 import { ObjectId } from 'mongodb';
-import { ILogo } from '../test-data/utils/logo-generator';
+import { ILogo } from '@/scripts/test-data/utils/logo-generator';
 
 export function generateMockLogo(userId: ObjectId, index: number): ILogo {
   const createdAt = new Date();

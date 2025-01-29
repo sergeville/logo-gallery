@@ -1,4 +1,4 @@
-import { fixImportPaths } from '../fix-imports';
+import { fixImportPaths } from '@/scripts/fix-imports';
 import fs from 'fs/promises';
 import path from 'path';
 import os from 'os';

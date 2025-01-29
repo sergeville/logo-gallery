@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import jwt from 'jsonwebtoken';
-import { User } from '../../app/models/User';
+import { User } from '@/app/models/User';
 
 export async function auth(request: Request) {
   try {

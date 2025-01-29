@@ -1,4 +1,4 @@
-import { userValidationRules, logoValidationRules } from '../validation-rules';
+import { userValidationRules, logoValidationRules } from '@/scripts/test-data/utils/validation-rules';
 import { ObjectId } from 'mongodb';
 
 describe('Validation Rules', () => {

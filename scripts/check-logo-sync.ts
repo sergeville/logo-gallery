@@ -1,5 +1,5 @@
-import { connectToDatabase } from '../lib/mongodb';
-import { Logo } from '../app/models/Logo';
+import { connectToDatabase } from '@/lib/mongodb';
+import { Logo } from '@/app/models/Logo';
 import { readdir } from 'fs/promises';
 import { join } from 'path';
 import chalk from 'chalk';

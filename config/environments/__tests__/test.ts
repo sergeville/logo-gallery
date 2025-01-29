@@ -1,5 +1,5 @@
-import { getConfig } from '../index';
-import { Config } from '../test';
+import { getConfig } from '..';
+import { Config } from '@/config/environments/test';
 
 describe('Test Environment Configuration', () => {
   it('should load test environment configuration correctly', () => {

@@ -1,8 +1,8 @@
 import { config } from 'dotenv';
 import path from 'path';
-import { databaseConfig } from './database';
-import { storageConfig } from './storage';
-import { apiConfig } from './api';
+import { databaseConfig } from '@/config/dev/database';
+import { storageConfig } from '@/config/dev/storage';
+import { apiConfig } from '@/config/dev/api';
 
 // Load development environment variables
 config({ path: path.join(process.cwd(), '.env.development') });

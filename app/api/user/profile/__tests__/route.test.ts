@@ -3,7 +3,7 @@ import { Collection, Db, MongoClient, ObjectId } from 'mongodb';
 import { connectToDatabase } from '@/app/lib/db';
 import { NextRequest } from 'next/server';
 import { cookies } from 'next/headers';
-import { GET, PUT } from '../route';
+import { GET, PUT } from '@/app/api/user/profile/route';
 
 jest.mock('@/app/lib/db');
 jest.mock('next/headers');

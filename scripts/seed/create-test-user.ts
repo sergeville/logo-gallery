@@ -1,6 +1,6 @@
-import { connectToDatabase } from '../../app/lib/db';
+import { connectToDatabase } from '@/app/lib/db';
 import bcrypt from 'bcrypt';
-import { User } from '../../app/lib/types';
+import { User } from '@/app/lib/types';
 
 const testUser = {
   email: 'test@example.com',

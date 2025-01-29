@@ -1,5 +1,5 @@
 import { render, screen, waitFor } from '@testing-library/react'
-import { AuthProvider, useAuth } from '../AuthContext'
+import { AuthProvider, useAuth } from '@/app/context/AuthContext'
 
 // Mock fetch
 global.fetch = jest.fn()

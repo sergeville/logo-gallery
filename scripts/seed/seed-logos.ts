@@ -1,5 +1,5 @@
 import { MongoClient, ObjectId } from 'mongodb';
-import { ILogo } from '../test-data/utils/logo-generator';
+import { ILogo } from '@/scripts/test-data/utils/logo-generator';
 
 async function seedLogos() {
   const uri = 'mongodb://localhost:27017/LogoGalleryDevelopmentDB';

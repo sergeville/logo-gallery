@@ -1,5 +1,5 @@
-import { connectToDatabase } from '../lib/mongodb';
-import { Logo } from '../app/models/Logo';
+import { connectToDatabase } from '@/lib/mongodb';
+import { Logo } from '@/app/models/Logo';
 import chalk from 'chalk';
 
 async function checkLogos() {

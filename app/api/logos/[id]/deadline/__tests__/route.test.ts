@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { PATCH } from '../route'
+import { PATCH } from '@/app/api/logos/[id]/deadline/route'
 import { Logo } from '@/app/lib/models/logo'
 import { Types } from 'mongoose'
 import dbConnect from '@/app/lib/db-config'

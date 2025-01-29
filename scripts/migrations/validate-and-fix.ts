@@ -1,7 +1,7 @@
 import { MongoClient, ObjectId } from 'mongodb';
-import { connectToDatabase, disconnectFromDatabase } from '../../app/lib/db';
-import { validateUser, validateLogo } from '../test-data/utils/model-validators';
-import { ValidationResult } from '../../app/lib/validation';
+import { connectToDatabase, disconnectFromDatabase } from '@/app/lib/db';
+import { validateUser, validateLogo } from '@/scripts/test-data/utils/model-validators';
+import { ValidationResult } from '@/app/lib/validation';
 import chalk from 'chalk';
 
 interface ValidationReport {

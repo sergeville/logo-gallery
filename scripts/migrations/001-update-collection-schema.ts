@@ -1,5 +1,5 @@
 import { Collection as MongoCollection } from 'mongodb';
-import { BaseMigration } from './base-migration';
+import { BaseMigration } from '@/scripts/migrations/base-migration';
 
 interface OldCollection {
   _id: any;

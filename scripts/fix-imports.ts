@@ -3,7 +3,7 @@ import chalk from 'chalk';
 import { glob } from 'glob';
 import fs from 'fs/promises';
 import path from 'path';
-import { checkImportPaths } from './import-checker';
+import { checkImportPaths } from '@/scripts/import-checker';
 
 export async function fixImportPaths(directory: string, dryRun: boolean = false): Promise<void> {
   const result = await checkImportPaths(directory);

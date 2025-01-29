@@ -1,5 +1,5 @@
 import { cacheConfig } from '@/config/cache.config';
-import { ImageCacheService } from './ImageCacheService';
+import { ImageCacheService } from '@/src/lib/services/cache/ImageCacheService';
 import crypto from 'crypto';
 
 interface CacheOptions {

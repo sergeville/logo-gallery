@@ -1,6 +1,6 @@
 import { MongoClient, ObjectId } from 'mongodb';
 import bcrypt from 'bcrypt';
-import { connectToDatabase } from '../../app/lib/db';
+import { connectToDatabase } from '@/app/lib/db';
 
 const users = [
   {

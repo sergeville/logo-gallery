@@ -14,9 +14,9 @@
     "db:validate": "NODE_ENV=test ts-node --project tsconfig.test.json scripts/test-data/validate-db.ts",
     "db:test-data:validate": "NODE_ENV=test ts-node --project tsconfig.test.json scripts/test-data/validate-test-data.ts",
     "test:seed": "jest scripts/seed/__tests__",
-    "test:visual": "playwright test --config=playwright.visual.config.ts",
-    "test:visual:update": "playwright test --config=playwright.visual.config.ts --update-snapshots",
-    "test:visual:ui": "playwright test --config=playwright.visual.config.ts --ui",
+    "test:visual": "percy exec -- playwright test tests/visual/",
+    "test:visual:update": "percy exec -- playwright test tests/visual/ --update-snapshots",
+    "test:visual:debug": "PWDEBUG=1 percy exec -- playwright test tests/visual/",
     "percy": "percy exec -- npx playwright test --config=playwright.percy.config.ts",
     "percy:update": "percy exec -- npx playwright test --config=playwright.percy.config.ts --update-snapshots"
   },
@@ -52,8 +52,8 @@
   },
   "devDependencies": {
     "@faker-js/faker": "^9.3.0",
-    "@percy/cli": "^1.30.6",
-    "@percy/playwright": "^1.0.7",
+    "@percy/cli": "^1.27.4",
+    "@percy/playwright": "^1.27.4",
     "@playwright/test": "^1.49.1",
     "@swc/core": "^1.10.7",
     "@swc/jest": "^0.2.37",

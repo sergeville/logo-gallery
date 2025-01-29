@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
+import { Role, DEFAULT_ROLE } from '@/config/roles.config';
 
 const userSchema = new mongoose.Schema({
   email: {
@@ -14,6 +15,12 @@ const userSchema = new mongoose.Schema({
   password: {
     type: String,
     required: true,
+  },
+  role: {
+    type: String,
+    enum: ['admin', 'moderator', 'user', 'guest'],
+    default: DEFAULT_ROLE,
+    required: true
   },
   profile: {
     avatarUrl: {
@@ -59,6 +66,11 @@ userSchema.methods.comparePassword = async function(candidatePassword: string) {
     console.error('Error comparing passwords:', error);
     return false;
   }
+};
+
+// Method to check if user has a specific role
+userSchema.methods.hasRole = function(role: Role): boolean {
+  return this.role === role;
 };
 
 // Only create the model if it doesn't exist

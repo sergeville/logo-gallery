@@ -12,17 +12,27 @@ interface Logo {
   title: string
   description: string
   imageUrl: string
+  thumbnailUrl: string
+  responsiveUrls?: Record<string, string>
   userId: string
   createdAt: string | Date
   totalVotes?: number
+  fileSize?: number
+  optimizedSize?: number
+  compressionRatio?: string
 }
 
 interface LogoCardProps {
   logo: Logo
   showDelete?: boolean
+  showStats?: boolean
 }
 
-export default function LogoCard({ logo, showDelete = false }: LogoCardProps) {
+export default function LogoCard({ 
+  logo, 
+  showDelete = false,
+  showStats = false,
+}: LogoCardProps) {
   const { data: session } = useSession()
   const isOwner = session?.user?.id === logo.userId
 
@@ -50,23 +60,24 @@ export default function LogoCard({ logo, showDelete = false }: LogoCardProps) {
     }
   }
 
-  const getImageUrl = () => {
-    if (logo.imageUrl.startsWith('http')) {
-      return logo.imageUrl;
+  const formatFileSize = (bytes?: number) => {
+    if (!bytes) return 'Unknown'
+    const units = ['B', 'KB', 'MB', 'GB']
+    let size = bytes
+    let unitIndex = 0
+    while (size >= 1024 && unitIndex < units.length - 1) {
+      size /= 1024
+      unitIndex++
     }
-    // Ensure the URL starts with a forward slash
-    const normalizedPath = logo.imageUrl.startsWith('/') ? logo.imageUrl : `/${logo.imageUrl}`;
-    // Use the base URL from environment or default to empty string (relative path)
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || '';
-    return `${baseUrl}${normalizedPath}`;
+    return `${size.toFixed(1)} ${units[unitIndex]}`
   }
 
   return (
     <div 
       data-testid="logo-card"
-      className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden"
+      className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden transition-transform hover:scale-[1.02]"
     >
-      <div className="relative" data-testid="logo-card">
+      <div className="relative">
         {/* Vote count overlay */}
         <div 
           data-testid="vote-count"
@@ -77,8 +88,10 @@ export default function LogoCard({ logo, showDelete = false }: LogoCardProps) {
           </span>
         </div>
         <LogoImage
-          src={getImageUrl()}
+          src={logo.thumbnailUrl}
           alt={`Logo: ${logo.title} - ${logo.description}`}
+          responsiveUrls={logo.responsiveUrls}
+          className="w-full aspect-square"
           data-testid="logo-image"
         />
       </div>
@@ -96,6 +109,28 @@ export default function LogoCard({ logo, showDelete = false }: LogoCardProps) {
         >
           {logo.description}
         </p>
+
+        {showStats && (
+          <div className="mb-4 text-sm">
+            <div className="grid grid-cols-2 gap-2 text-gray-600 dark:text-gray-400">
+              <div>
+                <span className="font-medium">Original:</span>{' '}
+                {formatFileSize(logo.fileSize)}
+              </div>
+              <div>
+                <span className="font-medium">Optimized:</span>{' '}
+                {formatFileSize(logo.optimizedSize)}
+              </div>
+              {logo.compressionRatio && (
+                <div className="col-span-2">
+                  <span className="font-medium">Compression:</span>{' '}
+                  {logo.compressionRatio}% saved
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         <div className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-300">
           <span 
             data-testid="upload-date"
@@ -104,6 +139,7 @@ export default function LogoCard({ logo, showDelete = false }: LogoCardProps) {
             {getUploadedDate()}
           </span>
         </div>
+
         <div className="flex justify-between items-center mt-4">
           <Link
             href={`/logos/${logo._id}`}

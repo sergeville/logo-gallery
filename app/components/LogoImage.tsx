@@ -2,60 +2,84 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
+import { useTheme } from 'next-themes';
 
 interface LogoImageProps {
-  src?: string;
-  alt?: string;
-  width?: number;
-  height?: number;
+  src: string;
+  alt: string;
   className?: string;
   priority?: boolean;
-  onError?: () => void;
+  quality?: number;
+  responsiveUrls?: Record<string, string>;
+  width?: number;
+  height?: number;
 }
 
 export default function LogoImage({
-  src = '',
-  alt = 'Logo',
-  width = 300,
-  height = 300,
+  src,
+  alt,
   className = '',
   priority = false,
-  onError
+  quality = 75,
+  responsiveUrls,
+  width,
+  height,
 }: LogoImageProps) {
   const [error, setError] = useState(false);
+  const { theme } = useTheme();
 
+  // Error fallback
   if (error) {
     return (
       <div 
-        data-testid="logo-image-error"
-        className={`flex items-center justify-center bg-gray-100 dark:bg-gray-700 min-h-[200px] ${className}`}
+        className={`flex items-center justify-center ${
+          theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'
+        } ${className}`}
+        style={{ aspectRatio: width && height ? width / height : '1' }}
       >
         <span className="text-gray-400">Image not available</span>
       </div>
     );
   }
 
-  const imageUrl = src && (src.startsWith('http') || src.startsWith('/')) ? src : `/${src}`;
+  // Normalize image URL
+  const imageUrl = src.startsWith('http') || src.startsWith('/') ? src : `/${src}`;
 
-  const handleError = () => {
-    setError(true);
-    onError?.();
+  // Generate srcSet if responsive URLs are available
+  const generateSrcSet = () => {
+    if (!responsiveUrls) return undefined;
+
+    const breakpoints = {
+      sm: 640,
+      md: 768,
+      lg: 1024,
+      xl: 1280,
+      '2xl': 1536,
+    };
+
+    return Object.entries(responsiveUrls)
+      .map(([size, url]) => `${url} ${breakpoints[size as keyof typeof breakpoints]}w`)
+      .join(', ');
   };
 
   return (
-    <div 
-      data-testid="logo-image"
-      className={`relative w-full aspect-square ${className}`}
-    >
+    <div className={`relative ${className}`} style={{ aspectRatio: width && height ? width / height : '1' }}>
       <Image
         src={imageUrl}
         alt={alt}
-        width={width}
-        height={height}
+        fill
         className="object-contain"
-        priority={priority ? "true" : undefined}
-        onError={handleError}
-        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+        onError={() => setError(true)}
+        sizes={
+          responsiveUrls
+            ? "(max-width: 640px) 100vw, (max-width: 768px) 80vw, (max-width: 1024px) 50vw, 33vw"
+            : undefined
+        }
+        srcSet={generateSrcSet()}
+        priority={priority}
+        quality={quality}
+        loading={priority ? 'eager' : 'lazy'}
+        {...(width && height ? { width, height } : {})}
       />
     </div>
   );

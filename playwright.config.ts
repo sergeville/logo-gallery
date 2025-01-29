@@ -30,6 +30,14 @@ export default defineConfig({
         viewport: { width: 1280, height: 720 },
       },
     },
+    {
+      name: 'visual',
+      testMatch: /.*\.visual\.ts/,
+      use: {
+        ...devices['Desktop Chrome'],
+        viewport: { width: 1280, height: 720 },
+      },
+    },
   ],
   webServer: {
     command: 'npm run dev',
@@ -46,4 +54,34 @@ export default defineConfig({
   typescript: {
     config: path.join(__dirname, 'tsconfig.e2e.json'),
   },
+})
+
+if (process.env.PERCY_TOKEN) {
+  export default defineConfig({
+    testDir: './e2e',
+    fullyParallel: true,
+    forbidOnly: !!process.env.CI,
+    retries: process.env.CI ? 2 : 1,
+    workers: process.env.CI ? 1 : undefined,
+    reporter: [['html', { open: 'never' }]],
+    use: {
+      baseURL: process.env.NEXT_PUBLIC_API_URL || LOCALHOST_URL,
+      trace: 'on-first-retry',
+      screenshot: 'only-on-failure',
+      video: 'retain-on-failure',
+      actionTimeout: 15000,
+      navigationTimeout: 15000,
+    },
+    projects: [
+      {
+        name: 'percy',
+        testMatch: /.*\.visual\.ts/,
+        use: {
+          ...devices['Desktop Chrome'],
+          viewport: null,
+        },
+      },
+    ],
+    webServer: {
+      command: 'npm run dev',
 }) 

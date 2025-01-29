@@ -2,12 +2,19 @@
 
 import React from 'react';
 import { Search, User } from 'lucide-react';
-import Image from 'next/image';
+import LogoImage from '@/app/components/LogoImage';
 
 interface Logo {
-  id: number;
+  id: string;
   name: string;
-  url: string;
+  title: string;
+  description: string;
+  imageUrl: string;
+  thumbnailUrl: string;
+  responsiveUrls?: Record<string, string>;
+  fileSize?: number;
+  optimizedSize?: number;
+  compressionRatio?: string;
 }
 
 /**
@@ -23,17 +30,34 @@ interface Logo {
  * - Logo cards with image display and error handling
  * - Action buttons for details
  */
-const LogoGallery = () => {
+export default function LogoGallery() {
   // Sample logo data
   const logos: Logo[] = [
-    { id: 1, name: 'Logo 1', url: '/placeholder/200/200' },
-    { id: 2, name: 'Logo 2', url: '/placeholder/200/200' },
-    { id: 3, name: 'Logo 3', url: '/placeholder/200/200' }
+    { 
+      id: '1',
+      name: 'Logo 1',
+      title: 'Logo 1',
+      description: 'Sample logo description',
+      imageUrl: '/placeholder/200/200',
+      thumbnailUrl: '/placeholder/200/200',
+    },
+    { 
+      id: '2',
+      name: 'Logo 2',
+      title: 'Logo 2',
+      description: 'Sample logo description',
+      imageUrl: '/placeholder/200/200',
+      thumbnailUrl: '/placeholder/200/200',
+    },
+    { 
+      id: '3',
+      name: 'Logo 3',
+      title: 'Logo 3',
+      description: 'Sample logo description',
+      imageUrl: '/placeholder/200/200',
+      thumbnailUrl: '/placeholder/200/200',
+    }
   ];
-
-  const handleImageError = (event: React.SyntheticEvent<HTMLImageElement>) => {
-    event.currentTarget.src = 'https://placehold.co/400x380/666666/FFFFFF?text=Image+Not+Found';
-  };
 
   return (
     <div className="min-h-screen bg-[#F2F2F7] dark:bg-black" data-testid="logo-gallery">
@@ -75,21 +99,38 @@ const LogoGallery = () => {
                 className="bg-white dark:bg-[#1C1C1E] rounded-xl shadow-sm hover:shadow-md transition-shadow p-4"
                 data-testid="logo-card"
               >
-                {/* Logo image container with error handling */}
-                <div className="relative h-[320px] mb-4 bg-gray-100 dark:bg-gray-700 rounded-lg" data-testid="logo-image-container">
-                  <Image
-                    src={logo.url}
-                    alt={logo.name}
-                    fill
-                    className="object-contain p-4"
-                    onError={handleImageError}
+                {/* Logo image container with optimization info */}
+                <div className="relative" data-testid="logo-image-container">
+                  <LogoImage
+                    src={logo.thumbnailUrl}
+                    alt={logo.title}
+                    responsiveUrls={logo.responsiveUrls}
+                    className="w-full aspect-square"
                     data-testid="logo-image"
                   />
+                  
+                  {logo.compressionRatio && (
+                    <div className="absolute top-2 right-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded-full">
+                      {logo.compressionRatio}% optimized
+                    </div>
+                  )}
                 </div>
                 
                 {/* Logo information section */}
-                <div className="flex items-center justify-between" data-testid="logo-info">
-                  <h3 className="text-lg font-medium dark:text-white">{logo.name}</h3>
+                <div className="mt-4" data-testid="logo-info">
+                  <h3 className="text-lg font-medium dark:text-white">{logo.title}</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                    {logo.description}
+                  </p>
+                  
+                  {/* File size information */}
+                  {logo.fileSize && logo.optimizedSize && (
+                    <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                      <span>Original: {formatFileSize(logo.fileSize)}</span>
+                      <span className="mx-2">•</span>
+                      <span>Optimized: {formatFileSize(logo.optimizedSize)}</span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Action buttons */}
@@ -108,6 +149,16 @@ const LogoGallery = () => {
       </main>
     </div>
   );
-};
+}
 
-export default LogoGallery;
+// Helper function to format file sizes
+function formatFileSize(bytes: number): string {
+  const units = ['B', 'KB', 'MB', 'GB'];
+  let size = bytes;
+  let unitIndex = 0;
+  while (size >= 1024 && unitIndex < units.length - 1) {
+    size /= 1024;
+    unitIndex++;
+  }
+  return `${size.toFixed(1)} ${units[unitIndex]}`;
+}

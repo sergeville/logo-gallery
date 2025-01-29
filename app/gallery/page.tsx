@@ -9,14 +9,17 @@ import { Search, Filter, SortAsc, SortDesc } from 'lucide-react';
 
 interface Logo {
   _id: string;
-  name: string;
-  imageUrl: string;
+  title: string;
   description: string;
+  imageUrl: string;
+  thumbnailUrl: string;
+  responsiveUrls?: Record<string, string>;
+  fileSize?: number;
+  optimizedSize?: number;
+  compressionRatio?: string;
   userId: string;
-  tags: string[];
-  uploadedAt?: string;
   createdAt: string;
-  ownerName: string;
+  tags?: string[];
 }
 
 export default function GalleryPage() {
@@ -24,11 +27,11 @@ export default function GalleryPage() {
   const { data: session, status } = useSession();
   const [logos, setLogos] = useState<Logo[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState<'date'>('date');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
-  const [selectedTag, setSelectedTag] = useState<string>('');
+  const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [tags, setTags] = useState<string[]>([]);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
@@ -173,7 +176,8 @@ export default function GalleryPage() {
                 onChange={(e) => setSortBy(e.target.value as 'date')}
                 className="rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white py-2 pl-3 pr-10"
               >
-                <option key="date" value="date">Date</option>
+                <option value="date">Date</option>
+                <option value="optimization">Optimization</option>
               </select>
               <button
                 type="button"
@@ -190,9 +194,9 @@ export default function GalleryPage() {
             <div className="flex gap-2 flex-wrap">
               <button
                 key="all"
-                onClick={() => setSelectedTag('')}
+                onClick={() => setSelectedTag(null)}
                 className={`px-3 py-1 rounded-full text-sm ${
-                  selectedTag === ''
+                  selectedTag === null
                     ? 'bg-primary-blue text-white'
                     : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
                 }`}
@@ -217,7 +221,7 @@ export default function GalleryPage() {
         </div>
 
         {error && (
-          <div className="text-red-500 text-center mb-4">
+          <div className="bg-red-50 dark:bg-red-900 text-red-700 dark:text-red-200 p-4 rounded-md mb-8">
             {error}
           </div>
         )}
@@ -230,19 +234,13 @@ export default function GalleryPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {logos.map((logo, index) => (
               <div
-                key={`${logo._id}-${index}`}
+                key={logo._id}
                 ref={index === logos.length - 1 ? lastLogoElementRef : undefined}
               >
                 <LogoCard
-                  logo={{
-                    _id: logo._id,
-                    title: logo.name,
-                    description: logo.description,
-                    imageUrl: logo.imageUrl,
-                    userId: logo.userId,
-                    createdAt: logo.uploadedAt || logo.createdAt
-                  }}
-                  showDelete={false}
+                  logo={logo}
+                  showStats={true}
+                  isOwner={session?.user?.id === logo.userId}
                 />
               </div>
             ))}
@@ -250,8 +248,8 @@ export default function GalleryPage() {
         )}
 
         {loading && (
-          <div className="flex justify-center items-center h-20 mt-4">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-blue"></div>
+          <div className="flex justify-center items-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 dark:border-white"></div>
           </div>
         )}
       </main>

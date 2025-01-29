@@ -12,13 +12,20 @@ export interface ILogo extends Document {
   description: string;
   imageUrl: string;
   thumbnailUrl: string;
+  originalUrl: string;
+  responsiveUrls: Map<string, string>;
   userId: string;
   ownerName?: string;
   dimensions?: {
     width: number;
     height: number;
   };
+  optimizedDimensions?: {
+    width: number;
+    height: number;
+  };
   fileSize: number;
+  optimizedSize: number;
   fileType: string;
   createdAt: Date;
   updatedAt: Date;
@@ -29,6 +36,7 @@ export interface ILogo extends Document {
   totalVotes: number;
   isOwnedBy(userId: string): boolean;
   updateTitle(newTitle: string): Promise<void>;
+  compressionRatio: string;
 }
 
 // Define static methods interface
@@ -52,96 +60,93 @@ const voteSchema = new mongoose.Schema({
 const logoSchema = new mongoose.Schema({
   title: {
     type: String,
-    required: [true, 'Please provide a title for your logo'],
-    maxlength: [60, 'Title cannot be more than 60 characters'],
-    minlength: [3, 'Title must be at least 3 characters'],
-    trim: true
+    required: [true, 'Title is required'],
+    minlength: [3, 'Title must be at least 3 characters long'],
+    maxlength: [60, 'Title cannot be more than 60 characters long'],
+    trim: true,
   },
   description: {
     type: String,
-    required: [true, 'Please provide a description for your logo'],
-    maxlength: [200, 'Description cannot be more than 200 characters'],
-    minlength: [10, 'Description must be at least 10 characters'],
-    trim: true
+    required: [true, 'Description is required'],
+    minlength: [10, 'Description must be at least 10 characters long'],
+    maxlength: [200, 'Description cannot be more than 200 characters long'],
+    trim: true,
   },
   imageUrl: {
     type: String,
-    required: [true, 'Please provide an image URL for your logo'],
-    validate: {
-      validator: function(v: string) {
-        return /^\/uploads\/.*\.(png|jpg|jpeg|gif|webp|svg)$/i.test(v) || v.startsWith('http');
-      },
-      message: 'Image URL must be a valid path to an image file'
-    }
+    required: [true, 'Image URL is required'],
   },
   thumbnailUrl: {
     type: String,
-    required: [true, 'Please provide a thumbnail URL for your logo'],
-    validate: {
-      validator: function(v: string) {
-        return /^\/uploads\/.*\.(png|jpg|jpeg|gif|webp|svg)$/i.test(v) || v.startsWith('http');
-      },
-      message: 'Thumbnail URL must be a valid path to an image file'
-    }
+    required: [true, 'Thumbnail URL is required'],
+  },
+  originalUrl: {
+    type: String,
+    required: [true, 'Original image URL is required'],
+  },
+  responsiveUrls: {
+    type: Map,
+    of: String,
+    default: new Map(),
   },
   userId: {
-    type: String,
-    required: [true, 'Please provide a user ID'],
-    index: true
+    type: mongoose.Schema.Types.ObjectId,
+    required: [true, 'User ID is required'],
+    ref: 'User',
   },
   ownerName: {
     type: String,
-    required: [true, 'Please provide the owner name'],
-    trim: true
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now,
-    immutable: true
-  },
-  updatedAt: {
-    type: Date,
-    default: Date.now
-  },
-  category: {
-    type: String,
-    default: 'uncategorized'
-  },
-  tags: [{
-    type: String,
-    trim: true
-  }],
-  dimensions: {
-    width: Number,
-    height: Number
+    required: [true, 'Owner name is required'],
   },
   fileSize: {
     type: Number,
-    required: [true, 'Please provide the file size']
+    required: [true, 'File size is required'],
+  },
+  optimizedSize: {
+    type: Number,
+    required: [true, 'Optimized size is required'],
   },
   fileType: {
     type: String,
-    required: [true, 'Please provide the file type']
+    required: [true, 'File type is required'],
+    enum: ['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml'],
+  },
+  dimensions: {
+    width: { type: Number, default: 0 },
+    height: { type: Number, default: 0 },
+  },
+  optimizedDimensions: {
+    width: { type: Number, default: 0 },
+    height: { type: Number, default: 0 },
+  },
+  uploadedAt: {
+    type: Date,
+    default: Date.now,
+  },
+  votes: [{
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: true,
+      ref: 'User',
+    },
+    votedAt: {
+      type: Date,
+      default: Date.now,
+    },
+  }],
+  totalVotes: {
+    type: Number,
+    default: 0,
   },
   votingDeadline: {
     type: Date,
     required: [true, 'Please provide a voting deadline'],
     default: () => new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // Default 30 days from creation
   },
-  votes: [voteSchema],
-  totalVotes: {
-    type: Number,
-    default: 0,
-    min: 0
-  },
-  uploadedAt: {
-    type: Date,
-    default: Date.now
-  }
 }, {
   timestamps: true,
   toJSON: { virtuals: true },
-  toObject: { virtuals: true }
+  toObject: { virtuals: true },
 });
 
 // Add a pre-save middleware to update totalVotes
@@ -173,6 +178,12 @@ logoSchema.virtual('fullImageUrl').get(function(this: ILogo) {
     return this.imageUrl;
   }
   return `${process.env.NEXT_PUBLIC_BASE_URL || ''}${this.imageUrl}`;
+});
+
+// Virtual for compression ratio
+logoSchema.virtual('compressionRatio').get(function() {
+  if (!this.fileSize || !this.optimizedSize) return 0;
+  return ((this.fileSize - this.optimizedSize) / this.fileSize * 100).toFixed(2);
 });
 
 // Instance methods
@@ -226,6 +237,7 @@ logoSchema.index({ title: 'text', description: 'text' });
 logoSchema.index({ userId: 1, title: 1 });
 logoSchema.index({ createdAt: -1 });
 logoSchema.index({ 'votes.userId': 1 });
+logoSchema.index({ totalVotes: -1 });
 
 // Pre-save middleware
 logoSchema.pre('save', function(next) {

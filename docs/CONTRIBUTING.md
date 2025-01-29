@@ -159,9 +159,39 @@ Example decision matrix:
    - [ ] Efficient database queries
    - [ ] Proper image optimization
 
+## Security Guidelines
+
+### Role-Based Access Control
+
+When contributing code that involves user actions or sensitive operations:
+
+1. **API Routes**
+   - Always protect routes with appropriate permissions
+   - Use the `createPermissionMiddleware` helper
+   - Example:
+     ```typescript
+     export const POST = createPermissionMiddleware('create:logo')(async (req) => {
+       // Handle request
+     });
+     ```
+
+2. **UI Components**
+   - Use `PermissionGate` for protected content
+   - Use `useRBAC` hook for conditional rendering
+   - Example:
+     ```typescript
+     <PermissionGate permission="edit:logo">
+       <EditButton />
+     </PermissionGate>
+     ```
+
+3. **New Features**
+   - Define required permissions in `roles.config.ts`
+   - Document permission requirements
+   - Add appropriate test coverage
+
+See [RBAC Guide](./guides/RBAC.md) for detailed implementation guidelines.
+
 ## Getting Help
 
 - Check existing documentation in `/docs`
-- Review test cases for examples
-- Ask questions in pull request comments
-- Join our Discord community 

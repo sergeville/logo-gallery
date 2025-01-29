@@ -9,7 +9,7 @@ if (!MONGODB_URI) {
 
 let cachedClient: MongoClient | null = null;
 
-async function connectDB() {
+export async function connectToDatabase() {
   try {
     if (cachedClient) {
       console.log('Using existing database connection');
@@ -34,4 +34,5 @@ export async function disconnectFromDatabase() {
   }
 }
 
-export default connectDB;
+// For backward compatibility
+export default connectToDatabase;

@@ -38,17 +38,17 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
+      <body className={`${inter.className} min-h-screen bg-white text-gray-900 dark:bg-[#0f1524] dark:text-gray-100 transition-colors duration-300`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
+          enableSystem={true}
+          disableTransitionOnChange={false}
         >
           <SessionProvider>
             <div className="min-h-screen flex flex-col">
               <Navbar />
-              <main className="flex-grow">
+              <main className="flex-grow" data-testid="main-content">
                 {children}
               </main>
               <Footer />

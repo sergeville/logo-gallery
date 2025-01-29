@@ -1,6 +1,7 @@
 import { TextEncoder, TextDecoder } from 'util';
 import 'whatwg-fetch';
 import '@testing-library/jest-dom';
+import React from 'react';
 
 // Polyfill TextEncoder/TextDecoder
 (global as any).TextEncoder = TextEncoder;
@@ -120,4 +121,48 @@ Object.defineProperty(window, 'matchMedia', {
     removeEventListener: jest.fn(),
     dispatchEvent: jest.fn(),
   })),
-}); 
+});
+
+// Mock next/image
+jest.mock('next/image', () => ({
+  __esModule: true,
+  default: function MockImage({ src, alt, width, height, ...props }: any) {
+    return React.createElement('img', {
+      src,
+      alt,
+      width,
+      height,
+      ...props
+    });
+  }
+}));
+
+// Mock next/navigation
+jest.mock('next/navigation', () => ({
+  useRouter: () => ({
+    push: jest.fn(),
+    refresh: jest.fn()
+  }),
+  usePathname: () => '/'
+}));
+
+// Mock environment variables
+process.env.NEXT_PUBLIC_BASE_URL = 'http://localhost:3000'
+
+// Suppress console errors during tests
+const originalError = console.error
+beforeAll(() => {
+  console.error = (...args: any[]) => {
+    if (
+      typeof args[0] === 'string' &&
+      args[0].includes('Warning: ReactDOM.render is no longer supported')
+    ) {
+      return
+    }
+    originalError.call(console, ...args)
+  }
+})
+
+afterAll(() => {
+  console.error = originalError
+}) 

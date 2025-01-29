@@ -5,12 +5,28 @@ import dbConnect from '@/app/lib/db-config'
 import { Logo } from '@/app/lib/models/logo'
 import { Types } from 'mongoose'
 
+/**
+ * Vote API Endpoint
+ * 
+ * Handles voting for logos with the following rules:
+ * 1. Users can only have one active vote at a time
+ * 2. Users cannot vote for their own logos
+ * 3. Users can change their vote to a different logo
+ * 
+ * The voting process:
+ * 1. Validates user authentication
+ * 2. Checks if the logo exists
+ * 3. Prevents voting for own logos
+ * 4. Checks for existing vote on this logo
+ * 5. Removes any previous vote on other logos
+ * 6. Records the new vote
+ */
 export async function POST(
   request: Request,
   { params }: { params: { id: string } }
 ) {
   try {
-    // 1. Get and validate session
+    // 1. Get and validate session - Users must be logged in to vote
     const session = await getServerSession(authOptions)
     if (!session?.user?.id) {
       return NextResponse.json(
@@ -23,7 +39,7 @@ export async function POST(
     await dbConnect()
 
     // 3. Get and validate the logo ID
-    const logoId = await Promise.resolve(params.id)
+    const logoId = params.id
     if (!logoId || !Types.ObjectId.isValid(logoId)) {
       return NextResponse.json(
         { error: 'Invalid logo ID' },
@@ -31,7 +47,7 @@ export async function POST(
       )
     }
 
-    // 4. Find the logo first to check conditions
+    // 4. Find the logo and validate its existence
     const existingLogo = await Logo.findById(logoId)
     if (!existingLogo) {
       return NextResponse.json(
@@ -40,7 +56,15 @@ export async function POST(
       )
     }
 
-    // 5. Check if user is trying to vote for their own logo
+    // 5. Check if voting deadline has passed
+    if (new Date() > new Date(existingLogo.votingDeadline)) {
+      return NextResponse.json(
+        { error: 'Voting period has ended for this logo' },
+        { status: 400 }
+      )
+    }
+
+    // 6. Prevent users from voting for their own logos
     if (existingLogo.userId === session.user.id.toString()) {
       return NextResponse.json(
         { error: 'Cannot vote for your own logo' },
@@ -48,18 +72,33 @@ export async function POST(
       )
     }
 
-    // 6. Check if user has already voted
-    const hasVoted = existingLogo.votes?.some(vote => 
-      vote.userId === session.user.id.toString()
-    )
-    if (hasVoted) {
+    // 7. Prevent duplicate votes on the same logo
+    const hasVotedThis = await Logo.findOne({
+      _id: new Types.ObjectId(logoId),
+      'votes.userId': session.user.id.toString()
+    })
+    
+    if (hasVotedThis) {
       return NextResponse.json(
         { error: 'You have already voted for this logo' },
         { status: 400 }
       )
     }
 
-    // 7. Add the vote using findOneAndUpdate to ensure atomicity
+    // 8. Find and remove any previous vote on other logos
+    const previousVote = await Logo.findOne({
+      'votes.userId': session.user.id.toString()
+    })
+
+    if (previousVote) {
+      // Remove the previous vote and decrement the vote count
+      await Logo.findByIdAndUpdate(previousVote._id, {
+        $pull: { votes: { userId: session.user.id.toString() } },
+        $inc: { totalVotes: -1 }
+      })
+    }
+
+    // 9. Add the new vote and increment the vote count
     const updatedLogo = await Logo.findOneAndUpdate(
       { _id: new Types.ObjectId(logoId) },
       {
@@ -74,7 +113,7 @@ export async function POST(
       {
         new: true, // Return the updated document
         runValidators: true,
-        select: '_id title description imageUrl totalVotes'
+        select: '_id title description imageUrl totalVotes votes'
       }
     ).lean()
 
@@ -85,6 +124,7 @@ export async function POST(
       )
     }
 
+    // Return the updated logo information
     return NextResponse.json(
       { 
         message: 'Vote submitted successfully',
@@ -93,7 +133,7 @@ export async function POST(
           title: updatedLogo.title,
           description: updatedLogo.description,
           imageUrl: updatedLogo.imageUrl,
-          totalVotes: updatedLogo.totalVotes
+          totalVotes: updatedLogo.votes.length
         }
       },
       { status: 200 }

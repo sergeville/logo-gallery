@@ -1,12 +1,12 @@
 import React, { ReactElement } from 'react';
 import { render, RenderOptions } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { ThemeProvider } from '@/app/contexts/ThemeContext';
+import { ThemeProvider } from 'next-themes';
 import { AuthProvider } from '@/app/contexts/AuthContext';
 
 const AllTheProviders = ({ children }: { children: React.ReactNode }) => {
   return (
-    <ThemeProvider>
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
       <AuthProvider>
         {children}
       </AuthProvider>

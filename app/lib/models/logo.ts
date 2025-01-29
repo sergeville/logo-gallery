@@ -23,6 +23,7 @@ export interface ILogo extends Document {
   createdAt: Date;
   updatedAt: Date;
   uploadedAt?: Date;
+  votingDeadline: Date; // New field for voting deadline
   fullImageUrl: string; // Virtual property
   votes: Vote[];
   totalVotes: number;
@@ -121,6 +122,11 @@ const logoSchema = new mongoose.Schema({
   fileType: {
     type: String,
     required: [true, 'Please provide the file type']
+  },
+  votingDeadline: {
+    type: Date,
+    required: [true, 'Please provide a voting deadline'],
+    default: () => new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // Default 30 days from creation
   },
   votes: [voteSchema],
   totalVotes: {

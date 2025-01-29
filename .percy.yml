@@ -1,0 +1,14 @@
+version: 2
+snapshot:
+  widths: [375, 768, 1280]  # Mobile, Tablet, Desktop
+  min-height: 1024
+  percy-css: |
+    /* Hide dynamic content that might cause false positives */
+    [data-testid="timestamp"],
+    [data-testid="dynamic-content"] {
+      visibility: hidden;
+    }
+discovery:
+  allowed-hostnames: []  # Add any external domains your app loads resources from
+  network-idle-timeout: 100  # Wait 100ms after network idle before taking snapshot
+  disable-cache: true  # Disable browser cache for consistent snapshots 

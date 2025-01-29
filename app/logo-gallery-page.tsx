@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
-import { Search, Sun, Moon, User } from 'lucide-react';
+'use client';
+
+import React from 'react';
+import { Search, User } from 'lucide-react';
 import Image from 'next/image';
 
 interface Logo {
@@ -22,8 +24,6 @@ interface Logo {
  * - Action buttons for details
  */
 const LogoGallery = () => {
-  const [darkMode, setDarkMode] = useState(false);
-  
   // Sample logo data
   const logos: Logo[] = [
     { id: 1, name: 'Logo 1', url: '/placeholder/200/200' },
@@ -36,7 +36,7 @@ const LogoGallery = () => {
   };
 
   return (
-    <div className={`min-h-screen ${darkMode ? 'dark bg-black' : 'bg-[#F2F2F7]'}`} data-testid="logo-gallery">
+    <div className="min-h-screen bg-[#F2F2F7] dark:bg-black" data-testid="logo-gallery">
       {/* Header */}
       <header className="fixed w-full backdrop-blur-lg bg-white/70 dark:bg-black/70 h-16 flex items-center px-4 border-b border-gray-200 dark:border-gray-800">
         <div className="flex items-center justify-between w-full max-w-7xl mx-auto">
@@ -53,18 +53,9 @@ const LogoGallery = () => {
               <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
             </div>
             
-            <button
-              onClick={() => setDarkMode(!darkMode)}
-              className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
-              data-testid="theme-toggle"
-              aria-label="Toggle dark mode"
-            >
-              {darkMode ? <Sun className="text-white" /> : <Moon />}
-            </button>
-            
             <button 
               className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
-              data-testid="user-button"
+              data-testid="user-menu-button"
               aria-label="User menu"
             >
               <User className="dark:text-white" />
@@ -76,8 +67,8 @@ const LogoGallery = () => {
       {/* Main Content */}
       <main className="pt-24 px-4 pb-8" data-testid="main-content">
         <div className="max-w-7xl mx-auto">
-          {/* Responsive grid layout */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* Gallery container */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" data-testid="gallery-container">
             {logos.map((logo) => (
               <div
                 key={logo.id}
@@ -97,7 +88,7 @@ const LogoGallery = () => {
                 </div>
                 
                 {/* Logo information section */}
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between" data-testid="logo-info">
                   <h3 className="text-lg font-medium dark:text-white">{logo.name}</h3>
                 </div>
 

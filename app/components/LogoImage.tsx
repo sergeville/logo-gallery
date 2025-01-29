@@ -4,12 +4,24 @@ import { useState } from 'react';
 import Image from 'next/image';
 
 interface LogoImageProps {
-  src: string;
-  alt: string;
+  src?: string;
+  alt?: string;
+  width?: number;
+  height?: number;
   className?: string;
+  priority?: boolean;
+  onError?: () => void;
 }
 
-export default function LogoImage({ src, alt, className = '' }: LogoImageProps) {
+export default function LogoImage({
+  src = '',
+  alt = 'Logo',
+  width = 300,
+  height = 300,
+  className = '',
+  priority = false,
+  onError
+}: LogoImageProps) {
   const [error, setError] = useState(false);
 
   if (error) {
@@ -23,21 +35,27 @@ export default function LogoImage({ src, alt, className = '' }: LogoImageProps) 
     );
   }
 
-  const imageUrl = src.startsWith('http') || src.startsWith('/') ? src : `/${src}`;
+  const imageUrl = src && (src.startsWith('http') || src.startsWith('/')) ? src : `/${src}`;
+
+  const handleError = () => {
+    setError(true);
+    onError?.();
+  };
 
   return (
     <div 
       data-testid="logo-image"
-      className="relative w-full aspect-square"
+      className={`relative w-full aspect-square ${className}`}
     >
       <Image
         src={imageUrl}
         alt={alt}
-        fill
-        className={`object-contain ${className}`}
-        onError={() => setError(true)}
+        width={width}
+        height={height}
+        className="object-contain"
+        priority={priority ? "true" : undefined}
+        onError={handleError}
         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-        priority={true}
       />
     </div>
   );

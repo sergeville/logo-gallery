@@ -152,12 +152,12 @@
                     {
                       "workerIndex": 0,
                       "status": "passed",
-                      "duration": 8260,
+                      "duration": 5463,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-01-28T23:10:43.056Z",
+                      "startTime": "2025-01-29T01:04:40.205Z",
                       "attachments": []
                     }
                   ],
@@ -184,12 +184,12 @@
                     {
                       "workerIndex": 0,
                       "status": "passed",
-                      "duration": 4633,
+                      "duration": 4603,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-01-28T23:10:51.551Z",
+                      "startTime": "2025-01-29T01:04:46.008Z",
                       "attachments": []
                     }
                   ],
@@ -216,7 +216,7 @@
                     {
                       "workerIndex": 0,
                       "status": "passed",
-                      "duration": 5857,
+                      "duration": 7829,
                       "errors": [],
                       "stdout": [
                         {
@@ -225,7 +225,7 @@
                       ],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-01-28T23:10:56.191Z",
+                      "startTime": "2025-01-29T01:04:50.619Z",
                       "attachments": []
                     }
                   ],
@@ -252,7 +252,7 @@
                     {
                       "workerIndex": 0,
                       "status": "passed",
-                      "duration": 5888,
+                      "duration": 6964,
                       "errors": [],
                       "stdout": [
                         {
@@ -264,7 +264,7 @@
                       ],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-01-28T23:11:02.055Z",
+                      "startTime": "2025-01-29T01:04:58.453Z",
                       "attachments": []
                     }
                   ],
@@ -291,12 +291,16 @@
                     {
                       "workerIndex": 0,
                       "status": "passed",
-                      "duration": 3619,
+                      "duration": 3891,
                       "errors": [],
-                      "stdout": [],
+                      "stdout": [
+                        {
+                          "text": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Desktop-Chrome/loading-spinner.png is re-generated, writing actual.\n"
+                        }
+                      ],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-01-28T23:11:07.949Z",
+                      "startTime": "2025-01-29T01:05:05.424Z",
                       "attachments": []
                     }
                   ],
@@ -319,8 +323,20 @@
                   "expectedStatus": "passed",
                   "projectId": "Desktop Chrome Dark",
                   "projectName": "Desktop Chrome Dark",
-                  "results": [],
-                  "status": "skipped"
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "status": "passed",
+                      "duration": 4710,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-01-29T01:08:47.875Z",
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
                 }
               ],
               "id": "99b47709ad32662f2642-8cd9806d8ee912af5967",
@@ -339,8 +355,20 @@
                   "expectedStatus": "passed",
                   "projectId": "Desktop Chrome Dark",
                   "projectName": "Desktop Chrome Dark",
-                  "results": [],
-                  "status": "skipped"
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "status": "passed",
+                      "duration": 4658,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-01-29T01:08:52.691Z",
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
                 }
               ],
               "id": "99b47709ad32662f2642-751137e3680b1181a550",
@@ -359,8 +387,24 @@
                   "expectedStatus": "passed",
                   "projectId": "Desktop Chrome Dark",
                   "projectName": "Desktop Chrome Dark",
-                  "results": [],
-                  "status": "skipped"
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "status": "passed",
+                      "duration": 7982,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Desktop-Chrome-Dark/gallery-responsive.png is re-generated, writing actual.\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-01-29T01:08:57.357Z",
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
                 }
               ],
               "id": "99b47709ad32662f2642-a1470459c502a6700b95",
@@ -379,8 +423,27 @@
                   "expectedStatus": "passed",
                   "projectId": "Desktop Chrome Dark",
                   "projectName": "Desktop Chrome Dark",
-                  "results": [],
-                  "status": "skipped"
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "status": "passed",
+                      "duration": 7291,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Desktop-Chrome-Dark/gallery-light.png is re-generated, writing actual.\n"
+                        },
+                        {
+                          "text": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Desktop-Chrome-Dark/gallery-dark.png is re-generated, writing actual.\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-01-29T01:09:05.347Z",
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
                 }
               ],
               "id": "99b47709ad32662f2642-774f00da1b518139113b",
@@ -399,8 +462,20 @@
                   "expectedStatus": "passed",
                   "projectId": "Desktop Chrome Dark",
                   "projectName": "Desktop Chrome Dark",
-                  "results": [],
-                  "status": "skipped"
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "status": "passed",
+                      "duration": 3619,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-01-29T01:09:12.644Z",
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
                 }
               ],
               "id": "99b47709ad32662f2642-33b1cdfec232685e5de1",
@@ -419,8 +494,20 @@
                   "expectedStatus": "passed",
                   "projectId": "Mobile Chrome",
                   "projectName": "Mobile Chrome",
-                  "results": [],
-                  "status": "skipped"
+                  "results": [
+                    {
+                      "workerIndex": 6,
+                      "status": "passed",
+                      "duration": 5409,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-01-29T01:13:03.973Z",
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
                 }
               ],
               "id": "99b47709ad32662f2642-472f9f88d65ce7f78b3e",
@@ -439,8 +526,20 @@
                   "expectedStatus": "passed",
                   "projectId": "Mobile Chrome",
                   "projectName": "Mobile Chrome",
-                  "results": [],
-                  "status": "skipped"
+                  "results": [
+                    {
+                      "workerIndex": 6,
+                      "status": "passed",
+                      "duration": 4711,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-01-29T01:13:09.506Z",
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
                 }
               ],
               "id": "99b47709ad32662f2642-5a15e7e162edf3acf2e6",
@@ -459,8 +558,24 @@
                   "expectedStatus": "passed",
                   "projectId": "Mobile Chrome",
                   "projectName": "Mobile Chrome",
-                  "results": [],
-                  "status": "skipped"
+                  "results": [
+                    {
+                      "workerIndex": 6,
+                      "status": "passed",
+                      "duration": 10490,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Mobile-Chrome/gallery-responsive.png is re-generated, writing actual.\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-01-29T01:13:14.227Z",
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
                 }
               ],
               "id": "99b47709ad32662f2642-e6ecf5e860a525fd823b",
@@ -479,8 +594,27 @@
                   "expectedStatus": "passed",
                   "projectId": "Mobile Chrome",
                   "projectName": "Mobile Chrome",
-                  "results": [],
-                  "status": "skipped"
+                  "results": [
+                    {
+                      "workerIndex": 6,
+                      "status": "passed",
+                      "duration": 4410,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Mobile-Chrome/gallery-light.png is re-generated, writing actual.\n"
+                        },
+                        {
+                          "text": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Mobile-Chrome/gallery-dark.png is re-generated, writing actual.\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-01-29T01:13:24.724Z",
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
                 }
               ],
               "id": "99b47709ad32662f2642-3aa869ea6baab465397b",
@@ -499,8 +633,20 @@
                   "expectedStatus": "passed",
                   "projectId": "Mobile Chrome",
                   "projectName": "Mobile Chrome",
-                  "results": [],
-                  "status": "skipped"
+                  "results": [
+                    {
+                      "workerIndex": 6,
+                      "status": "passed",
+                      "duration": 3965,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-01-29T01:13:29.140Z",
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
                 }
               ],
               "id": "99b47709ad32662f2642-e4ad7aa6e79771e22a98",
@@ -519,8 +665,20 @@
                   "expectedStatus": "passed",
                   "projectId": "Mobile Chrome Dark",
                   "projectName": "Mobile Chrome Dark",
-                  "results": [],
-                  "status": "skipped"
+                  "results": [
+                    {
+                      "workerIndex": 9,
+                      "status": "passed",
+                      "duration": 4774,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-01-29T01:17:16.919Z",
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
                 }
               ],
               "id": "99b47709ad32662f2642-aa4552d9a44a8fc0d4c4",
@@ -539,8 +697,20 @@
                   "expectedStatus": "passed",
                   "projectId": "Mobile Chrome Dark",
                   "projectName": "Mobile Chrome Dark",
-                  "results": [],
-                  "status": "skipped"
+                  "results": [
+                    {
+                      "workerIndex": 9,
+                      "status": "passed",
+                      "duration": 5340,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-01-29T01:17:21.788Z",
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
                 }
               ],
               "id": "99b47709ad32662f2642-61dbcd871f2954d84305",
@@ -559,8 +729,24 @@
                   "expectedStatus": "passed",
                   "projectId": "Mobile Chrome Dark",
                   "projectName": "Mobile Chrome Dark",
-                  "results": [],
-                  "status": "skipped"
+                  "results": [
+                    {
+                      "workerIndex": 9,
+                      "status": "passed",
+                      "duration": 9807,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Mobile-Chrome-Dark/gallery-responsive.png is re-generated, writing actual.\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-01-29T01:17:27.140Z",
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
                 }
               ],
               "id": "99b47709ad32662f2642-7269cfcbeb2512d81bc0",
@@ -579,8 +765,27 @@
                   "expectedStatus": "passed",
                   "projectId": "Mobile Chrome Dark",
                   "projectName": "Mobile Chrome Dark",
-                  "results": [],
-                  "status": "skipped"
+                  "results": [
+                    {
+                      "workerIndex": 9,
+                      "status": "passed",
+                      "duration": 4408,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Mobile-Chrome-Dark/gallery-light.png is re-generated, writing actual.\n"
+                        },
+                        {
+                          "text": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Mobile-Chrome-Dark/gallery-dark.png is re-generated, writing actual.\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-01-29T01:17:36.968Z",
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
                 }
               ],
               "id": "99b47709ad32662f2642-d64f988c8e52f9506a0d",
@@ -599,8 +804,20 @@
                   "expectedStatus": "passed",
                   "projectId": "Mobile Chrome Dark",
                   "projectName": "Mobile Chrome Dark",
-                  "results": [],
-                  "status": "skipped"
+                  "results": [
+                    {
+                      "workerIndex": 9,
+                      "status": "passed",
+                      "duration": 4519,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-01-29T01:17:41.382Z",
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
                 }
               ],
               "id": "99b47709ad32662f2642-ee96266cb79b00173cf7",
@@ -619,8 +836,20 @@
                   "expectedStatus": "passed",
                   "projectId": "Tablet Safari",
                   "projectName": "Tablet Safari",
-                  "results": [],
-                  "status": "skipped"
+                  "results": [
+                    {
+                      "workerIndex": 12,
+                      "status": "passed",
+                      "duration": 5055,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-01-29T01:21:36.878Z",
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
                 }
               ],
               "id": "99b47709ad32662f2642-44ef8c8ddf45aedcca7b",
@@ -639,8 +868,20 @@
                   "expectedStatus": "passed",
                   "projectId": "Tablet Safari",
                   "projectName": "Tablet Safari",
-                  "results": [],
-                  "status": "skipped"
+                  "results": [
+                    {
+                      "workerIndex": 12,
+                      "status": "passed",
+                      "duration": 6138,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-01-29T01:21:42.480Z",
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
                 }
               ],
               "id": "99b47709ad32662f2642-ebbf926a3988ec4a89d1",
@@ -659,8 +900,24 @@
                   "expectedStatus": "passed",
                   "projectId": "Tablet Safari",
                   "projectName": "Tablet Safari",
-                  "results": [],
-                  "status": "skipped"
+                  "results": [
+                    {
+                      "workerIndex": 12,
+                      "status": "passed",
+                      "duration": 8619,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Tablet-Safari/gallery-responsive.png is re-generated, writing actual.\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-01-29T01:21:48.728Z",
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
                 }
               ],
               "id": "99b47709ad32662f2642-8d102419670dd3962d16",
@@ -679,8 +936,27 @@
                   "expectedStatus": "passed",
                   "projectId": "Tablet Safari",
                   "projectName": "Tablet Safari",
-                  "results": [],
-                  "status": "skipped"
+                  "results": [
+                    {
+                      "workerIndex": 12,
+                      "status": "passed",
+                      "duration": 6500,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Tablet-Safari/gallery-light.png is re-generated, writing actual.\n"
+                        },
+                        {
+                          "text": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Tablet-Safari/gallery-dark.png is re-generated, writing actual.\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-01-29T01:21:57.354Z",
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
                 }
               ],
               "id": "99b47709ad32662f2642-64ae899eae291001676c",
@@ -699,8 +975,20 @@
                   "expectedStatus": "passed",
                   "projectId": "Tablet Safari",
                   "projectName": "Tablet Safari",
-                  "results": [],
-                  "status": "skipped"
+                  "results": [
+                    {
+                      "workerIndex": 12,
+                      "status": "passed",
+                      "duration": 4808,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-01-29T01:22:03.860Z",
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
                 }
               ],
               "id": "99b47709ad32662f2642-34249a0945f54bb24aff",
@@ -740,7 +1028,7 @@
                     {
                       "workerIndex": 0,
                       "status": "passed",
-                      "duration": 1012,
+                      "duration": 1027,
                       "errors": [],
                       "stdout": [
                         {
@@ -749,7 +1037,7 @@
                       ],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-01-28T23:11:11.585Z",
+                      "startTime": "2025-01-29T01:05:09.330Z",
                       "attachments": []
                     }
                   ],
@@ -776,7 +1064,7 @@
                     {
                       "workerIndex": 0,
                       "status": "passed",
-                      "duration": 7939,
+                      "duration": 11557,
                       "errors": [],
                       "stdout": [
                         {
@@ -791,7 +1079,7 @@
                       ],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-01-28T23:11:12.601Z",
+                      "startTime": "2025-01-29T01:05:10.363Z",
                       "attachments": []
                     }
                   ],
@@ -818,7 +1106,7 @@
                     {
                       "workerIndex": 0,
                       "status": "passed",
-                      "duration": 6616,
+                      "duration": 7501,
                       "errors": [],
                       "stdout": [
                         {
@@ -833,7 +1121,7 @@
                       ],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-01-28T23:11:20.546Z",
+                      "startTime": "2025-01-29T01:05:21.926Z",
                       "attachments": []
                     }
                   ],
@@ -860,12 +1148,22 @@
                     {
                       "workerIndex": 0,
                       "status": "passed",
-                      "duration": 1667,
+                      "duration": 2975,
                       "errors": [],
-                      "stdout": [],
+                      "stdout": [
+                        {
+                          "text": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Desktop-Chrome/nav-desktop.png is re-generated, writing actual.\n"
+                        },
+                        {
+                          "text": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Desktop-Chrome/nav-mobile-closed.png is re-generated, writing actual.\n"
+                        },
+                        {
+                          "text": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Desktop-Chrome/nav-mobile-open.png is re-generated, writing actual.\n"
+                        }
+                      ],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-01-28T23:11:27.170Z",
+                      "startTime": "2025-01-29T01:05:29.435Z",
                       "attachments": []
                     }
                   ],
@@ -892,28 +1190,13 @@
                     {
                       "workerIndex": 0,
                       "status": "passed",
-                      "duration": 1173,
+                      "duration": 1056,
                       "errors": [],
-                      "stdout": [
-                        {
-                          "text": "A snapshot doesn't exist at /Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Desktop-Chrome/footer.png, writing actual.\n"
-                        }
-                      ],
+                      "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-01-28T23:11:28.842Z",
-                      "attachments": [
-                        {
-                          "name": "footer-expected.png",
-                          "contentType": "image/png",
-                          "path": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Desktop-Chrome/footer.png"
-                        },
-                        {
-                          "name": "footer-actual.png",
-                          "contentType": "image/png",
-                          "path": "/Users/sergevilleneuve/Desktop/logo-gallery/test-results/layout.visual-Visual-Regression-Tests---Layout-Footer-layout-Desktop-Chrome/footer-actual.png"
-                        }
-                      ]
+                      "startTime": "2025-01-29T01:05:32.417Z",
+                      "attachments": []
                     }
                   ],
                   "status": "expected"
@@ -926,7 +1209,7 @@
             },
             {
               "title": "Grid layout",
-              "ok": true,
+              "ok": false,
               "tags": [],
               "tests": [
                 {
@@ -938,32 +1221,29 @@
                   "results": [
                     {
                       "workerIndex": 0,
-                      "status": "interrupted",
-                      "duration": 20081,
+                      "status": "timedOut",
+                      "duration": 101615,
                       "error": {
-                        "message": "Error: expect.toHaveScreenshot(grid-mobile.png): Test ended.\nCall log:\n\u001b[2m  - expect.toHaveScreenshot(grid-mobile.png) with timeout 30000ms\u001b[22m\n\u001b[2m    - verifying given screenshot expectation\u001b[22m\n\u001b[2m  - waiting for locator('.grid')\u001b[22m\n\u001b[2m  - failed to take screenshot - Error: strict mode violation: locator('.grid') resolved to 2 elements:\u001b[22m\n\u001b[2m    1) <div class=\"grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6\">…</div> aka locator('div').filter({ hasText: '0Claude 3.5 SonnetUse' }).nth(2)\u001b[22m\n\u001b[2m    2) <div class=\"grid grid-cols-1 md:grid-cols-3 gap-8\">…</div> aka locator('div').filter({ hasText: 'Logo GalleryA curated' }).nth(2)\u001b[22m\n\u001b[2m  - waiting 100ms before taking screenshot\u001b[22m\n\u001b[2m  - waiting for locator('.grid')\u001b[22m\n\u001b[2m  - failed to take screenshot - Error: strict mode violation: locator('.grid') resolved to 2 elements:\u001b[22m\n\u001b[2m    1) <div class=\"grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6\">…</div> aka locator('div').filter({ hasText: '0Claude 3.5 SonnetUse' }).nth(2)\u001b[22m\n\u001b[2m    2) <div class=\"grid grid-cols-1 md:grid-cols-3 gap-8\">…</div> aka locator('div').filter({ hasText: 'Logo GalleryA curated' }).nth(2)\u001b[22m\n\u001b[2m  - waiting 250ms before taking screenshot\u001b[22m\n\u001b[2m  - waiting for locator('.grid')\u001b[22m\n\u001b[2m  - failed to take screenshot - Error: strict mode violation: locator('.grid') resolved to 2 elements:\u001b[22m\n\u001b[2m    1) <div class=\"grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6\">…</div> aka locator('div').filter({ hasText: '0Claude 3.5 SonnetUse' }).nth(2)\u001b[22m\n\u001b[2m    2) <div class=\"grid grid-cols-1 md:grid-cols-3 gap-8\">…</div> aka locator('div').filter({ hasText: 'Logo GalleryA curated' }).nth(2)\u001b[22m\n\u001b[2m  - waiting 500ms before taking screenshot\u001b[22m\n\u001b[2m  3781 × waiting for locator('.grid')\u001b[22m\n\u001b[2m       - failed to take screenshot - Error: strict mode violation: locator('.grid') resolved to 2 elements:\u001b[22m\n\u001b[2m    1) <div class=\"grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6\">…</div> aka locator('div').filter({ hasText: '0Claude 3.5 SonnetUse' }).nth(2)\u001b[22m\n\u001b[2m    2) <div class=\"grid grid-cols-1 md:grid-cols-3 gap-8\">…</div> aka locator('div').filter({ hasText: 'Logo GalleryA curated' }).nth(2)\u001b[22m\n\u001b[2m       - waiting 1000ms before taking screenshot\u001b[22m\n\u001b[2m  - waiting for locator('.grid')\u001b[22m\n",
-                        "stack": "Error: expect.toHaveScreenshot(grid-mobile.png): Test ended.\nCall log:\n\u001b[2m  - expect.toHaveScreenshot(grid-mobile.png) with timeout 30000ms\u001b[22m\n\u001b[2m    - verifying given screenshot expectation\u001b[22m\n\u001b[2m  - waiting for locator('.grid')\u001b[22m\n\u001b[2m  - failed to take screenshot - Error: strict mode violation: locator('.grid') resolved to 2 elements:\u001b[22m\n\u001b[2m    1) <div class=\"grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6\">…</div> aka locator('div').filter({ hasText: '0Claude 3.5 SonnetUse' }).nth(2)\u001b[22m\n\u001b[2m    2) <div class=\"grid grid-cols-1 md:grid-cols-3 gap-8\">…</div> aka locator('div').filter({ hasText: 'Logo GalleryA curated' }).nth(2)\u001b[22m\n\u001b[2m  - waiting 100ms before taking screenshot\u001b[22m\n\u001b[2m  - waiting for locator('.grid')\u001b[22m\n\u001b[2m  - failed to take screenshot - Error: strict mode violation: locator('.grid') resolved to 2 elements:\u001b[22m\n\u001b[2m    1) <div class=\"grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6\">…</div> aka locator('div').filter({ hasText: '0Claude 3.5 SonnetUse' }).nth(2)\u001b[22m\n\u001b[2m    2) <div class=\"grid grid-cols-1 md:grid-cols-3 gap-8\">…</div> aka locator('div').filter({ hasText: 'Logo GalleryA curated' }).nth(2)\u001b[22m\n\u001b[2m  - waiting 250ms before taking screenshot\u001b[22m\n\u001b[2m  - waiting for locator('.grid')\u001b[22m\n\u001b[2m  - failed to take screenshot - Error: strict mode violation: locator('.grid') resolved to 2 elements:\u001b[22m\n\u001b[2m    1) <div class=\"grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6\">…</div> aka locator('div').filter({ hasText: '0Claude 3.5 SonnetUse' }).nth(2)\u001b[22m\n\u001b[2m    2) <div class=\"grid grid-cols-1 md:grid-cols-3 gap-8\">…</div> aka locator('div').filter({ hasText: 'Logo GalleryA curated' }).nth(2)\u001b[22m\n\u001b[2m  - waiting 500ms before taking screenshot\u001b[22m\n\u001b[2m  3781 × waiting for locator('.grid')\u001b[22m\n\u001b[2m       - failed to take screenshot - Error: strict mode violation: locator('.grid') resolved to 2 elements:\u001b[22m\n\u001b[2m    1) <div class=\"grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6\">…</div> aka locator('div').filter({ hasText: '0Claude 3.5 SonnetUse' }).nth(2)\u001b[22m\n\u001b[2m    2) <div class=\"grid grid-cols-1 md:grid-cols-3 gap-8\">…</div> aka locator('div').filter({ hasText: 'Logo GalleryA curated' }).nth(2)\u001b[22m\n\u001b[2m       - waiting 1000ms before taking screenshot\u001b[22m\n\u001b[2m  - waiting for locator('.grid')\u001b[22m\n\n    at /Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/layout.visual.spec.ts:108:7",
-                        "location": {
-                          "file": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/layout.visual.spec.ts",
-                          "column": 7,
-                          "line": 108
-                        },
-                        "snippet": "\u001b[0m \u001b[90m 106 |\u001b[39m       \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39msetViewportSize(viewport)\u001b[33m;\u001b[39m\n \u001b[90m 107 |\u001b[39m       \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForTimeout(\u001b[35m500\u001b[39m)\u001b[33m;\u001b[39m \u001b[90m// Wait for layout to adjust\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 108 |\u001b[39m       \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'.grid'\u001b[39m))\u001b[33m.\u001b[39mtoHaveScreenshot(\u001b[32m`grid-${viewport.name}.png`\u001b[39m\u001b[33m,\u001b[39m {\n \u001b[90m     |\u001b[39m       \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 109 |\u001b[39m         timeout\u001b[33m:\u001b[39m \u001b[35m30000\u001b[39m\u001b[33m,\u001b[39m\n \u001b[90m 110 |\u001b[39m       })\u001b[33m;\u001b[39m\n \u001b[90m 111 |\u001b[39m     }\u001b[0m"
+                        "message": "\u001b[31mTest timeout of 60000ms exceeded.\u001b[39m",
+                        "stack": "\u001b[31mTest timeout of 60000ms exceeded.\u001b[39m"
                       },
                       "errors": [
+                        {
+                          "message": "\u001b[31mTest timeout of 60000ms exceeded.\u001b[39m"
+                        },
                         {
                           "location": {
                             "file": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/layout.visual.spec.ts",
                             "column": 7,
                             "line": 108
                           },
-                          "message": "Error: expect.toHaveScreenshot(grid-mobile.png): Test ended.\nCall log:\n\u001b[2m  - expect.toHaveScreenshot(grid-mobile.png) with timeout 30000ms\u001b[22m\n\u001b[2m    - verifying given screenshot expectation\u001b[22m\n\u001b[2m  - waiting for locator('.grid')\u001b[22m\n\u001b[2m  - failed to take screenshot - Error: strict mode violation: locator('.grid') resolved to 2 elements:\u001b[22m\n\u001b[2m    1) <div class=\"grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6\">…</div> aka locator('div').filter({ hasText: '0Claude 3.5 SonnetUse' }).nth(2)\u001b[22m\n\u001b[2m    2) <div class=\"grid grid-cols-1 md:grid-cols-3 gap-8\">…</div> aka locator('div').filter({ hasText: 'Logo GalleryA curated' }).nth(2)\u001b[22m\n\u001b[2m  - waiting 100ms before taking screenshot\u001b[22m\n\u001b[2m  - waiting for locator('.grid')\u001b[22m\n\u001b[2m  - failed to take screenshot - Error: strict mode violation: locator('.grid') resolved to 2 elements:\u001b[22m\n\u001b[2m    1) <div class=\"grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6\">…</div> aka locator('div').filter({ hasText: '0Claude 3.5 SonnetUse' }).nth(2)\u001b[22m\n\u001b[2m    2) <div class=\"grid grid-cols-1 md:grid-cols-3 gap-8\">…</div> aka locator('div').filter({ hasText: 'Logo GalleryA curated' }).nth(2)\u001b[22m\n\u001b[2m  - waiting 250ms before taking screenshot\u001b[22m\n\u001b[2m  - waiting for locator('.grid')\u001b[22m\n\u001b[2m  - failed to take screenshot - Error: strict mode violation: locator('.grid') resolved to 2 elements:\u001b[22m\n\u001b[2m    1) <div class=\"grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6\">…</div> aka locator('div').filter({ hasText: '0Claude 3.5 SonnetUse' }).nth(2)\u001b[22m\n\u001b[2m    2) <div class=\"grid grid-cols-1 md:grid-cols-3 gap-8\">…</div> aka locator('div').filter({ hasText: 'Logo GalleryA curated' }).nth(2)\u001b[22m\n\u001b[2m  - waiting 500ms before taking screenshot\u001b[22m\n\u001b[2m  3781 × waiting for locator('.grid')\u001b[22m\n\u001b[2m       - failed to take screenshot - Error: strict mode violation: locator('.grid') resolved to 2 elements:\u001b[22m\n\u001b[2m    1) <div class=\"grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6\">…</div> aka locator('div').filter({ hasText: '0Claude 3.5 SonnetUse' }).nth(2)\u001b[22m\n\u001b[2m    2) <div class=\"grid grid-cols-1 md:grid-cols-3 gap-8\">…</div> aka locator('div').filter({ hasText: 'Logo GalleryA curated' }).nth(2)\u001b[22m\n\u001b[2m       - waiting 1000ms before taking screenshot\u001b[22m\n\u001b[2m  - waiting for locator('.grid')\u001b[22m\n\n\n\u001b[0m \u001b[90m 106 |\u001b[39m       \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39msetViewportSize(viewport)\u001b[33m;\u001b[39m\n \u001b[90m 107 |\u001b[39m       \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForTimeout(\u001b[35m500\u001b[39m)\u001b[33m;\u001b[39m \u001b[90m// Wait for layout to adjust\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 108 |\u001b[39m       \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'.grid'\u001b[39m))\u001b[33m.\u001b[39mtoHaveScreenshot(\u001b[32m`grid-${viewport.name}.png`\u001b[39m\u001b[33m,\u001b[39m {\n \u001b[90m     |\u001b[39m       \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 109 |\u001b[39m         timeout\u001b[33m:\u001b[39m \u001b[35m30000\u001b[39m\u001b[33m,\u001b[39m\n \u001b[90m 110 |\u001b[39m       })\u001b[33m;\u001b[39m\n \u001b[90m 111 |\u001b[39m     }\u001b[0m\n\u001b[2m    at /Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/layout.visual.spec.ts:108:7\u001b[22m"
+                          "message": "TypeError: The \"data\" argument must be of type string or an instance of Buffer, TypedArray, or DataView. Received undefined\n\n\u001b[0m \u001b[90m 106 |\u001b[39m       \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39msetViewportSize(viewport)\u001b[33m;\u001b[39m\n \u001b[90m 107 |\u001b[39m       \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForTimeout(\u001b[35m500\u001b[39m)\u001b[33m;\u001b[39m \u001b[90m// Wait for layout to adjust\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 108 |\u001b[39m       \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'.grid'\u001b[39m))\u001b[33m.\u001b[39mtoHaveScreenshot(\u001b[32m`grid-${viewport.name}.png`\u001b[39m\u001b[33m,\u001b[39m {\n \u001b[90m     |\u001b[39m       \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 109 |\u001b[39m         timeout\u001b[33m:\u001b[39m \u001b[35m30000\u001b[39m\u001b[33m,\u001b[39m\n \u001b[90m 110 |\u001b[39m       })\u001b[33m;\u001b[39m\n \u001b[90m 111 |\u001b[39m     }\u001b[0m\n\u001b[2m    at /Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/layout.visual.spec.ts:108:7\u001b[22m"
                         }
                       ],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-01-28T23:11:30.020Z",
+                      "startTime": "2025-01-29T01:05:33.478Z",
                       "attachments": [
                         {
                           "name": "screenshot",
@@ -980,15 +1260,53 @@
                           "contentType": "application/zip",
                           "path": "/Users/sergevilleneuve/Desktop/logo-gallery/test-results/layout.visual-Visual-Regression-Tests---Layout-Grid-layout-Desktop-Chrome/trace.zip"
                         }
+                      ]
+                    },
+                    {
+                      "workerIndex": 1,
+                      "status": "timedOut",
+                      "duration": 86751,
+                      "error": {
+                        "message": "\u001b[31mTest timeout of 60000ms exceeded.\u001b[39m",
+                        "stack": "\u001b[31mTest timeout of 60000ms exceeded.\u001b[39m"
+                      },
+                      "errors": [
+                        {
+                          "message": "\u001b[31mTest timeout of 60000ms exceeded.\u001b[39m"
+                        },
+                        {
+                          "location": {
+                            "file": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/layout.visual.spec.ts",
+                            "column": 7,
+                            "line": 108
+                          },
+                          "message": "TypeError: The \"data\" argument must be of type string or an instance of Buffer, TypedArray, or DataView. Received undefined\n\n\u001b[0m \u001b[90m 106 |\u001b[39m       \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39msetViewportSize(viewport)\u001b[33m;\u001b[39m\n \u001b[90m 107 |\u001b[39m       \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForTimeout(\u001b[35m500\u001b[39m)\u001b[33m;\u001b[39m \u001b[90m// Wait for layout to adjust\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 108 |\u001b[39m       \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'.grid'\u001b[39m))\u001b[33m.\u001b[39mtoHaveScreenshot(\u001b[32m`grid-${viewport.name}.png`\u001b[39m\u001b[33m,\u001b[39m {\n \u001b[90m     |\u001b[39m       \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 109 |\u001b[39m         timeout\u001b[33m:\u001b[39m \u001b[35m30000\u001b[39m\u001b[33m,\u001b[39m\n \u001b[90m 110 |\u001b[39m       })\u001b[33m;\u001b[39m\n \u001b[90m 111 |\u001b[39m     }\u001b[0m\n\u001b[2m    at /Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/layout.visual.spec.ts:108:7\u001b[22m"
+                        }
                       ],
-                      "errorLocation": {
-                        "file": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/layout.visual.spec.ts",
-                        "column": 7,
-                        "line": 108
-                      }
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 1,
+                      "startTime": "2025-01-29T01:07:16.297Z",
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/Users/sergevilleneuve/Desktop/logo-gallery/test-results/layout.visual-Visual-Regression-Tests---Layout-Grid-layout-Desktop-Chrome-retry1/test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "/Users/sergevilleneuve/Desktop/logo-gallery/test-results/layout.visual-Visual-Regression-Tests---Layout-Grid-layout-Desktop-Chrome-retry1/video.webm"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "/Users/sergevilleneuve/Desktop/logo-gallery/test-results/layout.visual-Visual-Regression-Tests---Layout-Grid-layout-Desktop-Chrome-retry1/trace.zip"
+                        }
+                      ]
                     }
                   ],
-                  "status": "skipped"
+                  "status": "unexpected"
                 }
               ],
               "id": "4f4cd04ed96c9f93656a-bee98cbe4c1e771bee12",
@@ -1007,8 +1325,27 @@
                   "expectedStatus": "passed",
                   "projectId": "Desktop Chrome",
                   "projectName": "Desktop Chrome",
-                  "results": [],
-                  "status": "skipped"
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "status": "passed",
+                      "duration": 2800,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Desktop-Chrome/theme-light.png is re-generated, writing actual.\n"
+                        },
+                        {
+                          "text": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Desktop-Chrome/theme-dark.png is re-generated, writing actual.\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-01-29T01:08:44.283Z",
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
                 }
               ],
               "id": "4f4cd04ed96c9f93656a-e3e261b372db7f981003",
@@ -1027,8 +1364,24 @@
                   "expectedStatus": "passed",
                   "projectId": "Desktop Chrome Dark",
                   "projectName": "Desktop Chrome Dark",
-                  "results": [],
-                  "status": "skipped"
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "status": "passed",
+                      "duration": 1122,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Desktop-Chrome-Dark/homepage.png is re-generated, writing actual.\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-01-29T01:09:16.278Z",
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
                 }
               ],
               "id": "4f4cd04ed96c9f93656a-b28bb9fbd2f70342c626",
@@ -1047,8 +1400,30 @@
                   "expectedStatus": "passed",
                   "projectId": "Desktop Chrome Dark",
                   "projectName": "Desktop Chrome Dark",
-                  "results": [],
-                  "status": "skipped"
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "status": "passed",
+                      "duration": 10360,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Desktop-Chrome-Dark/gallery-375x667.png is re-generated, writing actual.\n"
+                        },
+                        {
+                          "text": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Desktop-Chrome-Dark/gallery-768x1024.png is re-generated, writing actual.\n"
+                        },
+                        {
+                          "text": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Desktop-Chrome-Dark/gallery-1280x720.png is re-generated, writing actual.\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-01-29T01:09:17.405Z",
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
                 }
               ],
               "id": "4f4cd04ed96c9f93656a-3ac4a36020e80dc0de75",
@@ -1067,8 +1442,30 @@
                   "expectedStatus": "passed",
                   "projectId": "Desktop Chrome Dark",
                   "projectName": "Desktop Chrome Dark",
-                  "results": [],
-                  "status": "skipped"
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "status": "passed",
+                      "duration": 6275,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Desktop-Chrome-Dark/vote-375x667.png is re-generated, writing actual.\n"
+                        },
+                        {
+                          "text": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Desktop-Chrome-Dark/vote-768x1024.png is re-generated, writing actual.\n"
+                        },
+                        {
+                          "text": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Desktop-Chrome-Dark/vote-1280x720.png is re-generated, writing actual.\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-01-29T01:09:27.771Z",
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
                 }
               ],
               "id": "4f4cd04ed96c9f93656a-2a2369fc5e6b2f9bdf23",
@@ -1087,8 +1484,30 @@
                   "expectedStatus": "passed",
                   "projectId": "Desktop Chrome Dark",
                   "projectName": "Desktop Chrome Dark",
-                  "results": [],
-                  "status": "skipped"
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "status": "passed",
+                      "duration": 2275,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Desktop-Chrome-Dark/nav-desktop.png is re-generated, writing actual.\n"
+                        },
+                        {
+                          "text": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Desktop-Chrome-Dark/nav-mobile-closed.png is re-generated, writing actual.\n"
+                        },
+                        {
+                          "text": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Desktop-Chrome-Dark/nav-mobile-open.png is re-generated, writing actual.\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-01-29T01:09:34.053Z",
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
                 }
               ],
               "id": "4f4cd04ed96c9f93656a-207174d0884037863607",
@@ -1107,8 +1526,35 @@
                   "expectedStatus": "passed",
                   "projectId": "Desktop Chrome Dark",
                   "projectName": "Desktop Chrome Dark",
-                  "results": [],
-                  "status": "skipped"
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "status": "passed",
+                      "duration": 1213,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "A snapshot doesn't exist at /Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Desktop-Chrome-Dark/footer.png, writing actual.\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-01-29T01:09:36.335Z",
+                      "attachments": [
+                        {
+                          "name": "footer-expected.png",
+                          "contentType": "image/png",
+                          "path": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Desktop-Chrome-Dark/footer.png"
+                        },
+                        {
+                          "name": "footer-actual.png",
+                          "contentType": "image/png",
+                          "path": "/Users/sergevilleneuve/Desktop/logo-gallery/test-results/layout.visual-Visual-Regression-Tests---Layout-Footer-layout-Desktop-Chrome-Dark/footer-actual.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
                 }
               ],
               "id": "4f4cd04ed96c9f93656a-06c7e5309022c14cf2cd",
@@ -1118,7 +1564,7 @@
             },
             {
               "title": "Grid layout",
-              "ok": true,
+              "ok": false,
               "tags": [],
               "tests": [
                 {
@@ -1127,8 +1573,95 @@
                   "expectedStatus": "passed",
                   "projectId": "Desktop Chrome Dark",
                   "projectName": "Desktop Chrome Dark",
-                  "results": [],
-                  "status": "skipped"
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "status": "timedOut",
+                      "duration": 107323,
+                      "error": {
+                        "message": "\u001b[31mTest timeout of 60000ms exceeded.\u001b[39m",
+                        "stack": "\u001b[31mTest timeout of 60000ms exceeded.\u001b[39m"
+                      },
+                      "errors": [
+                        {
+                          "message": "\u001b[31mTest timeout of 60000ms exceeded.\u001b[39m"
+                        },
+                        {
+                          "location": {
+                            "file": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/layout.visual.spec.ts",
+                            "column": 7,
+                            "line": 108
+                          },
+                          "message": "TypeError: The \"data\" argument must be of type string or an instance of Buffer, TypedArray, or DataView. Received undefined\n\n\u001b[0m \u001b[90m 106 |\u001b[39m       \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39msetViewportSize(viewport)\u001b[33m;\u001b[39m\n \u001b[90m 107 |\u001b[39m       \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForTimeout(\u001b[35m500\u001b[39m)\u001b[33m;\u001b[39m \u001b[90m// Wait for layout to adjust\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 108 |\u001b[39m       \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'.grid'\u001b[39m))\u001b[33m.\u001b[39mtoHaveScreenshot(\u001b[32m`grid-${viewport.name}.png`\u001b[39m\u001b[33m,\u001b[39m {\n \u001b[90m     |\u001b[39m       \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 109 |\u001b[39m         timeout\u001b[33m:\u001b[39m \u001b[35m30000\u001b[39m\u001b[33m,\u001b[39m\n \u001b[90m 110 |\u001b[39m       })\u001b[33m;\u001b[39m\n \u001b[90m 111 |\u001b[39m     }\u001b[0m\n\u001b[2m    at /Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/layout.visual.spec.ts:108:7\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-01-29T01:09:37.553Z",
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/Users/sergevilleneuve/Desktop/logo-gallery/test-results/layout.visual-Visual-Regression-Tests---Layout-Grid-layout-Desktop-Chrome-Dark/test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "/Users/sergevilleneuve/Desktop/logo-gallery/test-results/layout.visual-Visual-Regression-Tests---Layout-Grid-layout-Desktop-Chrome-Dark/video.webm"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "/Users/sergevilleneuve/Desktop/logo-gallery/test-results/layout.visual-Visual-Regression-Tests---Layout-Grid-layout-Desktop-Chrome-Dark/trace.zip"
+                        }
+                      ]
+                    },
+                    {
+                      "workerIndex": 4,
+                      "status": "timedOut",
+                      "duration": 93987,
+                      "error": {
+                        "message": "\u001b[31mTest timeout of 60000ms exceeded.\u001b[39m",
+                        "stack": "\u001b[31mTest timeout of 60000ms exceeded.\u001b[39m"
+                      },
+                      "errors": [
+                        {
+                          "message": "\u001b[31mTest timeout of 60000ms exceeded.\u001b[39m"
+                        },
+                        {
+                          "location": {
+                            "file": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/layout.visual.spec.ts",
+                            "column": 7,
+                            "line": 108
+                          },
+                          "message": "TypeError: The \"data\" argument must be of type string or an instance of Buffer, TypedArray, or DataView. Received undefined\n\n\u001b[0m \u001b[90m 106 |\u001b[39m       \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39msetViewportSize(viewport)\u001b[33m;\u001b[39m\n \u001b[90m 107 |\u001b[39m       \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForTimeout(\u001b[35m500\u001b[39m)\u001b[33m;\u001b[39m \u001b[90m// Wait for layout to adjust\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 108 |\u001b[39m       \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'.grid'\u001b[39m))\u001b[33m.\u001b[39mtoHaveScreenshot(\u001b[32m`grid-${viewport.name}.png`\u001b[39m\u001b[33m,\u001b[39m {\n \u001b[90m     |\u001b[39m       \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 109 |\u001b[39m         timeout\u001b[33m:\u001b[39m \u001b[35m30000\u001b[39m\u001b[33m,\u001b[39m\n \u001b[90m 110 |\u001b[39m       })\u001b[33m;\u001b[39m\n \u001b[90m 111 |\u001b[39m     }\u001b[0m\n\u001b[2m    at /Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/layout.visual.spec.ts:108:7\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 1,
+                      "startTime": "2025-01-29T01:11:25.866Z",
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/Users/sergevilleneuve/Desktop/logo-gallery/test-results/layout.visual-Visual-Regression-Tests---Layout-Grid-layout-Desktop-Chrome-Dark-retry1/test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "/Users/sergevilleneuve/Desktop/logo-gallery/test-results/layout.visual-Visual-Regression-Tests---Layout-Grid-layout-Desktop-Chrome-Dark-retry1/video.webm"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "/Users/sergevilleneuve/Desktop/logo-gallery/test-results/layout.visual-Visual-Regression-Tests---Layout-Grid-layout-Desktop-Chrome-Dark-retry1/trace.zip"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "unexpected"
                 }
               ],
               "id": "4f4cd04ed96c9f93656a-be25e1862c1d906c99b3",
@@ -1147,8 +1680,27 @@
                   "expectedStatus": "passed",
                   "projectId": "Desktop Chrome Dark",
                   "projectName": "Desktop Chrome Dark",
-                  "results": [],
-                  "status": "skipped"
+                  "results": [
+                    {
+                      "workerIndex": 5,
+                      "status": "passed",
+                      "duration": 2436,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Desktop-Chrome-Dark/theme-light.png is re-generated, writing actual.\n"
+                        },
+                        {
+                          "text": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Desktop-Chrome-Dark/theme-dark.png is re-generated, writing actual.\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-01-29T01:13:00.897Z",
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
                 }
               ],
               "id": "4f4cd04ed96c9f93656a-2d9a041e7c2f19df9ef6",
@@ -1167,8 +1719,24 @@
                   "expectedStatus": "passed",
                   "projectId": "Mobile Chrome",
                   "projectName": "Mobile Chrome",
-                  "results": [],
-                  "status": "skipped"
+                  "results": [
+                    {
+                      "workerIndex": 6,
+                      "status": "passed",
+                      "duration": 716,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Mobile-Chrome/homepage.png is re-generated, writing actual.\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-01-29T01:13:33.121Z",
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
                 }
               ],
               "id": "4f4cd04ed96c9f93656a-0b3ae5a5d22b6b00ed74",
@@ -1187,8 +1755,30 @@
                   "expectedStatus": "passed",
                   "projectId": "Mobile Chrome",
                   "projectName": "Mobile Chrome",
-                  "results": [],
-                  "status": "skipped"
+                  "results": [
+                    {
+                      "workerIndex": 6,
+                      "status": "passed",
+                      "duration": 11310,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Mobile-Chrome/gallery-375x667.png is re-generated, writing actual.\n"
+                        },
+                        {
+                          "text": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Mobile-Chrome/gallery-768x1024.png is re-generated, writing actual.\n"
+                        },
+                        {
+                          "text": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Mobile-Chrome/gallery-1280x720.png is re-generated, writing actual.\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-01-29T01:13:33.842Z",
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
                 }
               ],
               "id": "4f4cd04ed96c9f93656a-5c507a28e3e38b5002bb",
@@ -1207,8 +1797,30 @@
                   "expectedStatus": "passed",
                   "projectId": "Mobile Chrome",
                   "projectName": "Mobile Chrome",
-                  "results": [],
-                  "status": "skipped"
+                  "results": [
+                    {
+                      "workerIndex": 6,
+                      "status": "passed",
+                      "duration": 6503,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Mobile-Chrome/vote-375x667.png is re-generated, writing actual.\n"
+                        },
+                        {
+                          "text": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Mobile-Chrome/vote-768x1024.png is re-generated, writing actual.\n"
+                        },
+                        {
+                          "text": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Mobile-Chrome/vote-1280x720.png is re-generated, writing actual.\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-01-29T01:13:45.158Z",
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
                 }
               ],
               "id": "4f4cd04ed96c9f93656a-f117cb8304be7737e8b8",
@@ -1227,8 +1839,30 @@
                   "expectedStatus": "passed",
                   "projectId": "Mobile Chrome",
                   "projectName": "Mobile Chrome",
-                  "results": [],
-                  "status": "skipped"
+                  "results": [
+                    {
+                      "workerIndex": 6,
+                      "status": "passed",
+                      "duration": 2239,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Mobile-Chrome/nav-desktop.png is re-generated, writing actual.\n"
+                        },
+                        {
+                          "text": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Mobile-Chrome/nav-mobile-closed.png is re-generated, writing actual.\n"
+                        },
+                        {
+                          "text": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Mobile-Chrome/nav-mobile-open.png is re-generated, writing actual.\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-01-29T01:13:51.668Z",
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
                 }
               ],
               "id": "4f4cd04ed96c9f93656a-56d36f6fa3c7f4b31e59",
@@ -1247,8 +1881,35 @@
                   "expectedStatus": "passed",
                   "projectId": "Mobile Chrome",
                   "projectName": "Mobile Chrome",
-                  "results": [],
-                  "status": "skipped"
+                  "results": [
+                    {
+                      "workerIndex": 6,
+                      "status": "passed",
+                      "duration": 1223,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "A snapshot doesn't exist at /Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Mobile-Chrome/footer.png, writing actual.\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-01-29T01:13:53.912Z",
+                      "attachments": [
+                        {
+                          "name": "footer-expected.png",
+                          "contentType": "image/png",
+                          "path": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Mobile-Chrome/footer.png"
+                        },
+                        {
+                          "name": "footer-actual.png",
+                          "contentType": "image/png",
+                          "path": "/Users/sergevilleneuve/Desktop/logo-gallery/test-results/layout.visual-Visual-Regression-Tests---Layout-Footer-layout-Mobile-Chrome/footer-actual.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
                 }
               ],
               "id": "4f4cd04ed96c9f93656a-ff0c06b59fac2c127870",
@@ -1258,7 +1919,7 @@
             },
             {
               "title": "Grid layout",
-              "ok": true,
+              "ok": false,
               "tags": [],
               "tests": [
                 {
@@ -1267,8 +1928,95 @@
                   "expectedStatus": "passed",
                   "projectId": "Mobile Chrome",
                   "projectName": "Mobile Chrome",
-                  "results": [],
-                  "status": "skipped"
+                  "results": [
+                    {
+                      "workerIndex": 6,
+                      "status": "timedOut",
+                      "duration": 101200,
+                      "error": {
+                        "message": "\u001b[31mTest timeout of 60000ms exceeded.\u001b[39m",
+                        "stack": "\u001b[31mTest timeout of 60000ms exceeded.\u001b[39m"
+                      },
+                      "errors": [
+                        {
+                          "message": "\u001b[31mTest timeout of 60000ms exceeded.\u001b[39m"
+                        },
+                        {
+                          "location": {
+                            "file": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/layout.visual.spec.ts",
+                            "column": 7,
+                            "line": 108
+                          },
+                          "message": "TypeError: The \"data\" argument must be of type string or an instance of Buffer, TypedArray, or DataView. Received undefined\n\n\u001b[0m \u001b[90m 106 |\u001b[39m       \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39msetViewportSize(viewport)\u001b[33m;\u001b[39m\n \u001b[90m 107 |\u001b[39m       \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForTimeout(\u001b[35m500\u001b[39m)\u001b[33m;\u001b[39m \u001b[90m// Wait for layout to adjust\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 108 |\u001b[39m       \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'.grid'\u001b[39m))\u001b[33m.\u001b[39mtoHaveScreenshot(\u001b[32m`grid-${viewport.name}.png`\u001b[39m\u001b[33m,\u001b[39m {\n \u001b[90m     |\u001b[39m       \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 109 |\u001b[39m         timeout\u001b[33m:\u001b[39m \u001b[35m30000\u001b[39m\u001b[33m,\u001b[39m\n \u001b[90m 110 |\u001b[39m       })\u001b[33m;\u001b[39m\n \u001b[90m 111 |\u001b[39m     }\u001b[0m\n\u001b[2m    at /Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/layout.visual.spec.ts:108:7\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-01-29T01:13:55.141Z",
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/Users/sergevilleneuve/Desktop/logo-gallery/test-results/layout.visual-Visual-Regression-Tests---Layout-Grid-layout-Mobile-Chrome/test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "/Users/sergevilleneuve/Desktop/logo-gallery/test-results/layout.visual-Visual-Regression-Tests---Layout-Grid-layout-Mobile-Chrome/video.webm"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "/Users/sergevilleneuve/Desktop/logo-gallery/test-results/layout.visual-Visual-Regression-Tests---Layout-Grid-layout-Mobile-Chrome/trace.zip"
+                        }
+                      ]
+                    },
+                    {
+                      "workerIndex": 7,
+                      "status": "timedOut",
+                      "duration": 95877,
+                      "error": {
+                        "message": "\u001b[31mTest timeout of 60000ms exceeded.\u001b[39m",
+                        "stack": "\u001b[31mTest timeout of 60000ms exceeded.\u001b[39m"
+                      },
+                      "errors": [
+                        {
+                          "message": "\u001b[31mTest timeout of 60000ms exceeded.\u001b[39m"
+                        },
+                        {
+                          "location": {
+                            "file": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/layout.visual.spec.ts",
+                            "column": 7,
+                            "line": 108
+                          },
+                          "message": "TypeError: The \"data\" argument must be of type string or an instance of Buffer, TypedArray, or DataView. Received undefined\n\n\u001b[0m \u001b[90m 106 |\u001b[39m       \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39msetViewportSize(viewport)\u001b[33m;\u001b[39m\n \u001b[90m 107 |\u001b[39m       \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForTimeout(\u001b[35m500\u001b[39m)\u001b[33m;\u001b[39m \u001b[90m// Wait for layout to adjust\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 108 |\u001b[39m       \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'.grid'\u001b[39m))\u001b[33m.\u001b[39mtoHaveScreenshot(\u001b[32m`grid-${viewport.name}.png`\u001b[39m\u001b[33m,\u001b[39m {\n \u001b[90m     |\u001b[39m       \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 109 |\u001b[39m         timeout\u001b[33m:\u001b[39m \u001b[35m30000\u001b[39m\u001b[33m,\u001b[39m\n \u001b[90m 110 |\u001b[39m       })\u001b[33m;\u001b[39m\n \u001b[90m 111 |\u001b[39m     }\u001b[0m\n\u001b[2m    at /Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/layout.visual.spec.ts:108:7\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 1,
+                      "startTime": "2025-01-29T01:15:37.417Z",
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/Users/sergevilleneuve/Desktop/logo-gallery/test-results/layout.visual-Visual-Regression-Tests---Layout-Grid-layout-Mobile-Chrome-retry1/test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "/Users/sergevilleneuve/Desktop/logo-gallery/test-results/layout.visual-Visual-Regression-Tests---Layout-Grid-layout-Mobile-Chrome-retry1/video.webm"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "/Users/sergevilleneuve/Desktop/logo-gallery/test-results/layout.visual-Visual-Regression-Tests---Layout-Grid-layout-Mobile-Chrome-retry1/trace.zip"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "unexpected"
                 }
               ],
               "id": "4f4cd04ed96c9f93656a-bab943604918d29c446d",
@@ -1287,8 +2035,27 @@
                   "expectedStatus": "passed",
                   "projectId": "Mobile Chrome",
                   "projectName": "Mobile Chrome",
-                  "results": [],
-                  "status": "skipped"
+                  "results": [
+                    {
+                      "workerIndex": 8,
+                      "status": "passed",
+                      "duration": 1893,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Mobile-Chrome/theme-light.png is re-generated, writing actual.\n"
+                        },
+                        {
+                          "text": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Mobile-Chrome/theme-dark.png is re-generated, writing actual.\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-01-29T01:17:14.425Z",
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
                 }
               ],
               "id": "4f4cd04ed96c9f93656a-b5544b37fbf0ecca5986",
@@ -1307,8 +2074,24 @@
                   "expectedStatus": "passed",
                   "projectId": "Mobile Chrome Dark",
                   "projectName": "Mobile Chrome Dark",
-                  "results": [],
-                  "status": "skipped"
+                  "results": [
+                    {
+                      "workerIndex": 9,
+                      "status": "passed",
+                      "duration": 870,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Mobile-Chrome-Dark/homepage.png is re-generated, writing actual.\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-01-29T01:17:45.916Z",
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
                 }
               ],
               "id": "4f4cd04ed96c9f93656a-ea014bf9f3e344236dde",
@@ -1327,8 +2110,30 @@
                   "expectedStatus": "passed",
                   "projectId": "Mobile Chrome Dark",
                   "projectName": "Mobile Chrome Dark",
-                  "results": [],
-                  "status": "skipped"
+                  "results": [
+                    {
+                      "workerIndex": 9,
+                      "status": "passed",
+                      "duration": 11629,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Mobile-Chrome-Dark/gallery-375x667.png is re-generated, writing actual.\n"
+                        },
+                        {
+                          "text": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Mobile-Chrome-Dark/gallery-768x1024.png is re-generated, writing actual.\n"
+                        },
+                        {
+                          "text": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Mobile-Chrome-Dark/gallery-1280x720.png is re-generated, writing actual.\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-01-29T01:17:46.791Z",
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
                 }
               ],
               "id": "4f4cd04ed96c9f93656a-133c7c23632878e4628c",
@@ -1347,8 +2152,30 @@
                   "expectedStatus": "passed",
                   "projectId": "Mobile Chrome Dark",
                   "projectName": "Mobile Chrome Dark",
-                  "results": [],
-                  "status": "skipped"
+                  "results": [
+                    {
+                      "workerIndex": 9,
+                      "status": "passed",
+                      "duration": 6537,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Mobile-Chrome-Dark/vote-375x667.png is re-generated, writing actual.\n"
+                        },
+                        {
+                          "text": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Mobile-Chrome-Dark/vote-768x1024.png is re-generated, writing actual.\n"
+                        },
+                        {
+                          "text": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Mobile-Chrome-Dark/vote-1280x720.png is re-generated, writing actual.\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-01-29T01:17:58.425Z",
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
                 }
               ],
               "id": "4f4cd04ed96c9f93656a-9a012cf858bf0bfcf043",
@@ -1367,8 +2194,30 @@
                   "expectedStatus": "passed",
                   "projectId": "Mobile Chrome Dark",
                   "projectName": "Mobile Chrome Dark",
-                  "results": [],
-                  "status": "skipped"
+                  "results": [
+                    {
+                      "workerIndex": 9,
+                      "status": "passed",
+                      "duration": 2265,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Mobile-Chrome-Dark/nav-desktop.png is re-generated, writing actual.\n"
+                        },
+                        {
+                          "text": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Mobile-Chrome-Dark/nav-mobile-closed.png is re-generated, writing actual.\n"
+                        },
+                        {
+                          "text": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Mobile-Chrome-Dark/nav-mobile-open.png is re-generated, writing actual.\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-01-29T01:18:04.970Z",
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
                 }
               ],
               "id": "4f4cd04ed96c9f93656a-10120ef9ef6d50703e05",
@@ -1387,8 +2236,35 @@
                   "expectedStatus": "passed",
                   "projectId": "Mobile Chrome Dark",
                   "projectName": "Mobile Chrome Dark",
-                  "results": [],
-                  "status": "skipped"
+                  "results": [
+                    {
+                      "workerIndex": 9,
+                      "status": "passed",
+                      "duration": 1253,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "A snapshot doesn't exist at /Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Mobile-Chrome-Dark/footer.png, writing actual.\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-01-29T01:18:07.240Z",
+                      "attachments": [
+                        {
+                          "name": "footer-expected.png",
+                          "contentType": "image/png",
+                          "path": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Mobile-Chrome-Dark/footer.png"
+                        },
+                        {
+                          "name": "footer-actual.png",
+                          "contentType": "image/png",
+                          "path": "/Users/sergevilleneuve/Desktop/logo-gallery/test-results/layout.visual-Visual-Regression-Tests---Layout-Footer-layout-Mobile-Chrome-Dark/footer-actual.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
                 }
               ],
               "id": "4f4cd04ed96c9f93656a-b9e191d53d79d0b3a9d6",
@@ -1398,7 +2274,7 @@
             },
             {
               "title": "Grid layout",
-              "ok": true,
+              "ok": false,
               "tags": [],
               "tests": [
                 {
@@ -1407,8 +2283,95 @@
                   "expectedStatus": "passed",
                   "projectId": "Mobile Chrome Dark",
                   "projectName": "Mobile Chrome Dark",
-                  "results": [],
-                  "status": "skipped"
+                  "results": [
+                    {
+                      "workerIndex": 9,
+                      "status": "timedOut",
+                      "duration": 109336,
+                      "error": {
+                        "message": "\u001b[31mTest timeout of 60000ms exceeded.\u001b[39m",
+                        "stack": "\u001b[31mTest timeout of 60000ms exceeded.\u001b[39m"
+                      },
+                      "errors": [
+                        {
+                          "message": "\u001b[31mTest timeout of 60000ms exceeded.\u001b[39m"
+                        },
+                        {
+                          "location": {
+                            "file": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/layout.visual.spec.ts",
+                            "column": 7,
+                            "line": 108
+                          },
+                          "message": "TypeError: The \"data\" argument must be of type string or an instance of Buffer, TypedArray, or DataView. Received undefined\n\n\u001b[0m \u001b[90m 106 |\u001b[39m       \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39msetViewportSize(viewport)\u001b[33m;\u001b[39m\n \u001b[90m 107 |\u001b[39m       \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForTimeout(\u001b[35m500\u001b[39m)\u001b[33m;\u001b[39m \u001b[90m// Wait for layout to adjust\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 108 |\u001b[39m       \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'.grid'\u001b[39m))\u001b[33m.\u001b[39mtoHaveScreenshot(\u001b[32m`grid-${viewport.name}.png`\u001b[39m\u001b[33m,\u001b[39m {\n \u001b[90m     |\u001b[39m       \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 109 |\u001b[39m         timeout\u001b[33m:\u001b[39m \u001b[35m30000\u001b[39m\u001b[33m,\u001b[39m\n \u001b[90m 110 |\u001b[39m       })\u001b[33m;\u001b[39m\n \u001b[90m 111 |\u001b[39m     }\u001b[0m\n\u001b[2m    at /Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/layout.visual.spec.ts:108:7\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-01-29T01:18:08.499Z",
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/Users/sergevilleneuve/Desktop/logo-gallery/test-results/layout.visual-Visual-Regression-Tests---Layout-Grid-layout-Mobile-Chrome-Dark/test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "/Users/sergevilleneuve/Desktop/logo-gallery/test-results/layout.visual-Visual-Regression-Tests---Layout-Grid-layout-Mobile-Chrome-Dark/video.webm"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "/Users/sergevilleneuve/Desktop/logo-gallery/test-results/layout.visual-Visual-Regression-Tests---Layout-Grid-layout-Mobile-Chrome-Dark/trace.zip"
+                        }
+                      ]
+                    },
+                    {
+                      "workerIndex": 10,
+                      "status": "timedOut",
+                      "duration": 94617,
+                      "error": {
+                        "message": "\u001b[31mTest timeout of 60000ms exceeded.\u001b[39m",
+                        "stack": "\u001b[31mTest timeout of 60000ms exceeded.\u001b[39m"
+                      },
+                      "errors": [
+                        {
+                          "message": "\u001b[31mTest timeout of 60000ms exceeded.\u001b[39m"
+                        },
+                        {
+                          "location": {
+                            "file": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/layout.visual.spec.ts",
+                            "column": 7,
+                            "line": 108
+                          },
+                          "message": "TypeError: The \"data\" argument must be of type string or an instance of Buffer, TypedArray, or DataView. Received undefined\n\n\u001b[0m \u001b[90m 106 |\u001b[39m       \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39msetViewportSize(viewport)\u001b[33m;\u001b[39m\n \u001b[90m 107 |\u001b[39m       \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForTimeout(\u001b[35m500\u001b[39m)\u001b[33m;\u001b[39m \u001b[90m// Wait for layout to adjust\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 108 |\u001b[39m       \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'.grid'\u001b[39m))\u001b[33m.\u001b[39mtoHaveScreenshot(\u001b[32m`grid-${viewport.name}.png`\u001b[39m\u001b[33m,\u001b[39m {\n \u001b[90m     |\u001b[39m       \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 109 |\u001b[39m         timeout\u001b[33m:\u001b[39m \u001b[35m30000\u001b[39m\u001b[33m,\u001b[39m\n \u001b[90m 110 |\u001b[39m       })\u001b[33m;\u001b[39m\n \u001b[90m 111 |\u001b[39m     }\u001b[0m\n\u001b[2m    at /Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/layout.visual.spec.ts:108:7\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 1,
+                      "startTime": "2025-01-29T01:19:58.825Z",
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/Users/sergevilleneuve/Desktop/logo-gallery/test-results/layout.visual-Visual-Regression-Tests---Layout-Grid-layout-Mobile-Chrome-Dark-retry1/test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "/Users/sergevilleneuve/Desktop/logo-gallery/test-results/layout.visual-Visual-Regression-Tests---Layout-Grid-layout-Mobile-Chrome-Dark-retry1/video.webm"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "/Users/sergevilleneuve/Desktop/logo-gallery/test-results/layout.visual-Visual-Regression-Tests---Layout-Grid-layout-Mobile-Chrome-Dark-retry1/trace.zip"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "unexpected"
                 }
               ],
               "id": "4f4cd04ed96c9f93656a-939ded809a9483afea70",
@@ -1427,8 +2390,27 @@
                   "expectedStatus": "passed",
                   "projectId": "Mobile Chrome Dark",
                   "projectName": "Mobile Chrome Dark",
-                  "results": [],
-                  "status": "skipped"
+                  "results": [
+                    {
+                      "workerIndex": 11,
+                      "status": "passed",
+                      "duration": 1797,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Mobile-Chrome-Dark/theme-light.png is re-generated, writing actual.\n"
+                        },
+                        {
+                          "text": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Mobile-Chrome-Dark/theme-dark.png is re-generated, writing actual.\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-01-29T01:21:34.466Z",
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
                 }
               ],
               "id": "4f4cd04ed96c9f93656a-062a046583bb4499101c",
@@ -1447,8 +2429,24 @@
                   "expectedStatus": "passed",
                   "projectId": "Tablet Safari",
                   "projectName": "Tablet Safari",
-                  "results": [],
-                  "status": "skipped"
+                  "results": [
+                    {
+                      "workerIndex": 12,
+                      "status": "passed",
+                      "duration": 893,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Tablet-Safari/homepage.png is re-generated, writing actual.\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-01-29T01:22:08.723Z",
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
                 }
               ],
               "id": "4f4cd04ed96c9f93656a-a32b7d2cb67849b5afd6",
@@ -1467,8 +2465,30 @@
                   "expectedStatus": "passed",
                   "projectId": "Tablet Safari",
                   "projectName": "Tablet Safari",
-                  "results": [],
-                  "status": "skipped"
+                  "results": [
+                    {
+                      "workerIndex": 12,
+                      "status": "passed",
+                      "duration": 9819,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Tablet-Safari/gallery-375x667.png is re-generated, writing actual.\n"
+                        },
+                        {
+                          "text": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Tablet-Safari/gallery-768x1024.png is re-generated, writing actual.\n"
+                        },
+                        {
+                          "text": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Tablet-Safari/gallery-1280x720.png is re-generated, writing actual.\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-01-29T01:22:09.620Z",
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
                 }
               ],
               "id": "4f4cd04ed96c9f93656a-b33696e7d84a203a671f",
@@ -1487,8 +2507,30 @@
                   "expectedStatus": "passed",
                   "projectId": "Tablet Safari",
                   "projectName": "Tablet Safari",
-                  "results": [],
-                  "status": "skipped"
+                  "results": [
+                    {
+                      "workerIndex": 12,
+                      "status": "passed",
+                      "duration": 6149,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Tablet-Safari/vote-375x667.png is re-generated, writing actual.\n"
+                        },
+                        {
+                          "text": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Tablet-Safari/vote-768x1024.png is re-generated, writing actual.\n"
+                        },
+                        {
+                          "text": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Tablet-Safari/vote-1280x720.png is re-generated, writing actual.\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-01-29T01:22:19.444Z",
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
                 }
               ],
               "id": "4f4cd04ed96c9f93656a-5566f2f9a5c0fd078eb4",
@@ -1507,8 +2549,30 @@
                   "expectedStatus": "passed",
                   "projectId": "Tablet Safari",
                   "projectName": "Tablet Safari",
-                  "results": [],
-                  "status": "skipped"
+                  "results": [
+                    {
+                      "workerIndex": 12,
+                      "status": "passed",
+                      "duration": 2257,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Tablet-Safari/nav-desktop.png is re-generated, writing actual.\n"
+                        },
+                        {
+                          "text": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Tablet-Safari/nav-mobile-closed.png is re-generated, writing actual.\n"
+                        },
+                        {
+                          "text": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Tablet-Safari/nav-mobile-open.png is re-generated, writing actual.\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-01-29T01:22:25.599Z",
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
                 }
               ],
               "id": "4f4cd04ed96c9f93656a-b06d8dbfa0165dc12c85",
@@ -1527,8 +2591,35 @@
                   "expectedStatus": "passed",
                   "projectId": "Tablet Safari",
                   "projectName": "Tablet Safari",
-                  "results": [],
-                  "status": "skipped"
+                  "results": [
+                    {
+                      "workerIndex": 12,
+                      "status": "passed",
+                      "duration": 1245,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "A snapshot doesn't exist at /Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Tablet-Safari/footer.png, writing actual.\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-01-29T01:22:27.861Z",
+                      "attachments": [
+                        {
+                          "name": "footer-expected.png",
+                          "contentType": "image/png",
+                          "path": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Tablet-Safari/footer.png"
+                        },
+                        {
+                          "name": "footer-actual.png",
+                          "contentType": "image/png",
+                          "path": "/Users/sergevilleneuve/Desktop/logo-gallery/test-results/layout.visual-Visual-Regression-Tests---Layout-Footer-layout-Tablet-Safari/footer-actual.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
                 }
               ],
               "id": "4f4cd04ed96c9f93656a-bdd7cff6341ce952fc7a",
@@ -1538,7 +2629,7 @@
             },
             {
               "title": "Grid layout",
-              "ok": true,
+              "ok": false,
               "tags": [],
               "tests": [
                 {
@@ -1547,8 +2638,95 @@
                   "expectedStatus": "passed",
                   "projectId": "Tablet Safari",
                   "projectName": "Tablet Safari",
-                  "results": [],
-                  "status": "skipped"
+                  "results": [
+                    {
+                      "workerIndex": 12,
+                      "status": "timedOut",
+                      "duration": 68378,
+                      "error": {
+                        "message": "\u001b[31mTest timeout of 60000ms exceeded.\u001b[39m",
+                        "stack": "\u001b[31mTest timeout of 60000ms exceeded.\u001b[39m"
+                      },
+                      "errors": [
+                        {
+                          "message": "\u001b[31mTest timeout of 60000ms exceeded.\u001b[39m"
+                        },
+                        {
+                          "location": {
+                            "file": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/layout.visual.spec.ts",
+                            "column": 7,
+                            "line": 108
+                          },
+                          "message": "TypeError: The \"data\" argument must be of type string or an instance of Buffer, TypedArray, or DataView. Received undefined\n\n\u001b[0m \u001b[90m 106 |\u001b[39m       \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39msetViewportSize(viewport)\u001b[33m;\u001b[39m\n \u001b[90m 107 |\u001b[39m       \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForTimeout(\u001b[35m500\u001b[39m)\u001b[33m;\u001b[39m \u001b[90m// Wait for layout to adjust\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 108 |\u001b[39m       \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'.grid'\u001b[39m))\u001b[33m.\u001b[39mtoHaveScreenshot(\u001b[32m`grid-${viewport.name}.png`\u001b[39m\u001b[33m,\u001b[39m {\n \u001b[90m     |\u001b[39m       \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 109 |\u001b[39m         timeout\u001b[33m:\u001b[39m \u001b[35m30000\u001b[39m\u001b[33m,\u001b[39m\n \u001b[90m 110 |\u001b[39m       })\u001b[33m;\u001b[39m\n \u001b[90m 111 |\u001b[39m     }\u001b[0m\n\u001b[2m    at /Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/layout.visual.spec.ts:108:7\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-01-29T01:22:29.109Z",
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/Users/sergevilleneuve/Desktop/logo-gallery/test-results/layout.visual-Visual-Regression-Tests---Layout-Grid-layout-Tablet-Safari/test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "/Users/sergevilleneuve/Desktop/logo-gallery/test-results/layout.visual-Visual-Regression-Tests---Layout-Grid-layout-Tablet-Safari/video.webm"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "/Users/sergevilleneuve/Desktop/logo-gallery/test-results/layout.visual-Visual-Regression-Tests---Layout-Grid-layout-Tablet-Safari/trace.zip"
+                        }
+                      ]
+                    },
+                    {
+                      "workerIndex": 13,
+                      "status": "timedOut",
+                      "duration": 65423,
+                      "error": {
+                        "message": "\u001b[31mTest timeout of 60000ms exceeded.\u001b[39m",
+                        "stack": "\u001b[31mTest timeout of 60000ms exceeded.\u001b[39m"
+                      },
+                      "errors": [
+                        {
+                          "message": "\u001b[31mTest timeout of 60000ms exceeded.\u001b[39m"
+                        },
+                        {
+                          "location": {
+                            "file": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/layout.visual.spec.ts",
+                            "column": 7,
+                            "line": 108
+                          },
+                          "message": "TypeError: The \"data\" argument must be of type string or an instance of Buffer, TypedArray, or DataView. Received undefined\n\n\u001b[0m \u001b[90m 106 |\u001b[39m       \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39msetViewportSize(viewport)\u001b[33m;\u001b[39m\n \u001b[90m 107 |\u001b[39m       \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForTimeout(\u001b[35m500\u001b[39m)\u001b[33m;\u001b[39m \u001b[90m// Wait for layout to adjust\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 108 |\u001b[39m       \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'.grid'\u001b[39m))\u001b[33m.\u001b[39mtoHaveScreenshot(\u001b[32m`grid-${viewport.name}.png`\u001b[39m\u001b[33m,\u001b[39m {\n \u001b[90m     |\u001b[39m       \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 109 |\u001b[39m         timeout\u001b[33m:\u001b[39m \u001b[35m30000\u001b[39m\u001b[33m,\u001b[39m\n \u001b[90m 110 |\u001b[39m       })\u001b[33m;\u001b[39m\n \u001b[90m 111 |\u001b[39m     }\u001b[0m\n\u001b[2m    at /Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/layout.visual.spec.ts:108:7\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 1,
+                      "startTime": "2025-01-29T01:23:38.541Z",
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/Users/sergevilleneuve/Desktop/logo-gallery/test-results/layout.visual-Visual-Regression-Tests---Layout-Grid-layout-Tablet-Safari-retry1/test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "/Users/sergevilleneuve/Desktop/logo-gallery/test-results/layout.visual-Visual-Regression-Tests---Layout-Grid-layout-Tablet-Safari-retry1/video.webm"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "/Users/sergevilleneuve/Desktop/logo-gallery/test-results/layout.visual-Visual-Regression-Tests---Layout-Grid-layout-Tablet-Safari-retry1/trace.zip"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "unexpected"
                 }
               ],
               "id": "4f4cd04ed96c9f93656a-03d5d31e40a6ccf5706f",
@@ -1567,8 +2745,27 @@
                   "expectedStatus": "passed",
                   "projectId": "Tablet Safari",
                   "projectName": "Tablet Safari",
-                  "results": [],
-                  "status": "skipped"
+                  "results": [
+                    {
+                      "workerIndex": 14,
+                      "status": "passed",
+                      "duration": 2342,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Tablet-Safari/theme-light.png is re-generated, writing actual.\n"
+                        },
+                        {
+                          "text": "/Users/sergevilleneuve/Desktop/logo-gallery/e2e/visual-tests/snapshots/Tablet-Safari/theme-dark.png is re-generated, writing actual.\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-01-29T01:24:45.138Z",
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
                 }
               ],
               "id": "4f4cd04ed96c9f93656a-1b453810a01e93e103a3",
@@ -1583,11 +2780,11 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2025-01-28T23:10:35.913Z",
-    "duration": 74488.421,
-    "expected": 10,
-    "skipped": 50,
-    "unexpected": 0,
+    "startTime": "2025-01-29T01:04:39.546Z",
+    "duration": 1208185.865,
+    "expected": 55,
+    "skipped": 0,
+    "unexpected": 5,
     "flaky": 0
   }
 }

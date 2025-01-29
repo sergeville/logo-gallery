@@ -25,7 +25,10 @@
     "test:visual:update": "percy exec -- playwright test tests/visual/ --update-snapshots",
     "test:visual:debug": "PWDEBUG=1 percy exec -- playwright test tests/visual/",
     "percy": "percy exec -- npx playwright test --config=playwright.percy.config.ts",
-    "percy:update": "percy exec -- npx playwright test --config=playwright.percy.config.ts --update-snapshots"
+    "percy:update": "percy exec -- npx playwright test --config=playwright.percy.config.ts --update-snapshots",
+    "check:imports": "ts-node scripts/import-checker.ts",
+    "fix:imports": "ts-node scripts/fix-imports.ts",
+    "fix:imports:dry": "ts-node scripts/fix-imports.ts --dry-run"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.0",
@@ -88,6 +91,8 @@
     "typescript": "^5.7.3",
     "web-encoding": "^1.1.5",
     "whatwg-fetch": "^3.6.20",
-    "whatwg-url": "^14.1.0"
+    "whatwg-url": "^14.1.0",
+    "@typescript-eslint/typescript-estree": "^6.21.0",
+    "glob": "^10.3.10"
   }
 }

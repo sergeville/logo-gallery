@@ -70,6 +70,13 @@ Before submitting a pull request, please:
 - [Development Setup](docs/development.md)
 - [Testing Guide](docs/testing.md)
 - [Deployment Guide](docs/deployment.md)
+- [Design Standards](STANDARDS.md)
+  - Import path conventions
+  - Project structure
+  - Code style guidelines
+  - Database schema
+  - Authentication flow
+  - Testing patterns
 
 ## License
 
@@ -79,3 +86,158 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - Next.js team for the amazing framework
 - All contributors who have helped shape this project
+
+# Image Handling Examples
+
+This repository contains a collection of React hooks and utilities for handling images in web applications. These examples demonstrate common image-related tasks such as optimization, preloading, validation, caching, and compression.
+
+## Features
+
+### 1. Image Optimization Hook (`useImageOptimization`)
+- Resize images to specified dimensions
+- Convert images to different formats (WebP, JPEG, PNG)
+- Adjust image quality
+- Handle both File and Blob inputs
+
+### 2. Image Preloading Hook (`useImagePreload`)
+- Preload single or multiple images
+- Cache preloaded images
+- Clear preload cache when needed
+- Prevent duplicate preloading
+
+### 3. Image Validation Hook (`useImageValidation`)
+- Validate image dimensions
+- Check file size limits
+- Verify allowed formats
+- Get image dimensions
+
+### 4. Image Cache Hook (`useImageCache`)
+- Cache images with size limits
+- Automatic cache cleanup
+- Age-based cache invalidation
+- Memory-efficient storage
+
+### 5. Image Compression Utility
+- Target size-based compression
+- Automatic quality adjustment
+- Compression ratio calculation
+- Original vs compressed size comparison
+
+## Installation
+
+```bash
+npm install
+# or
+yarn
+```
+
+## Usage Examples
+
+### Image Optimization
+
+```typescript
+import { useImageOptimization } from './hooks-and-utilities';
+
+function ImageUploader() {
+  const { optimizeImage } = useImageOptimization();
+
+  const handleUpload = async (file: File) => {
+    const optimized = await optimizeImage(file, {
+      maxWidth: 1920,
+      maxHeight: 1080,
+      quality: 85,
+      format: 'webp'
+    });
+    // Use optimized image...
+  };
+}
+```
+
+### Image Preloading
+
+```typescript
+import { useImagePreload } from './hooks-and-utilities';
+
+function ImageGallery() {
+  const { preloadImages } = useImagePreload();
+
+  useEffect(() => {
+    const urls = ['image1.jpg', 'image2.jpg'];
+    preloadImages(urls).then(() => {
+      console.log('Images preloaded');
+    });
+  }, []);
+}
+```
+
+### Image Validation
+
+```typescript
+import { useImageValidation } from './hooks-and-utilities';
+
+function ImageUploader() {
+  const { validateImage } = useImageValidation();
+
+  const handleUpload = async (file: File) => {
+    const result = await validateImage(file, {
+      maxWidth: 2000,
+      maxHeight: 2000,
+      maxSize: 5 * 1024 * 1024,
+      allowedFormats: ['image/jpeg', 'image/png', 'image/webp']
+    });
+
+    if (result.valid) {
+      // Process valid image...
+    } else {
+      console.error(result.error);
+    }
+  };
+}
+```
+
+### Image Caching
+
+```typescript
+import { useImageCache } from './hooks-and-utilities';
+
+function ImageViewer() {
+  const { cacheImage, getCachedImage } = useImageCache();
+
+  const loadImage = async (url: string) => {
+    const cached = getCachedImage(url);
+    if (cached) {
+      return URL.createObjectURL(cached);
+    }
+
+    const response = await fetch(url);
+    const blob = await response.blob();
+    await cacheImage(url, blob, {
+      maxSize: 50 * 1024 * 1024,
+      maxAge: 24 * 60 * 60 * 1000
+    });
+    return URL.createObjectURL(blob);
+  };
+}
+```
+
+### Image Compression
+
+```typescript
+import { compressImage } from './hooks-and-utilities';
+
+async function handleImageUpload(file: File) {
+  const result = await compressImage(file, 1024 * 1024); // Target size: 1MB
+  console.log(`Compression ratio: ${result.compressionRatio}`);
+  console.log(`Original size: ${result.originalSize} bytes`);
+  console.log(`Compressed size: ${result.compressedSize} bytes`);
+  // Use result.blob...
+}
+```
+
+## Contributing
+
+Feel free to submit issues and enhancement requests!
+
+## License
+
+MIT

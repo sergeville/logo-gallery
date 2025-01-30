@@ -72,12 +72,17 @@ Before submitting a pull request, please:
 - [Testing Guide](docs/testing.md)
 - [Deployment Guide](docs/deployment.md)
 - [Database Schema](docs/DATABASE.md)
+- [Contributing Guidelines](docs/CONTRIBUTING.md)
 - [TODO List](docs/TODO.md)
 
 ### Design Documentation
 - [Design Standards](docs/design/STANDARDS.md)
 - [Authentication Flow](docs/design/auth-signin.md)
 - [Upload Form](docs/design/upload-form.md)
+
+### Development Documentation
+- [Next.js Build Fixes](docs/development/nextjs-build-fixes.md)
+- [AI Instructions](docs/development/AICustomInstructions.md)
 
 ### Testing Documentation
 - [Test Data Generation](docs/test-data.md)

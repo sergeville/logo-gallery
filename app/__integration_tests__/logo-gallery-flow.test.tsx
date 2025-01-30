@@ -8,6 +8,11 @@ import { mockLogoBase, mockLogoWithVotes, generateMockLogo } from '@/app/__tests
 import { mockAuthenticatedSession, mockAdminSession } from '@/app/__tests__/fixtures/user.fixtures';
 import { TEST_TIMEOUTS, TEST_ERROR_MESSAGES } from '@/app/__tests__/constants';
 import { cleanupTest, waitForAnimations, waitForImages, waitForNetwork, setupAsyncTest } from '@/app/__tests__/utils/test-reliability';
+import { setupPerformanceMonitoring, performanceMonitor, trackNetworkRequest, withPerformanceTracking } from '@/app/__tests__/utils/test-performance';
+
+// Wrap components with performance tracking
+const TrackedLogoGallery = withPerformanceTracking(LogoGallery, 'LogoGallery');
+const TrackedLogoUpload = withPerformanceTracking(LogoUpload, 'LogoUpload');
 
 const renderWithProviders = (
   ui: React.ReactElement,
@@ -29,9 +34,19 @@ const renderWithProviders = (
 describe('Logo Gallery Flow', () => {
   const { withTimeout } = setupAsyncTest();
 
+  // Set up performance monitoring
+  setupPerformanceMonitoring();
+
   beforeEach(() => {
     // Mock fetch for API calls
-    global.fetch = jest.fn();
+    global.fetch = jest.fn().mockImplementation((...args) => {
+      trackNetworkRequest();
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({})
+      });
+    });
+    
     // Mock IntersectionObserver for infinite scroll
     global.IntersectionObserver = jest.fn(() => ({
       observe: jest.fn(),
@@ -49,20 +64,26 @@ describe('Logo Gallery Flow', () => {
       // Mock successful upload
       const uploadedLogo = generateMockLogo();
       (global.fetch as jest.Mock)
-        .mockImplementationOnce(() => Promise.resolve({
-          ok: true,
-          json: () => Promise.resolve(uploadedLogo)
-        }))
+        .mockImplementationOnce(() => {
+          trackNetworkRequest();
+          return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve(uploadedLogo)
+          });
+        })
         // Mock gallery fetch
-        .mockImplementationOnce(() => Promise.resolve({
-          ok: true,
-          json: () => Promise.resolve({ logos: [uploadedLogo], hasMore: false })
-        }));
+        .mockImplementationOnce(() => {
+          trackNetworkRequest();
+          return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve({ logos: [uploadedLogo], hasMore: false })
+          });
+        });
 
       const { container } = renderWithProviders(
         <>
-          <LogoUpload />
-          <LogoGallery />
+          <TrackedLogoUpload />
+          <TrackedLogoGallery />
         </>
       );
 
@@ -92,8 +113,8 @@ describe('Logo Gallery Flow', () => {
 
       const { container } = renderWithProviders(
         <>
-          <LogoUpload />
-          <LogoGallery />
+          <TrackedLogoUpload />
+          <TrackedLogoGallery />
         </>
       );
 
@@ -129,7 +150,7 @@ describe('Logo Gallery Flow', () => {
           json: () => Promise.resolve({ logos: nextPageLogos, hasMore: false })
         }));
 
-      const { container } = renderWithProviders(<LogoGallery />);
+      const { container } = renderWithProviders(<TrackedLogoGallery />);
 
       await withTimeout(async () => {
         // Wait for initial load
@@ -176,7 +197,7 @@ describe('Logo Gallery Flow', () => {
         })
       }));
 
-      const { container } = renderWithProviders(<LogoGallery />);
+      const { container } = renderWithProviders(<TrackedLogoGallery />);
 
       await withTimeout(async () => {
         // Wait for initial load
@@ -217,7 +238,7 @@ describe('Logo Gallery Flow', () => {
         }));
 
       const { container } = renderWithProviders(
-        <LogoGallery />,
+        <TrackedLogoGallery />,
         { session: mockAdminSession }
       );
 

@@ -376,4 +376,206 @@ describe('Logos API', () => {
     expect(data.logos).toHaveLength(1);
     expect(data.logos[0].userId).toBe('456');
   });
+
+  it('handles tag filtering', async () => {
+    const url = new URL('http://localhost:3000/api/logos?tag=modern');
+    const request = {
+      nextUrl: url,
+      url: url.toString()
+    } as NextRequest;
+
+    const mockLogo = {
+      _id: '123',
+      title: 'Modern Logo',
+      description: 'A modern design',
+      imageUrl: 'test.jpg',
+      thumbnailUrl: 'thumb.jpg',
+      userId: '456',
+      ownerName: 'Test User',
+      totalVotes: 0,
+      votes: [],
+      tags: ['modern', 'minimal'],
+      createdAt: new Date('2024-01-01'),
+      uploadedAt: new Date('2024-01-01')
+    };
+
+    const mockMethods = {
+      select: jest.fn().mockReturnThis(),
+      sort: jest.fn().mockReturnThis(),
+      skip: jest.fn().mockReturnThis(),
+      limit: jest.fn().mockReturnThis(),
+      lean: jest.fn().mockResolvedValue([mockLogo])
+    };
+
+    Logo.find = jest.fn().mockImplementation(() => mockMethods);
+    Logo.countDocuments = jest.fn().mockResolvedValue(1);
+
+    const response = await GET(request);
+    const data = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(Logo.find).toHaveBeenCalledWith({ tags: 'modern' });
+    expect(data.logos).toHaveLength(1);
+    expect(data.logos[0].name).toBe('Modern Logo');
+  });
+
+  it('handles vote page filtering', async () => {
+    const url = new URL('http://localhost:3000/api/logos?votePage=true');
+    const request = {
+      nextUrl: url,
+      url: url.toString()
+    } as NextRequest;
+
+    // Mock authenticated user session
+    (getServerSession as jest.Mock).mockResolvedValueOnce({
+      user: { id: 'currentUser123' }
+    });
+
+    const mockLogo = {
+      _id: '123',
+      title: 'Votable Logo',
+      description: 'Logo for voting',
+      imageUrl: 'test.jpg',
+      thumbnailUrl: 'thumb.jpg',
+      userId: 'otherUser456', // Different from currentUser123
+      ownerName: 'Other User',
+      totalVotes: 5,
+      votes: [],
+      createdAt: new Date('2024-01-01'),
+      uploadedAt: new Date('2024-01-01')
+    };
+
+    const mockMethods = {
+      select: jest.fn().mockReturnThis(),
+      sort: jest.fn().mockReturnThis(),
+      skip: jest.fn().mockReturnThis(),
+      limit: jest.fn().mockReturnThis(),
+      lean: jest.fn().mockResolvedValue([mockLogo])
+    };
+
+    Logo.find = jest.fn().mockImplementation(() => mockMethods);
+    Logo.countDocuments = jest.fn().mockResolvedValue(1);
+
+    const response = await GET(request);
+    const data = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(Logo.find).toHaveBeenCalledWith({ userId: { $ne: 'currentUser123' } });
+    expect(data.logos).toHaveLength(1);
+    expect(data.logos[0].userId).toBe('otherUser456');
+  });
+
+  it('handles sorting by date in ascending order', async () => {
+    const url = new URL('http://localhost:3000/api/logos?sortBy=date&sortOrder=asc');
+    const request = {
+      nextUrl: url,
+      url: url.toString()
+    } as NextRequest;
+
+    const mockLogos = [
+      {
+        _id: '1',
+        title: 'Older Logo',
+        description: 'Created first',
+        imageUrl: 'test1.jpg',
+        thumbnailUrl: 'thumb1.jpg',
+        userId: '456',
+        ownerName: 'Test User',
+        totalVotes: 0,
+        votes: [],
+        createdAt: new Date('2024-01-01'),
+        uploadedAt: new Date('2024-01-01')
+      },
+      {
+        _id: '2',
+        title: 'Newer Logo',
+        description: 'Created second',
+        imageUrl: 'test2.jpg',
+        thumbnailUrl: 'thumb2.jpg',
+        userId: '456',
+        ownerName: 'Test User',
+        totalVotes: 0,
+        votes: [],
+        createdAt: new Date('2024-02-01'),
+        uploadedAt: new Date('2024-02-01')
+      }
+    ];
+
+    const mockMethods = {
+      select: jest.fn().mockReturnThis(),
+      sort: jest.fn().mockReturnThis(),
+      skip: jest.fn().mockReturnThis(),
+      limit: jest.fn().mockReturnThis(),
+      lean: jest.fn().mockResolvedValue(mockLogos)
+    };
+
+    Logo.find = jest.fn().mockImplementation(() => mockMethods);
+    Logo.countDocuments = jest.fn().mockResolvedValue(2);
+
+    const response = await GET(request);
+    const data = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(mockMethods.sort).toHaveBeenCalledWith({ uploadedAt: 1 });
+    expect(data.logos).toHaveLength(2);
+    expect(data.logos[0].name).toBe('Newer Logo');
+    expect(data.logos[1].name).toBe('Older Logo');
+  });
+
+  it('handles sorting by votes in descending order', async () => {
+    const url = new URL('http://localhost:3000/api/logos?sortBy=votes&sortOrder=desc');
+    const request = {
+      nextUrl: url,
+      url: url.toString()
+    } as NextRequest;
+
+    const mockLogos = [
+      {
+        _id: '1',
+        title: 'Popular Logo',
+        description: 'Has many votes',
+        imageUrl: 'test1.jpg',
+        thumbnailUrl: 'thumb1.jpg',
+        userId: '456',
+        ownerName: 'Test User',
+        totalVotes: 10,
+        votes: [],
+        createdAt: new Date('2024-01-01'),
+        uploadedAt: new Date('2024-01-01')
+      },
+      {
+        _id: '2',
+        title: 'Less Popular Logo',
+        description: 'Has fewer votes',
+        imageUrl: 'test2.jpg',
+        thumbnailUrl: 'thumb2.jpg',
+        userId: '456',
+        ownerName: 'Test User',
+        totalVotes: 5,
+        votes: [],
+        createdAt: new Date('2024-01-01'),
+        uploadedAt: new Date('2024-01-01')
+      }
+    ];
+
+    const mockMethods = {
+      select: jest.fn().mockReturnThis(),
+      sort: jest.fn().mockReturnThis(),
+      skip: jest.fn().mockReturnThis(),
+      limit: jest.fn().mockReturnThis(),
+      lean: jest.fn().mockResolvedValue(mockLogos)
+    };
+
+    Logo.find = jest.fn().mockImplementation(() => mockMethods);
+    Logo.countDocuments = jest.fn().mockResolvedValue(2);
+
+    const response = await GET(request);
+    const data = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(mockMethods.sort).toHaveBeenCalledWith({ totalVotes: -1 });
+    expect(data.logos).toHaveLength(2);
+    expect(data.logos[0].name).toBe('Popular Logo');
+    expect(data.logos[1].name).toBe('Less Popular Logo');
+  });
 }); 

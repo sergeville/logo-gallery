@@ -3,10 +3,9 @@
 ## Current Issues to Fix
 
 ### Type Issues
-1. [ ] Fix `title` property missing in Logo interface (used in tests but not defined)
-2. [ ] Fix `style` prop type in LogoImage mock
-3. [ ] Fix `data-testid` prop type in LogoImage mock
-4. [ ] Fix `createdAt` type handling in date tests
+1. [ ] Fix `style` prop type in LogoImage mock
+2. [ ] Fix `data-testid` prop type in LogoImage mock
+3. [ ] Fix `createdAt` type handling in date tests
 
 ### Mock Issues
 1. [ ] Improve Next/Image mock to handle all required props
@@ -36,10 +35,10 @@
 
 ## Progress Tracking
 
-- Total Issues: 18
+- Total Issues: 17
 - Fixed: 6
 - In Progress: 0
-- Remaining: 12
+- Remaining: 11
 
 ## Notes
 

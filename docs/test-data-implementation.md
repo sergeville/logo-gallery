@@ -51,10 +51,9 @@ interface Logo {
   description: string;
   userId: ObjectId;
   tags: string[];
-  averageRating: number;
+  totalVotes: number;
   votes: Array<{
     userId: ObjectId;
-    rating: number;
     timestamp: Date;
   }>;
   createdAt: Date;
@@ -152,10 +151,11 @@ const testUser = await createTestUser({
 ```typescript
 // Generate multiple logos
 const logos = await seedLogos({
-  count: 10,
-  userIds: existingUserIds,
-  withRatings: true,
-  perUser: 2
+  count: 5,
+  userIds: [admin._id, ...users.map(u => u._id)],
+  withVotes: true,
+  minVotes: 10,  // Ensure sufficient votes
+  maxVotes: 20
 });
 
 // Create a test logo
@@ -170,9 +170,9 @@ const testLogo = await createTestLogo(userId, {
 const relationships = await seedRelationships({
   users,
   logos,
-  commentsPerLogo: 3,
+  commentsPerLogo: 5,
   collectionsPerUser: 2,
-  favoritesPerUser: 5,
+  favoritesPerUser: 3,
   commentMentions: true,
   collectionTags: true,
   sharedCollections: true
@@ -218,7 +218,7 @@ await dbHelper.disconnect();
 ### Logo Features
 - Style-based naming
 - Tag system with predefined categories
-- Rating and voting system
+- Voting system
 - Even distribution among users
 - Dynamic description generation
 - Timestamp management
@@ -330,12 +330,12 @@ async function setupE2ETest() {
     passwordHash: 'User123!' // Same password for easy testing
   });
 
-  // Create logos with specific ratings
+  // Create logos with votes
   const logos = await seedLogos({
     count: 5,
     userIds: [admin._id, ...users.map(u => u._id)],
-    withRatings: true,
-    minVotes: 10,  // Ensure sufficient ratings
+    withVotes: true,
+    minVotes: 10,  // Ensure sufficient votes
     maxVotes: 20
   });
 
@@ -371,7 +371,7 @@ async function createAPITestFixtures() {
   const userLogos = await seedLogos({
     count: 3,
     userIds: [user._id],
-    withRatings: true
+    withVotes: true
   });
 
   // Create a collection with specific logos

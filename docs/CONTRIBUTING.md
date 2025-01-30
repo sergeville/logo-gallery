@@ -7,23 +7,121 @@ This guide will help you contribute to the Logo Gallery project effectively whil
 ### 1. Easy to Follow with Clear Steps
 
 - Break down complex tasks into smaller, manageable steps
-- Use descriptive commit messages following the format:
+- Use conventional commits format:
   ```
-  feat(scope): add logo upload validation
+  <type>(<scope>): <description>
+
+  [optional body]
+
+  [optional footer(s)]
+  ```
+  Types: feat, fix, docs, style, refactor, test, chore
+  Example:
+  ```
+  feat(upload): implement drag-and-drop logo upload
   
-  - Add file size validation
-  - Implement mime type checking
-  - Add error messages for invalid uploads
+  - Add drag-and-drop zone component
+  - Implement file validation
+  - Add progress indicator
+  
+  Closes #123
   ```
 - Document setup steps clearly:
   ```bash
-  # Example setup
-  npm install
+  # Install dependencies
+  pnpm install
+
+  # Setup environment
   cp .env.example .env.local
-  npm run dev
+  
+  # Run development server
+  pnpm dev
+  
+  # Run tests
+  pnpm test
   ```
 
-### 2. Backed by Concrete Examples
+### 2. Code Quality Tools
+
+- ESLint with strict configuration
+- Prettier for consistent formatting
+- Husky for pre-commit hooks
+- lint-staged for staged files
+- TypeScript in strict mode
+- Example configuration:
+  ```json
+  {
+    "scripts": {
+      "lint": "eslint . --ext .ts,.tsx",
+      "format": "prettier --write .",
+      "type-check": "tsc --noEmit",
+      "test": "jest",
+      "prepare": "husky install"
+    }
+  }
+  ```
+
+### 3. Testing Standards
+
+- Unit tests with Jest and React Testing Library
+- Integration tests for API routes
+- E2E tests with Playwright
+- Visual regression tests
+- Example test structure:
+  ```typescript
+  describe('LogoUploader', () => {
+    it('validates file size and type', async () => {
+      const file = new File(['logo'], 'logo.png', { type: 'image/png' });
+      const { getByTestId, findByText } = render(<LogoUploader />);
+      
+      const dropzone = getByTestId('dropzone');
+      await userEvent.upload(dropzone, file);
+      
+      expect(await findByText('File uploaded successfully')).toBeInTheDocument();
+    });
+
+    it('shows error for invalid file type', async () => {
+      const file = new File(['invalid'], 'doc.pdf', { type: 'application/pdf' });
+      const { getByTestId, findByText } = render(<LogoUploader />);
+      
+      const dropzone = getByTestId('dropzone');
+      await userEvent.upload(dropzone, file);
+      
+      expect(await findByText('Invalid file type')).toBeInTheDocument();
+    });
+  });
+  ```
+
+### 4. Performance Monitoring
+
+- Implement Lighthouse CI
+- Monitor Core Web Vitals
+- Use performance budgets
+- Example performance budget:
+  ```json
+  {
+    "performance-budget": {
+      "resourceSizes": [
+        {
+          "resourceType": "script",
+          "budget": 300
+        },
+        {
+          "resourceType": "total",
+          "budget": 1000
+        }
+      ],
+      "resourceCounts": [
+        {
+          "resourceType": "third-party",
+          "budget": 10
+        }
+      ]
+    }
+  }
+  ```
+
+### 5. Backed by Concrete Examples
 
 - Include code examples in documentation
 - Provide usage examples in component files
@@ -48,7 +146,7 @@ describe('LogoCard', () => {
 });
 ```
 
-### 3. Technically Thorough
+### 6. Technically Thorough
 
 - Write comprehensive tests (unit, integration, e2e)
 - Handle edge cases and error scenarios
@@ -71,7 +169,7 @@ try {
 }
 ```
 
-### 4. Following Best Practices
+### 7. Following Best Practices
 
 - Follow the [Next.js Best Practices](https://nextjs.org/docs/pages/building-your-application/routing/middleware#nextjs-middleware)
 - Use React patterns effectively:
@@ -92,7 +190,7 @@ try {
   }
   ```
 
-### 5. Considering Multiple Solutions
+### 8. Considering Multiple Solutions
 
 Before implementing a feature, consider:
 - Performance implications
@@ -108,7 +206,7 @@ Example decision matrix:
 | Server-side crop  | Lower client load    | Additional request | ❌ Reject |
 ```
 
-### 6. Focused on Long-term Code Quality
+### 9. Focused on Long-term Code Quality
 
 - Write self-documenting code:
   ```typescript
@@ -161,36 +259,63 @@ Example decision matrix:
 
 ## Security Guidelines
 
-### Role-Based Access Control
+### Security Best Practices
 
-When contributing code that involves user actions or sensitive operations:
-
-1. **API Routes**
-   - Always protect routes with appropriate permissions
-   - Use the `createPermissionMiddleware` helper
+1. **Input Validation**
+   - Validate all user inputs
+   - Use Zod schemas
+   - Sanitize HTML content
    - Example:
      ```typescript
-     export const POST = createPermissionMiddleware('create:logo')(async (req) => {
-       // Handle request
+     const LogoSchema = z.object({
+       title: z.string().min(1).max(100),
+       description: z.string().max(500).optional(),
+       file: z.instanceof(File).refine(
+         (file) => ALLOWED_TYPES.includes(file.type),
+         'Invalid file type'
+       )
      });
      ```
 
-2. **UI Components**
-   - Use `PermissionGate` for protected content
-   - Use `useRBAC` hook for conditional rendering
+2. **Authentication & Authorization**
+   - Use NextAuth.js middleware
+   - Implement RBAC
+   - Rate limiting
    - Example:
      ```typescript
-     <PermissionGate permission="edit:logo">
-       <EditButton />
-     </PermissionGate>
+     export const config = {
+       matcher: ['/api/upload', '/api/logos/:path*']
+     };
+     
+     export function middleware(request: NextRequest) {
+       const token = await getToken({ req: request });
+       if (!token) {
+         return new NextResponse(
+           JSON.stringify({ error: 'Unauthorized' }),
+           { status: 401 }
+         );
+       }
+     }
      ```
 
-3. **New Features**
-   - Define required permissions in `roles.config.ts`
-   - Document permission requirements
-   - Add appropriate test coverage
-
-See [RBAC Guide](./guides/RBAC.md) for detailed implementation guidelines.
+3. **Data Protection**
+   - Use environment variables
+   - Implement proper CORS
+   - Set security headers
+   - Example:
+     ```typescript
+     // next.config.js
+     const securityHeaders = [
+       {
+         key: 'X-DNS-Prefetch-Control',
+         value: 'on'
+       },
+       {
+         key: 'Strict-Transport-Security',
+         value: 'max-age=63072000; includeSubDomains; preload'
+       }
+     ];
+     ```
 
 ## Getting Help
 

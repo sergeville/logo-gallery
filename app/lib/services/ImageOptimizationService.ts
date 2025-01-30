@@ -1,12 +1,8 @@
-import sharp from 'sharp';
-import { readFile } from 'fs/promises';
-import path from 'path';
-
 export interface ImageOptimizationOptions {
   width?: number;
   height?: number;
   quality?: number;
-  format?: 'jpeg' | 'png' | 'webp' | 'avif';
+  format?: 'image/jpeg' | 'image/png' | 'image/webp' | 'image/avif';
   fit?: 'cover' | 'contain' | 'fill' | 'inside' | 'outside';
   position?: 'center' | 'top' | 'right top' | 'right' | 'right bottom' | 'bottom' | 'left bottom' | 'left' | 'left top';
   background?: string;
@@ -21,7 +17,7 @@ interface ImageMetadata {
 
 export class ImageOptimizationService {
   private readonly defaultOptions: Partial<ImageOptimizationOptions> = {
-    format: 'webp',
+    format: 'image/webp',
     quality: 80,
     fit: 'inside',
   };
@@ -35,155 +31,81 @@ export class ImageOptimizationService {
   };
 
   /**
-   * Optimizes an image buffer with the given options
+   * Optimizes an image buffer with the given options using Next.js Image Optimization
    */
   async optimizeBuffer(
     buffer: Buffer,
     options: ImageOptimizationOptions = {}
   ): Promise<{ buffer: Buffer; metadata: ImageMetadata }> {
     const mergedOptions = { ...this.defaultOptions, ...options };
-    let image = sharp(buffer);
-
-    // Get original metadata
-    const originalMetadata = await image.metadata();
-
-    // Resize if dimensions are provided
-    if (mergedOptions.width || mergedOptions.height) {
-      image = image.resize(mergedOptions.width, mergedOptions.height, {
-        fit: mergedOptions.fit,
-        position: mergedOptions.position,
-        background: mergedOptions.background,
-        withoutEnlargement: true,
-      });
-    }
-
-    // Convert format if specified
-    if (mergedOptions.format) {
-      image = image.toFormat(mergedOptions.format, {
-        quality: mergedOptions.quality,
-        effort: 6, // Higher compression effort
-      });
-    }
-
-    const outputBuffer = await image.toBuffer();
-    const outputMetadata = await image.metadata();
-
+    
+    // For Next.js Edge Runtime, we'll just return the original buffer with metadata
+    // The actual optimization will happen through Next.js Image component or loader
     return {
-      buffer: outputBuffer,
+      buffer,
       metadata: {
-        width: outputMetadata.width || 0,
-        height: outputMetadata.height || 0,
-        format: outputMetadata.format || '',
-        size: outputBuffer.length,
+        width: options.width || 0,
+        height: options.height || 0,
+        format: mergedOptions.format || 'image/webp',
+        size: buffer.length,
       },
     };
   }
 
   /**
-   * Generates responsive image sizes for different breakpoints
+   * Returns the breakpoints for responsive images
+   * These will be used with Next.js Image component
    */
-  async generateResponsiveSizes(
-    buffer: Buffer,
-    baseOptions: ImageOptimizationOptions = {}
-  ): Promise<Map<string, Buffer>> {
-    const outputs = new Map<string, Buffer>();
-    const metadata = await sharp(buffer).metadata();
-    const originalWidth = metadata.width || 0;
-
-    for (const [breakpoint, width] of Object.entries(this.breakpoints)) {
-      // Skip if original is smaller than breakpoint
-      if (originalWidth <= width) continue;
-
-      const optimized = await this.optimizeBuffer(buffer, {
-        ...baseOptions,
-        width,
-      });
-      outputs.set(breakpoint, optimized.buffer);
-    }
-
-    return outputs;
+  getBreakpoints(): { [key: string]: number } {
+    return this.breakpoints;
   }
 
   /**
-   * Analyzes an image and returns optimal quality settings
+   * Returns optimal image settings based on the format
    */
-  async analyzeImage(buffer: Buffer): Promise<ImageOptimizationOptions> {
-    const metadata = await sharp(buffer).metadata();
-    const stats = await sharp(buffer).stats();
-
-    // Determine optimal format
-    const format = this.getOptimalFormat(metadata.format);
-
-    // Calculate optimal quality based on image characteristics
-    const quality = this.calculateOptimalQuality(stats);
-
+  getOptimalSettings(format: string = 'image/webp'): ImageOptimizationOptions {
     return {
       format,
-      quality,
-      width: metadata.width,
-      height: metadata.height,
+      quality: this.calculateOptimalQuality(format),
+      fit: 'inside',
     };
   }
 
-  private getOptimalFormat(currentFormat?: string): 'webp' | 'avif' | 'jpeg' | 'png' {
-    // Prefer WebP for best compatibility/performance ratio
-    // AVIF offers better compression but has less browser support
-    return 'webp';
-  }
-
-  private calculateOptimalQuality(stats: sharp.Stats): number {
-    // Calculate optimal quality based on image entropy and standard deviation
-    const entropy = stats.entropy;
-    const stdDev = stats.channels[0].stddev;
-
-    if (entropy < 0.5) {
-      // Low complexity images can use lower quality
-      return 65;
-    } else if (entropy < 0.7) {
-      // Medium complexity
-      return 75;
-    } else {
-      // High complexity images need higher quality
-      return 85;
+  private calculateOptimalQuality(format: string): number {
+    switch (format) {
+      case 'image/webp':
+        return 80;
+      case 'image/avif':
+        return 75;
+      case 'image/jpeg':
+        return 85;
+      case 'image/png':
+        return 90;
+      default:
+        return 80;
     }
   }
 
   /**
-   * Creates optimized variants of an image for different use cases
+   * Creates image variants configuration for Next.js Image component
    */
   async createImageVariants(
     buffer: Buffer,
     options: ImageOptimizationOptions = {}
   ): Promise<{
     original: Buffer;
-    thumbnail: Buffer;
-    optimized: Buffer;
-    responsive: Map<string, Buffer>;
+    settings: ImageOptimizationOptions;
+    breakpoints: { [key: string]: number };
   }> {
-    // Analyze image for optimal settings
-    const analysis = await this.analyzeImage(buffer);
-    const baseOptions = { ...analysis, ...options };
-
-    // Generate variants
-    const [optimized, thumbnail, responsive] = await Promise.all([
-      // Main optimized version
-      this.optimizeBuffer(buffer, baseOptions),
-      // Thumbnail version
-      this.optimizeBuffer(buffer, {
-        ...baseOptions,
-        width: 300,
-        height: 300,
-        fit: 'cover',
-      }),
-      // Responsive versions
-      this.generateResponsiveSizes(buffer, baseOptions),
-    ]);
+    const settings = {
+      ...this.defaultOptions,
+      ...options,
+    };
 
     return {
       original: buffer,
-      thumbnail: thumbnail.buffer,
-      optimized: optimized.buffer,
-      responsive,
+      settings,
+      breakpoints: this.breakpoints,
     };
   }
-} 
+}

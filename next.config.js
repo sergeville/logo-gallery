@@ -3,7 +3,7 @@ const nextConfig = {
   output: 'standalone',
   images: {
     unoptimized: true,
-    domains: ['localhost'],
+    domains: ['localhost', 'example.com'],
     remotePatterns: [
       {
         protocol: 'https',
@@ -11,6 +11,10 @@ const nextConfig = {
       },
     ],
   },
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  transpilePackages: ['sharp', 'bcrypt', 'bcryptjs'],
   experimental: {
     serverActions: {
       bodySizeLimit: '2mb'
@@ -21,6 +25,44 @@ const nextConfig = {
   },
   poweredByHeader: false,
   reactStrictMode: true,
+  webpack: (config, { isServer }) => {
+    // Handle Node.js built-in modules
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        child_process: false,
+        fs: false,
+        net: false,
+        tls: false,
+        crypto: false,
+        stream: false,
+        path: false,
+        os: false,
+        events: false,
+      };
+    }
+
+    // Add rule for handling Node.js native modules
+    config.module.rules.push({
+      test: /node_modules\/(sharp|bcrypt|bcryptjs)\/.*\.js$/,
+      use: {
+        loader: 'babel-loader',
+        options: {
+          presets: ['@babel/preset-env'],
+          cacheDirectory: true,
+        },
+      },
+    });
+
+    // Handle sharp WebAssembly
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@img/sharp-wasm32': false,
+      '@img/sharp-libvips-dev': false,
+    };
+
+    return config;
+  },
 }
 
-module.exports = nextConfig 
+module.exports = nextConfig

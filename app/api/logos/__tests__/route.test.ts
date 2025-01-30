@@ -227,4 +227,153 @@ describe('Logos API', () => {
       hasMore: false
     });
   });
+
+  it('handles search by title', async () => {
+    const url = new URL('http://localhost:3000/api/logos?search=test');
+    const request = {
+      nextUrl: url,
+      url: url.toString()
+    } as NextRequest;
+
+    const mockLogo = {
+      _id: '123',
+      title: 'Test Logo',
+      description: 'Some Description',
+      imageUrl: 'test.jpg',
+      thumbnailUrl: 'thumb.jpg',
+      userId: '456',
+      ownerName: 'Test User',
+      totalVotes: 0,
+      votes: [],
+      createdAt: new Date('2024-01-01'),
+      uploadedAt: new Date('2024-01-01')
+    };
+
+    const mockMethods = {
+      select: jest.fn().mockReturnThis(),
+      sort: jest.fn().mockReturnThis(),
+      skip: jest.fn().mockReturnThis(),
+      limit: jest.fn().mockReturnThis(),
+      lean: jest.fn().mockResolvedValue([mockLogo])
+    };
+
+    Logo.find = jest.fn().mockImplementation(() => mockMethods);
+    Logo.countDocuments = jest.fn().mockResolvedValue(1);
+
+    const response = await GET(request);
+    const data = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(Logo.find).toHaveBeenCalledWith({
+      $or: [
+        { title: { $regex: 'test', $options: 'i' } },
+        { description: { $regex: 'test', $options: 'i' } },
+        { tags: { $regex: 'test', $options: 'i' } },
+        { ownerName: { $regex: 'test', $options: 'i' } }
+      ]
+    });
+    expect(data.logos).toHaveLength(1);
+    expect(data.logos[0].name).toBe('Test Logo');
+  });
+
+  it('handles search by description', async () => {
+    const url = new URL('http://localhost:3000/api/logos?search=unique');
+    const request = {
+      nextUrl: url,
+      url: url.toString()
+    } as NextRequest;
+
+    const mockLogo = {
+      _id: '123',
+      title: 'Logo Title',
+      description: 'Unique Description',
+      imageUrl: 'test.jpg',
+      thumbnailUrl: 'thumb.jpg',
+      userId: '456',
+      ownerName: 'Test User',
+      totalVotes: 0,
+      votes: [],
+      createdAt: new Date('2024-01-01'),
+      uploadedAt: new Date('2024-01-01')
+    };
+
+    const mockMethods = {
+      select: jest.fn().mockReturnThis(),
+      sort: jest.fn().mockReturnThis(),
+      skip: jest.fn().mockReturnThis(),
+      limit: jest.fn().mockReturnThis(),
+      lean: jest.fn().mockResolvedValue([mockLogo])
+    };
+
+    Logo.find = jest.fn().mockImplementation(() => mockMethods);
+    Logo.countDocuments = jest.fn().mockResolvedValue(1);
+
+    const response = await GET(request);
+    const data = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(Logo.find).toHaveBeenCalledWith({
+      $or: [
+        { title: { $regex: 'unique', $options: 'i' } },
+        { description: { $regex: 'unique', $options: 'i' } },
+        { tags: { $regex: 'unique', $options: 'i' } },
+        { ownerName: { $regex: 'unique', $options: 'i' } }
+      ]
+    });
+    expect(data.logos).toHaveLength(1);
+    expect(data.logos[0].description).toBe('Unique Description');
+  });
+
+  it('handles combined search with userId filter', async () => {
+    const url = new URL('http://localhost:3000/api/logos?search=test&userId=456');
+    const request = {
+      nextUrl: url,
+      url: url.toString()
+    } as NextRequest;
+
+    const mockLogo = {
+      _id: '123',
+      title: 'Test Logo',
+      description: 'Some Description',
+      imageUrl: 'test.jpg',
+      thumbnailUrl: 'thumb.jpg',
+      userId: '456',
+      ownerName: 'Test User',
+      totalVotes: 0,
+      votes: [],
+      createdAt: new Date('2024-01-01'),
+      uploadedAt: new Date('2024-01-01')
+    };
+
+    const mockMethods = {
+      select: jest.fn().mockReturnThis(),
+      sort: jest.fn().mockReturnThis(),
+      skip: jest.fn().mockReturnThis(),
+      limit: jest.fn().mockReturnThis(),
+      lean: jest.fn().mockResolvedValue([mockLogo])
+    };
+
+    Logo.find = jest.fn().mockImplementation(() => mockMethods);
+    Logo.countDocuments = jest.fn().mockResolvedValue(1);
+
+    const response = await GET(request);
+    const data = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(Logo.find).toHaveBeenCalledWith({
+      $and: [
+        { userId: '456' },
+        {
+          $or: [
+            { title: { $regex: 'test', $options: 'i' } },
+            { description: { $regex: 'test', $options: 'i' } },
+            { tags: { $regex: 'test', $options: 'i' } },
+            { ownerName: { $regex: 'test', $options: 'i' } }
+          ]
+        }
+      ]
+    });
+    expect(data.logos).toHaveLength(1);
+    expect(data.logos[0].userId).toBe('456');
+  });
 }); 

@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/lib/auth';
-import { connectToDatabase } from '@/app/lib/db';
-import { User } from '@/app/lib/types';
+import { authConfig } from '@/app/lib/auth.config';
+import dbConnect from '@/app/lib/db-config';
+import { User } from '@/app/lib/models/user';
 
 export async function GET(request: Request) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getServerSession(authConfig);
 
     if (!session) {
       return NextResponse.json({
@@ -24,24 +24,16 @@ export async function GET(request: Request) {
       }, { status: 400 });
     }
 
-    const { db } = await connectToDatabase();
-    const usersCollection = db.collection<User>('users');
-
-    const user = await usersCollection.findOne({ email });
+    await dbConnect();
+    const user = await User.findById(session.user.id).select('-password').lean();
 
     if (!user) {
-      return NextResponse.json({
-        success: false,
-        message: 'User not found'
-      }, { status: 404 });
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
-
-    // Remove sensitive data before sending
-    const { password, ...userWithoutPassword } = user;
 
     return NextResponse.json({
       success: true,
-      user: userWithoutPassword
+      user
     });
 
   } catch (error) {

@@ -28,7 +28,8 @@ export class DatabaseHelper {
       NAME_MIN_LENGTH: 3,
       NAME_MAX_LENGTH: 100,
       DESCRIPTION_MAX_LENGTH: 1000,
-      TAGS_MAX_COUNT: 10
+      TAGS_MAX_COUNT: 10,
+      MAX_VOTES_PER_USER: 1
     },
     relationships: {
       MAX_COMMENT_DEPTH: 5,
@@ -245,9 +246,9 @@ export class DatabaseHelper {
       updatedAt: new Date(),
       votes: (data.votes || []).map((vote: any) => ({
         userId: new ObjectId(vote.userId),
-        rating: vote.rating,
         timestamp: new Date(vote.timestamp || Date.now())
-      }))
+      })),
+      totalVotes: data.votes?.length || 0
     };
 
     await this.db.collection('logos').insertOne(logo);
@@ -529,7 +530,8 @@ export class DatabaseHelper {
           name: `Logo ${Date.now()}`,
           tags: ['test'],
           description: 'Test logo',
-          rating: 0,
+          totalVotes: 0,
+          votes: [],
           ...overrides
         };
       case 'comment':
@@ -629,10 +631,9 @@ export class DatabaseHelper {
           thumbnailUrl: `https://example.com/logo${i}-thumb.png`,
           userId: owner._id,
           tags: [`tag${i}`, 'test'],
-          rating: 4,
+          totalVotes: 0,
           votes: [{
             userId: owner._id,
-            rating: 4,
             timestamp: new Date()
           }],
           createdAt: new Date(),

@@ -1,10 +1,9 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { Logo } from '@/app/lib/models/logo';
 import dbConnect from '@/app/lib/db-config';
-import { readFile } from 'fs/promises';
-import path from 'path';
 import { isValidObjectId } from 'mongoose';
 import { imageCacheService } from '@/app/lib/services/ImageCacheService';
+import { use } from 'react';
 
 // Configure route to run at the edge
 export const runtime = 'edge';
@@ -38,140 +37,53 @@ const MAX_QUALITY = 100;
 const MIN_QUALITY = 1;
 
 export async function GET(
-  request: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const logoId = params.id;
-
-    if (!isValidObjectId(logoId)) {
-      return new NextResponse('Invalid logo ID', { 
-        status: 400,
-        headers: SECURITY_HEADERS
-      });
+    const { id } = use(params);
+    if (!isValidObjectId(id)) {
+      return new NextResponse('Invalid logo ID', { status: 400 });
     }
 
     await dbConnect();
-    const logo = await Logo.findById(logoId).lean();
+    const logo = await Logo.findById(id);
 
     if (!logo) {
-      return new NextResponse('Logo not found', { 
-        status: 404,
-        headers: SECURITY_HEADERS
-      });
+      return new NextResponse('Logo not found', { status: 404 });
     }
 
-    if (!logo.imageUrl) {
-      return new NextResponse('Image URL not found', { 
-        status: 404,
-        headers: SECURITY_HEADERS
-      });
-    }
-
-    // Handle external URLs by redirecting with caching headers
-    if (logo.imageUrl.startsWith('http')) {
-      const headers = {
-        ...SECURITY_HEADERS,
-        'Cache-Control': CACHE_CONTROL_REVALIDATE
-      };
-      return NextResponse.redirect(logo.imageUrl, { headers });
-    }
-
-    const imagePath = path.join(process.cwd(), 'public', logo.imageUrl);
-    const ext = path.extname(imagePath).slice(1).toLowerCase();
-
-    if (!ALLOWED_EXTENSIONS.has(ext)) {
-      return new NextResponse('Invalid image format', { 
-        status: 400,
-        headers: SECURITY_HEADERS
-      });
-    }
-
-    const contentType = contentTypes[ext];
-    if (!contentType) {
-      return new NextResponse('Unsupported image format', { 
-        status: 400,
-        headers: SECURITY_HEADERS
-      });
-    }
-
-    // Get and validate image processing options
-    const url = new URL(request.url);
-    let width = url.searchParams.get('w') ? parseInt(url.searchParams.get('w')!) : undefined;
-    let height = url.searchParams.get('h') ? parseInt(url.searchParams.get('h')!) : undefined;
-    let quality = url.searchParams.get('q') ? parseInt(url.searchParams.get('q')!) : undefined;
-    const format = url.searchParams.get('f') as 'jpeg' | 'png' | 'webp' | undefined;
-
-    // Validate and constrain dimensions
-    if (width) {
-      width = Math.min(Math.max(width, MIN_DIMENSION), MAX_DIMENSION);
-    }
-    if (height) {
-      height = Math.min(Math.max(height, MIN_DIMENSION), MAX_DIMENSION);
-    }
-    if (quality) {
-      quality = Math.min(Math.max(quality, MIN_QUALITY), MAX_QUALITY);
-    }
-
-    // Generate a cache key based on the normalized image path and processing options
-    const cacheKey = `${imagePath}?w=${width}&h=${height}&q=${quality}&f=${format}`;
-
-    // Try to get the image from cache first
-    const cachedImage = await imageCacheService.getImage(imagePath, {
-      width,
-      height,
-      quality,
-      format
-    });
-
+    // Check cache first
+    const cachedImage = await imageCacheService.getImage(logo.imageUrl);
     if (cachedImage) {
-      const headers = {
-        ...SECURITY_HEADERS,
-        'Content-Type': cachedImage.contentType,
-        'Cache-Control': CACHE_CONTROL_IMMUTABLE,
-        'Content-Length': cachedImage.buffer.length.toString(),
-        'ETag': `"${Buffer.from(cacheKey).toString('base64')}"`,
-        'Vary': 'Accept, Accept-Encoding',
-        'Accept-Ranges': 'bytes',
-        'Last-Modified': new Date().toUTCString()
-      };
-
-      return new NextResponse(cachedImage.buffer, { headers });
-    }
-
-    // If not in cache, read and process the image
-    const imageBuffer = await readFile(imagePath);
-    const processedImage = await imageCacheService.getImage(imagePath, {
-      width,
-      height,
-      quality,
-      format
-    });
-
-    if (!processedImage) {
-      return new NextResponse('Failed to process image', { 
-        status: 500,
-        headers: SECURITY_HEADERS
+      return new NextResponse(cachedImage.buffer, {
+        headers: {
+          'Content-Type': cachedImage.contentType,
+          'Cache-Control': 'public, max-age=3600',
+          'x-cache': 'HIT'
+        }
       });
     }
 
-    const headers = {
-      ...SECURITY_HEADERS,
-      'Content-Type': processedImage.contentType,
-      'Cache-Control': CACHE_CONTROL_IMMUTABLE,
-      'Content-Length': processedImage.buffer.length.toString(),
-      'ETag': `"${Buffer.from(cacheKey).toString('base64')}"`,
-      'Vary': 'Accept, Accept-Encoding',
-      'Accept-Ranges': 'bytes',
-      'Last-Modified': new Date().toUTCString()
-    };
+    // If not in cache, fetch from URL
+    const imageResponse = await fetch(logo.imageUrl);
+    const imageBuffer = await imageResponse.arrayBuffer();
 
-    return new NextResponse(processedImage.buffer, { headers });
-  } catch (error) {
-    console.error('Error serving image:', error);
-    return new NextResponse('Internal Server Error', { 
-      status: 500,
-      headers: SECURITY_HEADERS
+    // Cache the image
+    await imageCacheService.getImage(logo.imageUrl, {
+      buffer: Buffer.from(imageBuffer),
+      contentType: 'image/png'
     });
+
+    return new NextResponse(imageBuffer, {
+      headers: {
+        'Content-Type': 'image/png',
+        'Cache-Control': 'public, max-age=3600',
+        'x-cache': 'MISS'
+      }
+    });
+  } catch (error) {
+    console.error('Error serving logo image:', error);
+    return new NextResponse('Error serving image', { status: 500 });
   }
 } 

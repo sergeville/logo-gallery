@@ -3,6 +3,7 @@ import { readFile } from 'fs/promises';
 import path from 'path';
 import { headers } from 'next/headers';
 import { imageCacheService } from '@/app/lib/services/ImageCacheService';
+import { use } from 'react';
 
 const UPLOAD_DIR = path.join(process.cwd(), 'public', 'uploads');
 
@@ -17,10 +18,11 @@ const contentTypes: Record<string, string> = {
 
 export async function GET(
   request: Request,
-  { params }: { params: { path: string[] } }
+  { params }: { params: Promise<{ path: string[] }> }
 ) {
   try {
-    const filePath = path.join(UPLOAD_DIR, ...params.path);
+    const { path: pathArray } = use(params);
+    const filePath = path.join(UPLOAD_DIR, pathArray.join('/'));
     const ext = path.extname(filePath).slice(1).toLowerCase();
     const contentType = contentTypes[ext] || 'application/octet-stream';
 

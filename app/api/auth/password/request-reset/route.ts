@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { connectToDatabase } from '@/app/lib/db-config';
+import dbConnect from '@/app/lib/db-config';
+import { User } from '@/app/lib/models/user';
 import { sendEmail } from '@/app/lib/email';
 import crypto from 'crypto';
 
@@ -14,8 +15,8 @@ export async function POST(request: Request) {
       );
     }
 
-    const { db } = await connectToDatabase();
-    const user = await db.collection('users').findOne({ email });
+    await dbConnect();
+    const user = await User.findOne({ email });
 
     if (!user) {
       // Return success even if user not found for security
@@ -30,7 +31,7 @@ export async function POST(request: Request) {
     const expires = new Date(Date.now() + 3600000); // 1 hour from now
 
     // Save reset token
-    await db.collection('users').updateOne(
+    await User.updateOne(
       { _id: user._id },
       { 
         $set: { 

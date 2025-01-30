@@ -27,9 +27,9 @@ echo -e "${GREEN}4. Get only logo names and URLs:${NC}"
 echo "curl -X GET http://localhost:3000/api/logos | jq '.logos[] | {name, url}'"
 echo
 
-# 5. Get logos with rating > 4.5
-echo -e "${GREEN}5. Get logos with rating > 4.5:${NC}"
-echo "curl -X GET http://localhost:3000/api/logos | jq '.logos[] | select(.averageRating > 4.5)'"
+# 5. Get logos with high vote counts
+echo -e "${GREEN}5. Get logos with most votes:${NC}"
+echo "curl -X GET http://localhost:3000/api/logos | jq '.logos[] | select(.totalVotes > 10)'"
 echo
 
 # 6. Create a new logo (Jardinscampion Logo)
@@ -42,7 +42,7 @@ echo 'curl -X POST http://localhost:3000/api/logos \
   \"description\": \"Official Jardinscampion logo\",
   \"userId\": \"65f1234567890123456789ab\",
   \"tags\": [\"official\", \"brand\", \"company\"],
-  \"averageRating\": 5.0
+  \"totalVotes\": 0
 }'"
 echo
 
@@ -56,7 +56,7 @@ echo 'curl -X POST http://localhost:3000/api/logos \
   \"description\": \"Jardinscampion icon version\",
   \"userId\": \"65f1234567890123456789ab\",
   \"tags\": [\"icon\", \"brand\", \"minimal\"],
-  \"averageRating\": 4.8
+  \"totalVotes\": 0
 }'"
 echo
 
@@ -67,7 +67,7 @@ echo
 
 # 9. Get logos in table format
 echo -e "${GREEN}9. Get logos in table format:${NC}"
-echo "curl -X GET http://localhost:3000/api/logos | jq -r '.logos[] | [.name, .description, .averageRating] | @tsv' | column -t -s $'\t'"
+echo "curl -X GET http://localhost:3000/api/logos | jq -r '.logos[] | [.name, .description, .totalVotes] | @tsv' | column -t -s $'\t'"
 echo
 
 # New command to display all images in an HTML gallery
@@ -98,7 +98,7 @@ echo 'curl -X GET http://localhost:3000/api/logos | jq -r '"'"'
           <div class=\"tags\">
             \(.tags | map("<span class=\"tag\">\(.)</span>") | join(""))
           </div>
-          <p>Rating: \(.averageRating)</p>
+          <p>Total Votes: \(.totalVotes)</p>
         </div>
       </div>")
     </div>
@@ -114,7 +114,7 @@ echo
 
 # Alternative using mongoose-based API
 echo -e "${GREEN}12. List all logos using API (clean format):${NC}"
-echo 'curl -X GET http://localhost:3000/api/logos | jq -r ".logos[] | \"\(.name):\n  URL: \(.url)\n  Rating: \(.averageRating)\n\""'
+echo 'curl -X GET http://localhost:3000/api/logos | jq -r ".logos[] | \"\(.name):\n  URL: \(.url)\n  Total Votes: \(.totalVotes)\n\""'
 echo
 
 echo -e "${BLUE}=== Usage ===${NC}"

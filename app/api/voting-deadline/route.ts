@@ -1,18 +1,20 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/app/api/auth/[...nextauth]/route'
-import { connectToDatabase } from '@/lib/db'
-import { VotingSettings } from '@/models/VotingSettings'
+import { authConfig } from '@/app/lib/auth.config'
+import dbConnect from '@/app/lib/db-config'
+import { VotingSettings } from '@/app/lib/models/VotingSettings'
 
 export async function GET() {
   try {
-    await connectToDatabase()
-    const settings = await VotingSettings.getInstance()
+    await dbConnect()
+    const settings = await VotingSettings.findOne() || await VotingSettings.create({
+      deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // Default 7 days from now
+    })
     return NextResponse.json({ deadline: settings.deadline })
   } catch (error) {
     console.error('Error fetching deadline:', error)
     return NextResponse.json(
-      { error: 'Failed to fetch deadline' },
+      { error: 'Failed to fetch voting deadline' },
       { status: 500 }
     )
   }
@@ -21,7 +23,7 @@ export async function GET() {
 export async function PUT(request: Request) {
   try {
     // Check authentication
-    const session = await getServerSession(authOptions)
+    const session = await getServerSession(authConfig)
     if (!session) {
       return NextResponse.json(
         { error: 'Authentication required' },
@@ -37,7 +39,6 @@ export async function PUT(request: Request) {
       )
     }
 
-    // Get and validate the new deadline
     const { deadline } = await request.json()
     if (!deadline) {
       return NextResponse.json(
@@ -46,29 +47,26 @@ export async function PUT(request: Request) {
       )
     }
 
-    // Validate deadline format
-    const deadlineDate = new Date(deadline)
-    if (isNaN(deadlineDate.getTime())) {
+    const newDeadline = new Date(deadline)
+    if (newDeadline < new Date()) {
       return NextResponse.json(
-        { error: 'Invalid deadline format' },
+        { error: 'Deadline must be in the future' },
         { status: 400 }
       )
     }
 
-    // Connect to database and update settings
-    await connectToDatabase()
-    const settings = await VotingSettings.getInstance()
-    settings.deadline = deadlineDate
-    await settings.save()
-
-    return NextResponse.json(
-      { message: 'Deadline updated successfully', deadline: settings.deadline },
-      { status: 200 }
+    await dbConnect()
+    const settings = await VotingSettings.findOneAndUpdate(
+      {},
+      { deadline: newDeadline },
+      { upsert: true, new: true }
     )
+
+    return NextResponse.json({ deadline: settings.deadline })
   } catch (error) {
     console.error('Error updating deadline:', error)
     return NextResponse.json(
-      { error: 'Failed to update deadline' },
+      { error: 'Failed to update voting deadline' },
       { status: 500 }
     )
   }

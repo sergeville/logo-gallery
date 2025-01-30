@@ -5,27 +5,38 @@ export interface User {
   email: string;
   username: string;
   password: string;
-  role?: 'admin' | 'user';
-  profile?: {
+  createdAt: Date;
+  profile: {
     bio?: string;
     website?: string;
     avatar?: string;
     location?: string;
     skills?: string[];
   };
-  createdAt: Date;
 }
 
 export interface Logo {
   _id: ObjectId;
   name: string;
+  description?: string;
   imageUrl: string;
   thumbnailUrl: string;
-  description?: string;
   userId: ObjectId;
   tags: string[];
+  category?: string;
+  dimensions?: {
+    width: number;
+    height: number;
+  };
+  fileSize?: number;
+  fileType?: string;
   createdAt: Date;
-  updatedAt?: Date;
+  updatedAt: Date;
+  totalVotes: number;
+  votes: Array<{
+    userId: ObjectId;
+    timestamp: Date;
+  }>;
 }
 
 export interface Comment {
@@ -34,21 +45,19 @@ export interface Comment {
   userId: ObjectId;
   content: string;
   parentId?: ObjectId;
-  mentions?: ObjectId[];
-  likes?: number;
   createdAt: Date;
+  likes?: number;
+  mentions?: ObjectId[];
 }
 
 export interface Collection {
   _id: ObjectId;
-  userId: ObjectId;
   name: string;
+  userId: ObjectId;
   logos: ObjectId[];
-  tags?: string[];
-  collaborators?: ObjectId[];
+  createdAt: Date;
   isPublic: boolean;
   sharedWith?: ObjectId[];
-  createdAt: Date;
 }
 
 export interface Relationships {

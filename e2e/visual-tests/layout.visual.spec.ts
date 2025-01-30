@@ -3,7 +3,10 @@ import { LOCALHOST_URL } from '@/config/constants';
 import {
   preparePageForVisualTest,
   testResponsiveLayouts,
-  VIEWPORT_SIZES
+  VIEWPORT_SIZES,
+  compareScreenshots,
+  waitForElement,
+  ensurePageReady
 } from '../utils/visual-test-utils';
 
 test.describe('Visual Regression Tests - Layout', () => {
@@ -128,6 +131,73 @@ test.describe('Visual Regression Tests - Layout', () => {
     await expect(page).toHaveScreenshot('theme-dark.png', {
       fullPage: true,
       timeout: 30000,
+    });
+  });
+
+  test('should test responsive grid layouts', async ({ page }) => {
+    await preparePageForVisualTest(page);
+    
+    await testResponsiveLayouts(page, 'grid-layout', async (viewport) => {
+      await page.setViewportSize(viewport);
+      await page.route('**/api/config', (route) => {
+        route.fulfill({
+          status: 200,
+          body: JSON.stringify({
+            data: {
+              gallery: {
+                columns: viewport.width >= 1024 ? 4 : viewport.width >= 768 ? 3 : 2,
+                spacing: 16,
+                maxWidth: 1200,
+                imageHeight: 200
+              }
+            }
+          })
+        });
+      });
+      await page.route('**/api/images', (route) => {
+        route.fulfill({
+          status: 200,
+          body: JSON.stringify({
+            data: Array(6).fill(null).map((_, i) => ({
+              id: String(i + 1),
+              name: `Logo ${i + 1}`,
+              url: `https://example.com/logo${i + 1}.png`
+            }))
+          })
+        });
+      });
+      await page.goto('/gallery');
+      await ensurePageReady(page);
+      await waitForElement(page, '[data-testid="gallery-grid"]');
+      await compareScreenshots(page, `grid-layout-${viewport.width}x${viewport.height}`);
+    });
+  });
+
+  test('should test header and navigation layout', async ({ page }) => {
+    await preparePageForVisualTest(page);
+    
+    await testResponsiveLayouts(page, 'header-layout', async (viewport) => {
+      await page.setViewportSize(viewport);
+      await page.goto('/gallery');
+      await ensurePageReady(page);
+      await waitForElement(page, '[data-testid="main-header"]');
+      await compareScreenshots(page, `header-layout-${viewport.width}x${viewport.height}`);
+    });
+  });
+
+  test('should test footer layout', async ({ page }) => {
+    await preparePageForVisualTest(page);
+    
+    await testResponsiveLayouts(page, 'footer-layout', async (viewport) => {
+      await page.setViewportSize(viewport);
+      await page.goto('/gallery');
+      await ensurePageReady(page);
+      await waitForElement(page, '[data-testid="main-footer"]');
+      await page.evaluate(() => {
+        window.scrollTo(0, document.body.scrollHeight);
+      });
+      await page.waitForTimeout(1000); // Wait for scroll to complete
+      await compareScreenshots(page, `footer-layout-${viewport.width}x${viewport.height}`);
     });
   });
 }); 

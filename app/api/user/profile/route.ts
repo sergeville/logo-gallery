@@ -32,34 +32,19 @@ export async function GET(request: NextRequest) {
     }
 
     // Get user's logos stats
-    const [totalLogos, logosWithVotes] = await Promise.all([
-      Logo.countDocuments({ ownerId: user._id }),
-      Logo.find({ ownerId: user._id }).select('votes')
-    ]);
+    const userLogos = await Logo.find({ ownerId: user._id }).select('votes');
 
-    // Calculate total votes and average rating
-    let totalVotes = 0;
-    let totalRating = 0;
-
-    logosWithVotes.forEach(logo => {
-      totalVotes += logo.votes.length;
-      logo.votes.forEach((vote: { rating: number }) => {
-        totalRating += vote.rating;
-      });
-    });
-
-    const averageRating = totalVotes > 0 ? totalRating / totalVotes : 0;
+    // Calculate total votes
+    const totalVotes = userLogos.reduce((sum, logo) => sum + (logo.votes?.length || 0), 0);
 
     return NextResponse.json({
-      name: user.name,
-      email: user.email,
-      bio: user.bio,
-      location: user.location,
-      website: user.website,
-      joinedDate: user.createdAt,
-      totalLogos,
-      totalVotes,
-      averageRating
+      user: {
+        ...session.user,
+        stats: {
+          totalLogos: userLogos.length,
+          totalVotes
+        }
+      }
     });
   } catch (error) {
     console.error('Error fetching user profile:', error);
@@ -72,8 +57,8 @@ export async function GET(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    const sessionCookie = cookies().get('session');
-    if (!sessionCookie?.value) {
+    const session = await getServerSession(authOptions);
+    if (!session?.user) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
 
@@ -89,7 +74,7 @@ export async function PUT(request: NextRequest) {
       }, { status: 400 });
     }
 
-    const user = await User.findById(sessionCookie.value);
+    const user = await User.findById(session.user.id);
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }

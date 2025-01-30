@@ -15,7 +15,7 @@ The application uses a structured seeding approach with three main components:
 
 2. **Logo Seeding** (`scripts/seed/logos.ts`)
    - Creates test logos with metadata
-   - Supports ratings and voting
+   - Supports voting system
    - Maintains user relationships
    - Includes tag and style generation
 
@@ -36,7 +36,7 @@ async function setupTestDatabase() {
   const logos = await seedLogos({
     count: 30,
     userIds: users.map(u => u._id),
-    withRatings: true,
+    withVotes: true,
     perUser: 3
   });
 

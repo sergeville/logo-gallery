@@ -1,35 +1,24 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/lib/auth';
-import { connectToDatabase } from '@/app/lib/db';
-import { User } from '@/app/lib/types';
+import { authConfig } from '@/app/lib/auth.config';
+import dbConnect from '@/app/lib/db-config';
+import { User } from '@/app/lib/models/user';
 
 export async function DELETE(request: Request) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getServerSession(authConfig);
 
-    if (!session) {
+    if (!session?.user?.id) {
       return NextResponse.json({
         success: false,
         message: 'Not authenticated'
       }, { status: 401 });
     }
 
-    const { email } = session.user;
+    await dbConnect();
+    const result = await User.findByIdAndDelete(session.user.id);
 
-    if (!email) {
-      return NextResponse.json({
-        success: false,
-        message: 'User email not found in session'
-      }, { status: 400 });
-    }
-
-    const { db } = await connectToDatabase();
-    const usersCollection = db.collection<User>('users');
-
-    const result = await usersCollection.deleteOne({ email });
-
-    if (result.deletedCount === 0) {
+    if (!result) {
       return NextResponse.json({
         success: false,
         message: 'User not found'

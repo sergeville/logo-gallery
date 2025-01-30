@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/app/api/auth/[...nextauth]/route'
+import { authConfig } from '@/app/lib/auth.config'
 import dbConnect from '@/app/lib/db-config'
 import { Logo } from '@/app/lib/models/logo'
 import { Types } from 'mongoose'
+import { use } from 'react'
 
 /**
  * Admin API Endpoint to update voting deadline
@@ -11,11 +12,11 @@ import { Types } from 'mongoose'
  */
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // 1. Get and validate session
-    const session = await getServerSession(authOptions)
+    const session = await getServerSession(authConfig)
     if (!session?.user?.id || !session?.user?.isAdmin) {
       return NextResponse.json(
         { error: 'Admin access required' },
@@ -24,11 +25,11 @@ export async function PATCH(
     }
 
     // 2. Connect to database
-    await dbConnect()
+    dbConnect()
 
     // 3. Get and validate the logo ID
-    const logoId = params.id
-    if (!logoId || !Types.ObjectId.isValid(logoId)) {
+    const { id } = use(params);
+    if (!id || !Types.ObjectId.isValid(id)) {
       return NextResponse.json(
         { error: 'Invalid logo ID' },
         { status: 400 }
@@ -54,8 +55,8 @@ export async function PATCH(
     }
 
     // 6. Update the logo's voting deadline
-    const updatedLogo = await Logo.findByIdAndUpdate(
-      logoId,
+    const updatedLogo = Logo.findByIdAndUpdate(
+      id,
       { votingDeadline: newDeadline },
       {
         new: true,

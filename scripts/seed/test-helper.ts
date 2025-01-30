@@ -681,10 +681,8 @@ export class TestHelper {
       errors.push(`Cannot exceed ${rules.TAGS_MAX_COUNT} tags`);
     }
 
-    if (logo.rating !== undefined && (typeof logo.rating !== 'number' || 
-        logo.rating < rules.RATING_MIN || 
-        logo.rating > rules.RATING_MAX)) {
-      errors.push(`Rating must be between ${rules.RATING_MIN} and ${rules.RATING_MAX}`);
+    if (logo.totalVotes !== undefined && typeof logo.totalVotes !== 'number') {
+      errors.push('Total votes must be a number');
     }
 
     if (!Array.isArray(logo.votes)) {

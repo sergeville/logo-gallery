@@ -129,7 +129,7 @@ const logoSchema = new mongoose.Schema({
       required: true,
       ref: 'User',
     },
-    votedAt: {
+    timestamp: {
       type: Date,
       default: Date.now,
     },

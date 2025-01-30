@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/app/api/auth/[...nextauth]/route'
+import { authConfig } from '@/app/lib/auth.config'
 import dbConnect from '@/app/lib/db-config'
 import { Logo } from '@/app/lib/models/logo'
 import { Types } from 'mongoose'
+import { use } from 'react'
 
 /**
  * Vote API Endpoint
@@ -23,11 +24,13 @@ import { Types } from 'mongoose'
  */
 export async function POST(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = use(params)
+
     // 1. Get and validate session - Users must be logged in to vote
-    const session = await getServerSession(authOptions)
+    const session = await getServerSession(authConfig)
     if (!session?.user?.id) {
       return NextResponse.json(
         { error: 'Authentication required' },
@@ -39,8 +42,7 @@ export async function POST(
     await dbConnect()
 
     // 3. Get and validate the logo ID
-    const logoId = params.id
-    if (!logoId || !Types.ObjectId.isValid(logoId)) {
+    if (!id || !Types.ObjectId.isValid(id)) {
       return NextResponse.json(
         { error: 'Invalid logo ID' },
         { status: 400 }
@@ -48,7 +50,7 @@ export async function POST(
     }
 
     // 4. Find the logo and validate its existence
-    const existingLogo = await Logo.findById(logoId)
+    const existingLogo = await Logo.findById(id)
     if (!existingLogo) {
       return NextResponse.json(
         { error: 'Logo not found' },
@@ -74,7 +76,7 @@ export async function POST(
 
     // 7. Prevent duplicate votes on the same logo
     const hasVotedThis = await Logo.findOne({
-      _id: new Types.ObjectId(logoId),
+      _id: new Types.ObjectId(id),
       'votes.userId': session.user.id.toString()
     })
     
@@ -100,7 +102,7 @@ export async function POST(
 
     // 9. Add the new vote and increment the vote count
     const updatedLogo = await Logo.findOneAndUpdate(
-      { _id: new Types.ObjectId(logoId) },
+      { _id: new Types.ObjectId(id) },
       {
         $push: {
           votes: {

@@ -1,14 +1,16 @@
 import { NextResponse } from 'next/server'
 import { connectToDatabase } from '@/app/lib/db'
 import { ObjectId } from 'mongodb'
+import { use } from 'react'
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = use(params)
     const { db } = await connectToDatabase()
-    const userId = new ObjectId(params.id)
+    const userId = new ObjectId(id)
 
     const logos = await db
       .collection('logos')

@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { cacheMiddleware } from '@/middleware/cacheMiddleware'
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const response = NextResponse.next()
 
   response.headers.set('Access-Control-Allow-Credentials', 'true')
@@ -12,7 +13,7 @@ export function middleware(request: NextRequest) {
     'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
   )
 
-  return response
+  return cacheMiddleware(request, response)
 }
 
 export const config = {

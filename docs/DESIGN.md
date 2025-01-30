@@ -2,20 +2,22 @@
 
 ## 📋 Project Overview
 
-The Logo Gallery is a web application for uploading, displaying, and managing logo designs. Users can upload logos, view others' submissions, and interact through ratings and comments.
+The Logo Gallery is a platform where designers can showcase their logo designs, get feedback from others' submissions, and interact through votes and comments.
 
 ## 🏗 Architecture
 
 ### Tech Stack
-- **Frontend**: Next.js 14 with App Router
+- **Frontend**: Next.js 14.1 with App Router
 - **Backend**: Next.js API Routes
-- **Database**: MongoDB
-- **Authentication**: NextAuth.js
-- **Styling**: Tailwind CSS
+- **Database**: MongoDB 7.0+
+- **Authentication**: NextAuth.js v5
+- **Styling**: Tailwind CSS 3.4
 - **Image Storage**: Local file system with uploads directory
-- **State Management**: React Hooks + Context
-- **Form Handling**: React Hook Form
-- **Validation**: Zod
+- **State Management**: React Hooks + Context + Zustand
+- **Form Handling**: React Hook Form v7
+- **Validation**: Zod + TypeScript 5.3+
+- **Testing**: Jest + React Testing Library + Playwright
+- **CI/CD**: GitHub Actions
 
 ### Database Schema
 
@@ -52,6 +54,11 @@ interface Logo {
   fileSize: number;
   fileType: string;
   uploadedAt: Date;
+  totalVotes: number;
+  votes: Array<{
+    userId: ObjectId;
+    timestamp: Date;
+  }>;
 }
 
 // Vote Model
@@ -59,8 +66,7 @@ interface Vote {
   _id: ObjectId;
   logoId: ObjectId;
   userId: ObjectId;
-  rating: number;
-  createdAt: Date;
+  timestamp: Date;
 }
 ```
 
@@ -165,8 +171,7 @@ logo-gallery/
    - Responsive grid layout
    - Infinite scroll pagination
    - Search and filter capabilities
-   - Sort by date or rating
-
+ 
 2. **Personal Gallery (My Logos)**
    - Route: `/mylogos`
    - Shows only logged-in user's logos
@@ -188,7 +193,7 @@ logo-gallery/
    - By owner name
    - Full-text search
    - Date range
-   - Rating range
+
 
 ## 🎯 Navigation Structure
 
@@ -220,21 +225,255 @@ logo-gallery/
 
 1. **Image Optimization**
    - Automatic thumbnail generation
-   - Next.js Image component
-   - WebP format support
-   - Lazy loading
+   - Next.js Image component with priority loading
+   - WebP/AVIF format support with fallbacks
+   - Lazy loading with blur placeholder
+   - Responsive image sizes
 
 2. **Data Loading**
    - Server-side pagination
    - Incremental Static Regeneration
+   - React Suspense boundaries
    - SWR for client caching
    - Optimistic updates
+   - Streaming SSR
 
 3. **Code Optimization**
-   - Dynamic imports
+   - Dynamic imports with preloading
    - Route prefetching
    - Bundle optimization
    - Tree shaking
+   - Module/Component level code splitting
+   - Partial prerendering (Next.js 14 feature)
+
+4. **Core Web Vitals**
+   - First Contentful Paint (FCP) optimization
+   - Largest Contentful Paint (LCP) < 2.5s
+   - First Input Delay (FID) < 100ms
+   - Cumulative Layout Shift (CLS) < 0.1
+   - Interaction to Next Paint (INP) < 200ms
+
+5. **Caching Strategy**
+   - Browser caching with Cache-Control headers
+   - Static asset caching
+   - API response caching
+   - Stale-while-revalidate pattern
+   - Service Worker for offline support
+
+## 🔌 API Documentation
+
+### Authentication
+
+All protected endpoints require a valid JWT token in the Authorization header:
+```http
+Authorization: Bearer <token>
+```
+
+### Endpoints
+
+#### Logo Management
+
+##### `GET /api/logos`
+Get paginated list of logos.
+
+Query Parameters:
+```typescript
+{
+  page?: number;        // Default: 1
+  limit?: number;       // Default: 12
+  category?: string;
+  tag?: string;
+  search?: string;
+  ownerId?: string;
+}
+```
+
+Response:
+```typescript
+{
+  logos: Logo[];
+  totalCount: number;
+  currentPage: number;
+  totalPages: number;
+}
+```
+
+##### `POST /api/logos`
+Upload a new logo.
+
+Request Body (multipart/form-data):
+```typescript
+{
+  file: File;          // Logo image file (required)
+  name: string;        // Logo name (required)
+  description?: string;
+  category: string;    // Logo category (required)
+  tags?: string[];     // Array of tags
+}
+```
+
+Response:
+```typescript
+{
+  logo: Logo;          // Created logo object
+  message: string;
+}
+```
+
+##### `GET /api/logos/[id]`
+Get logo details by ID.
+
+Response:
+```typescript
+{
+  logo: Logo;
+}
+```
+
+##### `PATCH /api/logos/[id]`
+Update logo details.
+
+Request Body:
+```typescript
+{
+  name?: string;
+  description?: string;
+  category?: string;
+  tags?: string[];
+}
+```
+
+Response:
+```typescript
+{
+  logo: Logo;          // Updated logo object
+  message: string;
+}
+```
+
+##### `DELETE /api/logos/[id]`
+Delete a logo.
+
+Response:
+```typescript
+{
+  message: string;
+}
+```
+
+#### Votes
+
+##### `POST /api/logos/[id]/vote`
+Submit a vote for a logo.
+
+Request Body:
+```typescript
+{
+  logoId: string;      // Logo ID (required)
+}
+```
+
+Response:
+```typescript
+{
+  vote: Vote;
+  totalVotes: number;
+  message: string;
+}
+```
+
+##### `GET /api/votes/[logoId]`
+Get votes for a specific logo.
+
+Response:
+```typescript
+{
+  votes: Vote[];
+  totalVotes: number;
+}
+```
+
+#### User Management
+
+##### `GET /api/users/me`
+Get current user profile.
+
+Response:
+```typescript
+{
+  user: {
+    _id: string;
+    email: string;
+    name: string;
+    profile: {
+      avatar: string;
+      bio: string;
+    }
+  }
+}
+```
+
+##### `PATCH /api/users/me`
+Update current user profile.
+
+Request Body:
+```typescript
+{
+  name?: string;
+  profile?: {
+    avatar?: string;
+    bio?: string;
+  }
+}
+```
+
+Response:
+```typescript
+{
+  user: User;
+  message: string;
+}
+```
+
+### Error Responses
+
+All endpoints follow a consistent error response format:
+
+```typescript
+{
+  error: {
+    code: string;      // Error code
+    message: string;   // Human-readable message
+    details?: any;     // Additional error details
+  }
+}
+```
+
+Common Error Codes:
+- `UNAUTHORIZED`: Authentication required or token invalid
+- `FORBIDDEN`: Insufficient permissions
+- `NOT_FOUND`: Resource not found
+- `VALIDATION_ERROR`: Invalid input data
+- `RATE_LIMITED`: Too many requests
+- `INTERNAL_ERROR`: Server error
+
+### Rate Limiting
+
+- Public endpoints: 100 requests per minute
+- Authenticated endpoints: 1000 requests per minute
+- Upload endpoints: 50 requests per hour
+
+### Caching
+
+- GET requests are cached for 5 minutes by default
+- Cache can be bypassed with `Cache-Control: no-cache` header
+- Individual endpoints may specify different cache durations
+
+### Versioning
+
+- Current API version: v1
+- Version is included in the URL path: `/api/v1/...`
+- Breaking changes will increment the version number
 
 ## 🎨 Color Palette
 
@@ -337,105 +576,18 @@ logo-gallery/
 ## 🌓 Dark Mode
 
 ### Implementation
-- Uses Tailwind's dark mode with `dark:` prefix
-- Toggles based on user preference and manual selection
-- Persists user choice in local storage
+- Uses Tailwind's dark mode with `
 
-### Color Mapping
-- Background: `bg-white` → `dark:bg-gray-800`
-- Text: `text-gray-900` → `dark:text-white`
-- Borders: `border-gray-200` → `dark:border-gray-700`
-- Cards: `bg-white` → `dark:bg-gray-800`
+## Overview
+The Logo Gallery is a platform where designers can showcase their logo designs, get feedback from others' submissions, and interact through votes and comments.
 
-## 🎭 UI States
+### Filtering and Sorting
 
-### Interactive Elements
-- Hover: Slight opacity or color change
-- Focus: Blue ring with 2px width
-- Active: Darker shade of the base color
-- Disabled: Reduced opacity and gray color
+Available sort options:
+- Sort by date
+- Sort by vote count
 
-### Loading States
-```jsx
-// Loading Spinner
-<div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-
-// Skeleton Loading
-<div className="animate-pulse bg-gray-200 dark:bg-gray-700 rounded-lg h-[200px]"></div>
-```
-
-## 🎯 Accessibility
-
-### Focus Management
-- Visible focus rings on all interactive elements
-- Skip links for keyboard navigation
-- Proper tab order
-
-### Color Contrast
-- All text meets WCAG 2.1 AA standards
-- Interactive elements have sufficient contrast
-- No color-only information
-
-### ARIA Attributes
-- Proper roles and labels
-- Error messages linked to form fields
-- Modal and dialog management
-
-## 📏 Spacing System
-
-### Scale (in pixels)
-- 0: 0px
-- 1: 4px
-- 2: 8px
-- 3: 12px
-- 4: 16px
-- 6: 24px
-- 8: 32px
-- 12: 48px
-- 16: 64px
-
-### Usage
-```jsx
-// Margin and Padding
-<div className="m-4 p-6">
-  <div className="space-y-4">
-    {/* Content with vertical spacing */}
-  </div>
-</div>
-```
-
-## 🔄 Animations
-
-### Transitions
-- Duration: 150ms - 300ms
-- Timing: ease-in-out
-- Properties: opacity, colors, transform
-
-```jsx
-// Hover transition
-<div className="transition-all duration-200 ease-in-out hover:scale-105">
-  {/* Content */}
-</div>
-```
-
-### Loading Animations
-- Smooth spinner rotation
-- Subtle pulse effects
-- Progressive loading skeletons
-
-## 📦 Layout Structure
-
-### Page Layout
-```jsx
-<div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-  <Header />
-  <main className="container mx-auto px-4 py-8">
-    {/* Page content */}
-  </main>
-  <Footer />
-</div>
-```
-
-### Container Widths
-- Default: `max-w-7xl`
-- Narrow: `
+Filter options:
+- Date range
+- Vote count range
+- Categories/tags

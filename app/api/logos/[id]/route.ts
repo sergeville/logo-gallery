@@ -1,17 +1,18 @@
-import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth/next';
+import { authConfig } from '@/app/lib/auth.config';
 import { Logo } from '@/app/lib/models/logo';
 import dbConnect from '@/app/lib/db-config';
 import { unlink } from 'fs/promises';
 import path from 'path';
+import { use } from 'react';
 
 export async function GET(
-  request: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const id = await Promise.resolve(params.id);
   try {
+    const { id } = use(params);
     console.log('Fetching logo with ID:', id);
     await dbConnect();
 
@@ -30,14 +31,12 @@ export async function GET(
 }
 
 export async function DELETE(
-  request: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const id = await Promise.resolve(params.id);
-  console.log('Starting logo deletion for ID:', id);
-  
   try {
-    const session = await getServerSession(authOptions);
+    const { id } = use(params);
+    const session = await getServerSession(authConfig);
     if (!session) {
       console.log('Unauthorized: No session found');
       return new NextResponse('Unauthorized', { status: 401 });
@@ -81,13 +80,7 @@ export async function DELETE(
     
     return new NextResponse(null, { status: 204 });
   } catch (error) {
-    console.error('Error deleting logo:', {
-      error: error instanceof Error ? {
-        message: error.message,
-        stack: error.stack,
-        name: error.name
-      } : error
-    });
+    console.error('Error deleting logo:', error);
     return new NextResponse('Internal Server Error', { status: 500 });
   }
 } 

@@ -114,6 +114,11 @@ interface Logo {
   description: string;
   userId: ObjectId;
   tags: string[];
+  totalVotes: number;
+  votes: Array<{
+    userId: ObjectId;
+    timestamp: Date;
+  }>;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -187,7 +192,9 @@ async function setupCompleteTestData() {
   const logos = await seedLogos({
     count: 30,
     userIds: users.map(u => u._id),
-    withRatings: true
+    withVotes: true,
+    minVotes: 10,
+    maxVotes: 20
   });
 
   // Then create all relationships

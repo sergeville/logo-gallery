@@ -2,23 +2,94 @@
 
 ## Import Path Standards
 
-### Path Aliases
-- Use `@/` path alias for imports from the project root
-- Example: `import { connectToDatabase } from '@/lib/db'`
+### Using the `@` Path Alias
+
+All imports should use the `@` path alias instead of relative paths. This makes imports more consistent and easier to maintain.
 
 ```typescript
-// ✅ Correct
-import { MyComponent } from '@/components/MyComponent'
-import { connectToDatabase } from '@/lib/db'
-import { VotingSettings } from '@/models/VotingSettings'
+// ✅ Good
+import { Button } from '@/app/components/Button';
+import { useAuth } from '@/app/hooks/useAuth';
+import { config } from '@/config/app.config';
 
-// ❌ Incorrect
-import { MyComponent } from '../../components/MyComponent'
-import { connectToDatabase } from 'lib/db'
-import { VotingSettings } from '../models/VotingSettings'
+// ❌ Bad
+import { Button } from '../../components/Button';
+import { useAuth } from '../hooks/useAuth';
+import { config } from '../../../config/app.config';
 ```
 
-### Directory Structure
+### Import Order
+
+Imports should be organized in the following order:
+1. Built-in Node modules
+2. External dependencies
+3. Internal modules (using @/)
+4. Parent/sibling modules
+5. Type imports
+
+Each group should be separated by a blank line and alphabetically sorted.
+
+```typescript
+// Built-in modules
+import { useEffect } from 'react';
+
+// External dependencies
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
+
+// Internal modules
+import { Button } from '@/app/components/Button';
+import { useAuth } from '@/app/hooks/useAuth';
+import { config } from '@/config/app.config';
+
+// Types
+import type { User } from '@/app/types';
+```
+
+### File Structure
+
+- Components should be imported from `@/app/components`
+- Hooks should be imported from `@/app/hooks`
+- Types should be imported from `@/app/types`
+- Configuration should be imported from `@/config`
+- Services should be imported from `@/app/lib/services`
+- Utils should be imported from `@/app/lib/utils`
+
+### Index Imports
+
+Avoid using `/index` in import paths. The bundler will automatically resolve index files.
+
+```typescript
+// ✅ Good
+import { Button } from '@/app/components/Button';
+
+// ❌ Bad
+import { Button } from '@/app/components/Button/index';
+```
+
+### Type Imports
+
+Use explicit type imports with the `type` keyword to help the bundler with tree-shaking.
+
+```typescript
+// ✅ Good
+import type { User } from '@/app/types';
+
+// ❌ Bad
+import { User } from '@/app/types';
+```
+
+## Enforcement
+
+These standards are enforced through:
+1. ESLint rules in `.eslintrc.js`
+2. TypeScript path aliases in `tsconfig.json`
+3. Import checker and fixer scripts
+4. Pre-commit hooks
+
+Run `npm run fix-imports` to automatically fix import paths in your code.
+
+## Directory Structure
 ```
 app/
 ├── lib/           # Shared utilities, database connections, etc.

@@ -24,24 +24,20 @@ export interface LogoDimensions {
 }
 
 export interface Vote {
-  userId: ObjectId;
-  rating: number;
+  userId: string;
   timestamp: Date;
 }
 
 export interface Logo {
-  _id?: ObjectId;
+  _id: string;
   name: string;
   description: string;
-  url: string;
   imageUrl: string;
   thumbnailUrl: string;
-  userId: ObjectId;
+  userId: string;
   ownerName: string;
-  tags: string[];
   totalVotes: number;
-  averageRating: number;
-  votes: Vote[];
+  votes?: Vote[];
   createdAt: Date;
   updatedAt: Date;
   uploadedAt?: Date;

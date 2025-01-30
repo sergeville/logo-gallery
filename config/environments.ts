@@ -1,13 +1,14 @@
 import { config } from 'dotenv';
 import path from 'path';
 import {
-  validateEnvironment,
+  validateEnvironmentVariables,
+  type EnvironmentVariables,
   validateMongoDBUri,
   validatePort,
   validateApiUrl,
   validateDatabaseName,
   ConfigurationError
-} from '../src/lib/validation';
+} from '@/lib/validation';
 
 interface Config {
   env: string;
@@ -23,7 +24,7 @@ interface Config {
 
 export function getConfig(): Config {
   const env = process.env.NODE_ENV || 'development';
-  validateEnvironment(env);
+  validateEnvironmentVariables(env);
 
   // Load environment variables from the appropriate file
   const envFile = path.join(process.cwd(), `.env.${env}`);

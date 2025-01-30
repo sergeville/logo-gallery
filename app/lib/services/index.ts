@@ -1,10 +1,8 @@
-import { ImageOptimizationService } from '@/app/lib/services/ImageOptimizationService';
-import { imageCacheService } from '@/app/lib/services/ImageCacheService';
+import { ImageOptimizationService } from './ImageOptimizationService';
+import { imageCacheService } from './ImageCacheService';
 
-export const imageOptimizationService = new ImageOptimizationService();
+// Create instance
+const imageOptimizationService = new ImageOptimizationService();
 
-export {
-  imageCacheService,
-  imageOptimizationService,
-  ImageOptimizationService,
-}; 
+// Export everything
+export { imageCacheService, imageOptimizationService, ImageOptimizationService }; 

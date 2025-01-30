@@ -1,30 +1,20 @@
 /**
  * Root Layout Component
  * Provides the base structure and configuration for the entire application.
- * Includes global providers, metadata, and common layout elements.
+ * Includes global providers and common layout elements.
  */
 
 'use client';
 
 import './globals.css'
-import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import { ThemeProvider } from '@/app/components/ThemeProvider'
 import { SessionProvider } from '@/app/components/SessionProvider'
 import Navbar from '@/app/components/Navbar'
 import Footer from '@/app/components/Footer'
-import { usePerformanceMonitoring } from '@/hooks/usePerformanceMonitoring'
+import { usePerformanceMonitoring } from '@/app/hooks/usePerformanceMonitoring'
 
 const inter = Inter({ subsets: ['latin'] })
-
-/**
- * Application metadata configuration
- * Defines SEO-related information and favicon settings
- */
-export const metadata: Metadata = {
-  title: 'Logo Gallery',
-  description: 'A gallery of logos from around the world',
-}
 
 /**
  * Root layout component that wraps all pages

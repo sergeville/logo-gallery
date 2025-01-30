@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authConfig } from '@/app/lib/auth.config';
 import { writeFile, mkdir } from 'fs/promises';
 import { join } from 'path';
 import { Logo } from '@/app/lib/models/logo';
@@ -13,55 +13,60 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
 export async function POST(request: Request) {
   try {
-    // Ensure user is authenticated
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return new NextResponse('Unauthorized', { status: 401 });
+    const session = await getServerSession(authConfig);
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
     }
 
-    // Parse form data
     const formData = await request.formData();
     const file = formData.get('file') as File;
     const name = formData.get('name') as string;
     const description = formData.get('description') as string;
 
-    // Validate inputs
-    if (!file || !name) {
-      return new NextResponse('Missing required fields', { status: 400 });
+    if (!file) {
+      return NextResponse.json(
+        { error: 'No file provided' },
+        { status: 400 }
+      );
+    }
+
+    if (!name) {
+      return NextResponse.json(
+        { error: 'Missing required field: name' },
+        { status: 400 }
+      );
     }
 
     if (!ALLOWED_TYPES.includes(file.type)) {
-      return new NextResponse(
-        'Invalid file type. Please upload a JPEG, PNG, SVG, or WebP image.',
+      return NextResponse.json(
+        { error: 'Invalid file type. Please upload a JPEG, PNG, SVG, or WebP image.' },
         { status: 400 }
       );
     }
 
     if (file.size > MAX_FILE_SIZE) {
-      return new NextResponse(
-        'File too large. Maximum size is 10MB.',
+      return NextResponse.json(
+        { error: 'File too large. Maximum size is 10MB.' },
         { status: 400 }
       );
     }
 
-    // Create upload directory if it doesn't exist
     await mkdir(UPLOAD_DIR, { recursive: true });
 
-    // Generate unique filename base
     const timestamp = Date.now();
     const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '');
     const fileBase = `${timestamp}-${sanitizedName}`;
 
-    // Convert file to buffer
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
+    const buffer = Buffer.from(await file.arrayBuffer());
 
-    // Optimize image and generate variants
-    const variants = await imageOptimizationService.createImageVariants(buffer, {
-      format: 'webp', // Prefer WebP for better compression
+    const optimizedResult = await imageOptimizationService.optimizeBuffer(buffer, {
+      quality: 80,
+      format: 'image/webp'
     });
 
-    // Save all image variants
     const filePaths = {
       original: join(UPLOAD_DIR, `${fileBase}-original.${file.type.split('/')[1]}`),
       optimized: join(UPLOAD_DIR, `${fileBase}.webp`),
@@ -69,25 +74,39 @@ export async function POST(request: Request) {
     };
 
     await Promise.all([
-      writeFile(filePaths.original, variants.original),
-      writeFile(filePaths.optimized, variants.optimized),
-      writeFile(filePaths.thumbnail, variants.thumbnail),
+      writeFile(filePaths.original, optimizedResult.buffer),
+      writeFile(filePaths.optimized, optimizedResult.buffer),
+      writeFile(filePaths.thumbnail, optimizedResult.buffer),
     ]);
 
-    // Save responsive variants if not SVG
     const responsiveFilePaths = new Map<string, string>();
     if (file.type !== 'image/svg+xml') {
-      for (const [size, buffer] of variants.responsive) {
+      const responsiveSizes = {
+        sm: 640,
+        md: 768,
+        lg: 1024,
+        xl: 1280,
+        '2xl': 1536,
+      };
+
+      for (const [size, width] of Object.entries(responsiveSizes)) {
+        const responsiveResult = await imageOptimizationService.optimizeBuffer(
+          optimizedResult.buffer,
+          {
+            width,
+            format: 'image/webp',
+            quality: 80
+          }
+        );
+
         const responsivePath = join(UPLOAD_DIR, `${fileBase}-${size}.webp`);
-        await writeFile(responsivePath, buffer);
+        await writeFile(responsivePath, responsiveResult.buffer);
         responsiveFilePaths.set(size, responsivePath.replace(process.cwd() + '/public', ''));
       }
     }
 
-    // Connect to database
     await dbConnect();
 
-    // Create logo document
     const logo = new Logo({
       title: name.trim(),
       description: description?.trim() || 'No description provided',
@@ -97,9 +116,10 @@ export async function POST(request: Request) {
       responsiveUrls: Object.fromEntries(responsiveFilePaths),
       userId: session.user.id,
       ownerName: session.user.name,
-      fileSize: file.size,
+      fileSize: buffer.length,
       fileType: file.type,
-      optimizedSize: variants.optimized.length,
+      optimizedSize: optimizedResult.metadata.size,
+      compressionRatio: ((1 - optimizedResult.metadata.size / buffer.length) * 100).toFixed(1),
       uploadedAt: new Date(),
     });
 
@@ -116,8 +136,8 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     console.error('Error uploading logo:', error);
-    return new NextResponse(
-      'Internal server error',
+    return NextResponse.json(
+      { error: 'Failed to upload logo' },
       { status: 500 }
     );
   }

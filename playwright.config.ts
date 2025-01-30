@@ -7,8 +7,9 @@ import { LOCALHOST_URL } from '@/config/constants'
 const env = process.env.NODE_ENV || 'development'
 dotenv.config({ path: path.join(__dirname, `.env.${env}`) })
 
-export default defineConfig({
+const baseConfig = {
   testDir: './e2e',
+  testMatch: '**/*.spec.ts',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 1,
@@ -22,23 +23,6 @@ export default defineConfig({
     actionTimeout: 15000,
     navigationTimeout: 15000,
   },
-  projects: [
-    {
-      name: 'chromium',
-      use: { 
-        ...devices['Desktop Chrome'],
-        viewport: { width: 1280, height: 720 },
-      },
-    },
-    {
-      name: 'visual',
-      testMatch: /.*\.visual\.ts/,
-      use: {
-        ...devices['Desktop Chrome'],
-        viewport: { width: 1280, height: 720 },
-      },
-    },
-  ],
   webServer: {
     command: 'npm run dev',
     url: LOCALHOST_URL,
@@ -54,34 +38,40 @@ export default defineConfig({
   typescript: {
     config: path.join(__dirname, 'tsconfig.e2e.json'),
   },
-})
+}
 
-if (process.env.PERCY_TOKEN) {
-  export default defineConfig({
-    testDir: './e2e',
-    fullyParallel: true,
-    forbidOnly: !!process.env.CI,
-    retries: process.env.CI ? 2 : 1,
-    workers: process.env.CI ? 1 : undefined,
-    reporter: [['html', { open: 'never' }]],
-    use: {
-      baseURL: process.env.NEXT_PUBLIC_API_URL || LOCALHOST_URL,
-      trace: 'on-first-retry',
-      screenshot: 'only-on-failure',
-      video: 'retain-on-failure',
-      actionTimeout: 15000,
-      navigationTimeout: 15000,
+// Define projects based on whether Percy is enabled
+const projects = [
+  {
+    name: 'chromium',
+    use: { 
+      ...devices['Desktop Chrome'],
+      viewport: { width: 1280, height: 720 },
     },
-    projects: [
-      {
-        name: 'percy',
-        testMatch: /.*\.visual\.ts/,
-        use: {
-          ...devices['Desktop Chrome'],
-          viewport: null,
-        },
-      },
-    ],
-    webServer: {
-      command: 'npm run dev',
+  },
+  {
+    name: 'visual',
+    testMatch: '**/*.visual.spec.ts',
+    use: {
+      ...devices['Desktop Chrome'],
+      viewport: { width: 1280, height: 720 },
+    },
+  },
+]
+
+// Add Percy project if token is present
+if (process.env.PERCY_TOKEN) {
+  projects.push({
+    name: 'percy',
+    testMatch: '**/*.visual.spec.ts',
+    use: {
+      ...devices['Desktop Chrome'],
+      viewport: { width: 1280, height: 720 },
+    },
+  })
+}
+
+export default defineConfig({
+  ...baseConfig,
+  projects,
 }) 

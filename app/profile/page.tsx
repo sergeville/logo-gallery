@@ -1,5 +1,5 @@
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authConfig } from '@/app/lib/auth.config';
 import { redirect } from 'next/navigation';
 import { Logo } from '@/app/lib/models/logo';
 import { User } from '@/app/lib/models/user';
@@ -7,7 +7,7 @@ import dbConnect from '@/app/lib/db-config';
 import LogoCard from '@/app/components/LogoCard';
 
 export default async function ProfilePage() {
-  const session = await getServerSession(authOptions);
+  const session = await getServerSession(authConfig);
   if (!session?.user?.id) {
     redirect('/auth/signin');
   }

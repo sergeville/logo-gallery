@@ -75,11 +75,11 @@ export default function LogoImage({
             ? "(max-width: 640px) 100vw, (max-width: 768px) 80vw, (max-width: 1024px) 50vw, 33vw"
             : undefined
         }
-        srcSet={generateSrcSet()}
         priority={priority}
         quality={quality}
         loading={priority ? 'eager' : 'lazy'}
         {...(width && height ? { width, height } : {})}
+        {...(responsiveUrls ? { srcSet: generateSrcSet() } : {})}
       />
     </div>
   );

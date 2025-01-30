@@ -21,20 +21,21 @@ const LogoSchema = new mongoose.Schema({
   tags: [{
     type: String,
   }],
+  totalVotes: {
+    type: Number,
+    default: 0
+  },
   votes: [{
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
+      required: true
     },
-    value: {
-      type: Number,
-      enum: [-1, 1],
-    },
+    timestamp: {
+      type: Date,
+      default: Date.now
+    }
   }],
-  averageRating: {
-    type: Number,
-    default: 0,
-  },
 }, {
   timestamps: true,
 });

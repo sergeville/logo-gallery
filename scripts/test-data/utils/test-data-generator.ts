@@ -19,8 +19,11 @@ export interface TestLogo {
   description: string;
   ownerId: ObjectId;
   tags?: string[];
-  rating?: number;
-  votes?: number;
+  totalVotes?: number;
+  votes?: Array<{
+    userId: ObjectId;
+    timestamp: Date;
+  }>;
   colors?: string[];
   dimensions?: {
     width: number;
@@ -56,8 +59,8 @@ export function generateTestLogo(ownerId?: ObjectId, overrides = {}): TestLogo {
     description: 'A test logo',
     ownerId: ownerId || new ObjectId(),
     tags: ['minimal', 'modern'],
-    rating: 4,
-    votes: 10,
+    totalVotes: 10,
+    votes: [],
     colors: ['#000000', '#FFFFFF'],
     dimensions: {
       width: 100,

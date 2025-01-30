@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
-import { Role, DEFAULT_ROLE } from '@/config/roles.config';
+import { Role, DEFAULT_ROLE } from '@/app/config/roles.config';
 
 const userSchema = new mongoose.Schema({
   email: {

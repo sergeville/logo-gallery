@@ -1,6 +1,6 @@
 'use client';
 
-import { useRBAC } from '@/hooks/useRBAC';
+import { useRBAC } from '../hooks/useRBAC';
 import { Permission } from '@/config/roles.config';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
@@ -18,16 +18,16 @@ export function PermissionGate({
   fallback,
   redirectTo = '/auth/signin',
 }: PermissionGateProps) {
-  const { hasPermission, isLoading } = useRBAC();
+  const { hasPermission, isAuthenticated } = useRBAC();
   const router = useRouter();
 
   useEffect(() => {
-    if (!isLoading && !hasPermission(permission) && redirectTo) {
+    if (!isAuthenticated && redirectTo) {
       router.push(redirectTo);
     }
-  }, [isLoading, hasPermission, permission, redirectTo, router]);
+  }, [isAuthenticated, redirectTo, router]);
 
-  if (isLoading) {
+  if (!isAuthenticated) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-indigo-500"></div>

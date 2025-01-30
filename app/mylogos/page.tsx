@@ -1,5 +1,5 @@
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authConfig } from '@/app/lib/auth.config';
 import { redirect } from 'next/navigation';
 import { Logo } from '@/app/lib/models/logo';
 import dbConnect from '@/app/lib/db-config';
@@ -17,7 +17,7 @@ function safeISOString(date: any): string {
 }
 
 export default async function MyLogos() {
-  const session = await getServerSession(authOptions);
+  const session = await getServerSession(authConfig);
   
   if (!session) {
     redirect('/auth/signin');

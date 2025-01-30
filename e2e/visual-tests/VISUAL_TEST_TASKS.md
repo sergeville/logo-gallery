@@ -64,12 +64,12 @@
 
 ### Loading States
 - [ ] Loading Component
-  - Status: Not split
-  - Action: Need to break down into smaller tests
-  - Files to create:
-    - `loading/initial.visual.spec.ts`
-    - `loading/spinner.visual.spec.ts`
-    - `loading/skeleton.visual.spec.ts`
+  - Status: In Progress
+  - Action: Breaking down into smaller tests
+  - Files created:
+    - [x] `loading/initial.visual.spec.ts` - Implemented
+    - [ ] `loading/spinner.visual.spec.ts` - Pending
+    - [ ] `loading/skeleton.visual.spec.ts` - Pending
 
 ### Logo Gallery
 - [ ] Logo Gallery Component

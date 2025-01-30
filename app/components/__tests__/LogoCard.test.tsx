@@ -1,193 +1,182 @@
 import React from 'react';
-import { useTheme } from '@/app/components/ThemeProvider';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { ThemeProvider } from 'next-themes';
+import LogoCard from '../LogoCard';
+import { mockLogoBase, mockLogoWithResponsiveUrls, mockLogoWithError } from '@/app/__tests__/fixtures/logo.fixtures';
+import { mockUserBase, mockAuthenticatedSession, mockUnauthenticatedSession } from '@/app/__tests__/fixtures/user.fixtures';
+import { TEST_TIMEOUTS, TEST_ERROR_MESSAGES } from '@/app/__tests__/constants';
+import { cleanupTest, waitForAnimations, waitForImages, waitForNetwork, setupAsyncTest, setupErrorBoundaryTest, trackEventListener } from '@/app/__tests__/utils/test-reliability';
+import { TestErrorBoundary } from './TestErrorBoundary';
 
-// Mock DeleteLogoButton component
-jest.mock('@/app/components/DeleteLogoButton', () => ({
-  __esModule: true,
-  default: ({ logoId, onDelete }: { logoId: string; onDelete?: () => void }) => {
-    const [isOpen, setIsOpen] = React.useState(false);
-    const [isDeleting, setIsDeleting] = React.useState(false);
-    const [error, setError] = React.useState<string | null>(null);
-    const { theme } = useTheme();
+// Custom render function with theme provider
+const renderWithTheme = (ui: React.ReactElement, { theme = 'light' } = {}) => {
+  const { container, ...rest } = render(
+    <ThemeProvider attribute="class" defaultTheme={theme} enableSystem={false}>
+      {ui}
+    </ThemeProvider>
+  );
+  return { container, ...rest };
+};
 
-    const handleDelete = async () => {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s timeout
+describe('LogoCard', () => {
+  // Set up async test utilities
+  const { withTimeout } = setupAsyncTest();
+  
+  // Set up error boundary testing
+  const { wrapWithErrorBoundary } = setupErrorBoundaryTest(TestErrorBoundary);
 
-      try {
-        setIsDeleting(true);
-        setError(null);
+  // Clean up after each test
+  afterEach(async () => {
+    await cleanupTest();
+  });
+
+  it('renders without crashing', async () => {
+    const { container } = renderWithTheme(<LogoCard logo={mockLogoBase} />);
+    
+    expect(screen.getByTestId('logo-image-loading')).toBeInTheDocument();
+    
+    await withTimeout(async () => {
+      await waitForImages(container);
+      const image = await screen.findByTestId('logo-image');
+      expect(image).toBeInTheDocument();
+    });
+  });
+
+  describe('Image Handling', () => {
+    it('shows loading state and handles successful load', async () => {
+      const { container } = renderWithTheme(<LogoCard logo={mockLogoBase} />);
+      
+      // Check loading state
+      expect(screen.getByTestId('logo-image-loading')).toBeInTheDocument();
+      
+      // Wait for image to load
+      await withTimeout(async () => {
+        await waitForImages(container);
+        await waitForAnimations();
         
-        const response = await fetch(`/api/logos/${logoId}`, {
-          method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          signal: controller.signal
-        });
+        const image = await screen.findByTestId('logo-image');
+        expect(image).toBeInTheDocument();
+        expect(screen.queryByTestId('logo-image-loading')).not.toBeInTheDocument();
+      });
+    });
 
-        clearTimeout(timeoutId);
+    it('handles image load errors gracefully', async () => {
+      const { container } = renderWithTheme(<LogoCard logo={mockLogoWithError} />);
+      
+      await withTimeout(async () => {
+        await waitForImages(container).catch(() => {/* Expected error */});
+        await waitForAnimations();
+        
+        expect(screen.getByTestId('logo-image-error')).toBeInTheDocument();
+        expect(screen.getByText('Image not available')).toBeInTheDocument();
+      });
+    });
+  });
 
-        if (!response.ok) {
-          const data = await response.json().catch(() => ({}));
-          
-          // Handle specific HTTP status codes
-          switch (response.status) {
-            case 401:
-              throw new Error('Unauthorized: Please log in to delete this logo');
-            case 403:
-              throw new Error('Forbidden: You do not have permission to delete this logo');
-            case 404:
-              throw new Error('Logo not found');
-            case 409:
-              throw new Error('Logo is currently in use and cannot be deleted');
-            case 429:
-              throw new Error('Too many requests. Please try again later');
-            case 500:
-              throw new Error('Server error occurred. Please try again later');
-            default:
-              throw new Error(data.message || 'Failed to delete logo');
-          }
-        }
+  describe('DeleteLogoButton', () => {
+    beforeEach(() => {
+      // Reset fetch mock before each test
+      global.fetch = jest.fn();
+    });
 
-        setIsOpen(false);
-        onDelete?.();
-      } catch (error) {
-        if (error instanceof Error) {
-          if (error.name === 'AbortError') {
-            setError('Request timed out. Please try again');
-          } else if (error.name === 'TypeError') {
-            setError('Network error occurred. Please check your connection');
-          } else {
-            setError(error.message || 'Failed to delete logo');
-          }
-        } else {
-          setError('An unexpected error occurred');
-        }
-      } finally {
-        setIsDeleting(false);
-        clearTimeout(timeoutId);
-      }
-    };
+    it('handles successful deletion', async () => {
+      // Mock successful deletion
+      (global.fetch as jest.Mock).mockImplementationOnce(() => 
+        Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({ success: true })
+        })
+      );
 
-    // Cleanup function for unmounting
-    React.useEffect(() => {
-      return () => {
-        setIsOpen(false);
-        setIsDeleting(false);
-        setError(null);
+      const onDelete = jest.fn();
+      const { container } = renderWithTheme(
+        <LogoCard 
+          logo={mockLogoBase} 
+          showDelete={true} 
+          isOwner={true}
+          onDelete={onDelete}
+        />
+      );
+
+      await withTimeout(async () => {
+        // Wait for initial render
+        await waitForImages(container);
+        
+        // Click delete button
+        fireEvent.click(screen.getByTestId('delete-button'));
+        await waitForAnimations();
+        
+        // Click confirm delete
+        fireEvent.click(screen.getByTestId('confirm-delete-button'));
+        
+        // Wait for deletion and animation
+        await waitForNetwork();
+        await waitForAnimations();
+        
+        // Verify modal is closed and callback is called
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+        expect(onDelete).toHaveBeenCalled();
+      });
+    });
+
+    it('handles network errors during deletion', async () => {
+      // Mock network error
+      (global.fetch as jest.Mock).mockImplementationOnce(() => 
+        Promise.reject(new TypeError(TEST_ERROR_MESSAGES.NETWORK))
+      );
+
+      const { container } = renderWithTheme(
+        <LogoCard logo={mockLogoBase} showDelete={true} isOwner={true} />
+      );
+
+      await withTimeout(async () => {
+        // Wait for initial render
+        await waitForImages(container);
+        
+        // Click delete button
+        fireEvent.click(screen.getByTestId('delete-button'));
+        await waitForAnimations();
+        
+        // Click confirm delete
+        fireEvent.click(screen.getByTestId('confirm-delete-button'));
+        
+        // Wait for error handling
+        await waitForNetwork().catch(() => {/* Expected error */});
+        await waitForAnimations();
+        
+        // Verify error message
+        expect(screen.getByText(TEST_ERROR_MESSAGES.NETWORK)).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe('Error Boundary', () => {
+    it('catches and handles render errors', async () => {
+      const errorMessage = 'Test render error';
+      const BrokenComponent = () => {
+        throw new Error(errorMessage);
+        return null;
       };
-    }, []);
 
-    return (
-      <>
-        <button
-          data-testid="delete-button"
-          onClick={() => setIsOpen(true)}
-          className="text-gray-500 hover:text-red-600 transition-colors"
-          aria-label="Delete logo"
-          type="button"
-        >
-          Delete
-        </button>
+      const onError = jest.fn();
+      
+      renderWithTheme(
+        wrapWithErrorBoundary(
+          () => (
+            <LogoCard
+              logo={{ ...mockLogoBase, Component: BrokenComponent }}
+              showDelete={true}
+              isOwner={true}
+            />
+          ),
+          { onError }
+        )
+      );
 
-        {isOpen && (
-          <div 
-            role="dialog" 
-            aria-modal="true" 
-            aria-labelledby="dialog-title"
-            aria-describedby="dialog-description"
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
-          >
-            <div 
-              className={`bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl max-w-md w-full mx-4 ${
-                isDeleting ? 'opacity-75' : ''
-              }`}
-            >
-              <h3 
-                id="dialog-title" 
-                className="text-xl font-semibold mb-4 text-gray-900 dark:text-white"
-              >
-                Delete Logo
-              </h3>
-              <p 
-                id="dialog-description"
-                className="text-gray-600 dark:text-gray-300 mb-4"
-              >
-                Are you sure you want to delete this logo? This action cannot be undone.
-              </p>
-              {error && (
-                <div 
-                  className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded p-3 mb-4" 
-                  role="alert"
-                  aria-live="polite"
-                >
-                  <p className="text-red-600 dark:text-red-400">{error}</p>
-                </div>
-              )}
-              <div className="flex justify-end gap-3">
-                <button 
-                  onClick={() => {
-                    setError(null);
-                    setIsOpen(false);
-                  }}
-                  data-testid="cancel-button"
-                  type="button"
-                  className={`px-4 py-2 rounded ${
-                    theme === 'dark' 
-                      ? 'bg-gray-700 hover:bg-gray-600 text-gray-200' 
-                      : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-                  }`}
-                  aria-label="Cancel deletion"
-                  disabled={isDeleting}
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleDelete}
-                  disabled={isDeleting}
-                  data-testid="confirm-delete-button"
-                  type="button"
-                  className={`px-4 py-2 rounded ${
-                    isDeleting
-                      ? 'bg-red-400 cursor-not-allowed'
-                      : 'bg-red-600 hover:bg-red-700'
-                  } text-white`}
-                  aria-label={isDeleting ? "Deleting logo..." : "Confirm deletion"}
-                >
-                  {isDeleting ? (
-                    <span className="flex items-center gap-2">
-                      <svg 
-                        className="animate-spin h-4 w-4" 
-                        viewBox="0 0 24 24"
-                        aria-hidden="true"
-                      >
-                        <circle 
-                          className="opacity-25" 
-                          cx="12" 
-                          cy="12" 
-                          r="10" 
-                          stroke="currentColor" 
-                          strokeWidth="4" 
-                          fill="none" 
-                        />
-                        <path 
-                          className="opacity-75" 
-                          fill="currentColor" 
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" 
-                        />
-                      </svg>
-                      <span>Deleting...</span>
-                    </span>
-                  ) : (
-                    'Delete'
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-      </>
-    );
-  },
-})) 
+      // Verify error boundary caught the error
+      expect(screen.getByRole('alert')).toBeInTheDocument();
+      expect(screen.getByText('Something went wrong.')).toBeInTheDocument();
+      expect(onError).toHaveBeenCalled();
+    });
+  });
+}); 

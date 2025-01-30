@@ -21,10 +21,10 @@
   - Dependencies: Needs baseline screenshot
 
 ### Input Component
-- [ ] Default State (`input/default.visual.spec.ts`)
-  - Status: Not run
-  - Last Run: Never
-  - Issues: Empty file needs implementation
+- [x] Default State (`input/default.visual.spec.ts`)
+  - Status: Implemented
+  - Last Run: Pending baseline screenshot
+  - Issues: None
 - [x] Focus State (`input/focus.visual.spec.ts`)
   - Status: Created
   - Last Run: Pending
@@ -84,7 +84,8 @@
 ## Next Steps
 
 1. Implement empty test files:
-   - [ ] Input default state
+   - [x] Button default state
+   - [x] Input default state
 
 2. Break down remaining components:
    - [ ] Loading states

@@ -36,7 +36,7 @@ jest.mock('next/navigation', () => ({
 // Mock LogoImage component with loading states
 jest.mock('@/app/components/LogoImage', () => ({
   __esModule: true,
-  default: ({ src, responsiveUrls, ...props }: {
+  default: ({ src, responsiveUrls, 'data-testid': testId = 'logo-image', ...props }: {
     src: string;
     responsiveUrls?: Record<string, string>;
     alt: string;
@@ -65,7 +65,7 @@ jest.mock('@/app/components/LogoImage', () => ({
     if (error) {
       return (
         <div 
-          data-testid="logo-image-error" 
+          data-testid={`${testId}-error`}
           className="flex items-center justify-center bg-gray-100 dark:bg-gray-800"
         >
           <span className="text-gray-400">Image not available</span>
@@ -74,7 +74,7 @@ jest.mock('@/app/components/LogoImage', () => ({
     }
 
     if (isLoading) {
-      return <div data-testid="logo-image-loading" className="animate-pulse bg-gray-200 dark:bg-gray-700" />
+      return <div data-testid={`${testId}-loading`} className="animate-pulse bg-gray-200 dark:bg-gray-700" />
     }
 
     const imageUrl = !src ? '/placeholder.png' : src.startsWith('http') || src.startsWith('/') ? src : `/${src}`
@@ -97,10 +97,10 @@ jest.mock('@/app/components/LogoImage', () => ({
 
     return (
       <img 
+        {...props}
         src={imageUrl} 
         srcSet={srcSet}
-        {...props} 
-        data-testid="logo-image"
+        data-testid={testId}
       />
     )
   },

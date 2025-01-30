@@ -106,19 +106,32 @@ jest.mock('@/app/components/DeleteLogoButton', () => ({
           data-testid="delete-button"
           onClick={() => setIsOpen(true)}
           className="text-gray-500 hover:text-red-600"
+          aria-label="Delete logo"
+          type="button"
         >
           Delete
         </button>
 
         {isOpen && (
-          <div role="dialog" aria-modal="true" className="fixed inset-0 z-50">
+          <div 
+            role="dialog" 
+            aria-modal="true" 
+            aria-labelledby="dialog-title"
+            className="fixed inset-0 z-50"
+          >
             <div className="bg-white dark:bg-gray-800 p-6 rounded-lg">
-              <h3>Delete Logo</h3>
-              {error && <p className="text-red-600">{error}</p>}
+              <h3 id="dialog-title">Delete Logo</h3>
+              {error && (
+                <p className="text-red-600" role="alert">
+                  {error}
+                </p>
+              )}
               <div className="mt-4 flex justify-end gap-3">
                 <button 
                   onClick={() => setIsOpen(false)}
                   data-testid="cancel-button"
+                  type="button"
+                  aria-label="Cancel deletion"
                 >
                   Cancel
                 </button>
@@ -126,6 +139,8 @@ jest.mock('@/app/components/DeleteLogoButton', () => ({
                   onClick={handleDelete}
                   disabled={isDeleting}
                   data-testid="confirm-delete-button"
+                  type="button"
+                  aria-label={isDeleting ? "Deleting logo..." : "Confirm deletion"}
                 >
                   {isDeleting ? 'Deleting...' : 'Delete'}
                 </button>
@@ -329,6 +344,50 @@ describe('LogoCard', () => {
       await waitFor(() => {
         expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
       })
+    })
+  })
+
+  describe('Accessibility', () => {
+    it('has appropriate ARIA labels for interactive elements', () => {
+      renderWithTheme(<LogoCard logo={mockLogo} showDelete={true} isOwner={true} />)
+      const deleteButton = screen.getByTestId('delete-button')
+      expect(deleteButton).toHaveAttribute('aria-label', 'Delete logo')
+    })
+
+    it('has appropriate ARIA roles for modal dialog', () => {
+      renderWithTheme(<LogoCard logo={mockLogo} showDelete={true} isOwner={true} />)
+      const deleteButton = screen.getByTestId('delete-button')
+      fireEvent.click(deleteButton)
+      
+      const dialog = screen.getByRole('dialog')
+      expect(dialog).toHaveAttribute('aria-modal', 'true')
+    })
+
+    it('has appropriate alt text for logo image', async () => {
+      renderWithTheme(<LogoCard logo={mockLogo} />)
+      const image = await screen.findByTestId('logo-image')
+      expect(image).toHaveAttribute('alt', `Logo: ${mockLogo.title} - ${mockLogo.description}`)
+    })
+
+    it('has appropriate heading hierarchy', () => {
+      renderWithTheme(<LogoCard logo={mockLogo} />)
+      const title = screen.getByTestId('logo-title')
+      expect(title.tagName).toBe('H3')
+    })
+
+    it('ensures interactive elements are keyboard accessible', () => {
+      renderWithTheme(<LogoCard logo={mockLogo} showDelete={true} isOwner={true} />)
+      const viewDetailsLink = screen.getByTestId('view-details-link')
+      expect(viewDetailsLink).toHaveAttribute('href', `/logos/${mockLogo._id}`)
+      
+      const deleteButton = screen.getByTestId('delete-button')
+      expect(deleteButton).toHaveAttribute('type', 'button')
+    })
+
+    it('maintains sufficient color contrast in dark mode', () => {
+      renderWithTheme(<LogoCard logo={mockLogo} />, { theme: 'dark' })
+      const description = screen.getByTestId('logo-description')
+      expect(description).toHaveClass('dark:text-gray-400') // Ensures readable contrast
     })
   })
 }) 

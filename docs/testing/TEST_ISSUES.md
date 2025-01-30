@@ -19,7 +19,7 @@
 2. [✓] Add tests for hover states
 3. [✓] Add tests for image loading states
 4. [✓] Add tests for DeleteLogoButton click handling
-5. [ ] Add tests for accessibility attributes
+5. [✓] Add tests for accessibility attributes
 6. [ ] Add tests for responsive image breakpoints
 
 ### Test Organization
@@ -37,9 +37,9 @@
 ## Progress Tracking
 
 - Total Issues: 18
-- Fixed: 0
+- Fixed: 5
 - In Progress: 0
-- Remaining: 18
+- Remaining: 13
 
 ## Notes
 

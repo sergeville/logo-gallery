@@ -6,7 +6,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authConfig } from '@/app/lib/auth.config';
 import dbConnect from '@/app/lib/db-config';
 import { Logo } from '@/app/lib/models/logo';
 import mongoose from 'mongoose';
@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = request.nextUrl;
     const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '12');
+    const limit = Math.max(1, parseInt(searchParams.get('limit') || '12'));
     const sortBy = searchParams.get('sortBy') || 'date';
     const sortOrder = searchParams.get('sortOrder') || 'desc';
     const tag = searchParams.get('tag');
@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
     // Get the current user's session if we're on the vote page
     let currentUserId = null;
     if (isVotePage) {
-      const session = await getServerSession(authOptions);
+      const session = await getServerSession(authConfig);
       if (session?.user?.id) {
         currentUserId = session.user.id;
       }
@@ -72,14 +72,14 @@ export async function GET(request: NextRequest) {
     const sortOptions: any = {};
     if (sortBy === 'date') {
       sortOptions.uploadedAt = sortOrder === 'asc' ? 1 : -1;
-    } else if (sortBy === 'rating') {
+    } else if (sortBy === 'votes') {
       sortOptions.totalVotes = sortOrder === 'asc' ? 1 : -1;
     }
 
     // Execute query with pagination
     const [logos, total] = await Promise.all([
       Logo.find(query)
-        .select('_id title description imageUrl thumbnailUrl userId ownerName totalVotes')
+        .select('_id title description imageUrl thumbnailUrl userId ownerName totalVotes votes createdAt')
         .sort(sortOptions)
         .skip(skip)
         .limit(limit)
@@ -90,21 +90,33 @@ export async function GET(request: NextRequest) {
     // Transform the data to match the frontend interface
     const transformedLogos = logos.map(logo => ({
       _id: logo._id,
-      name: logo.title, // Map title to name
-      description: logo.description,
+      name: logo.title,
+      description: logo.description || '',
       imageUrl: logo.imageUrl,
       thumbnailUrl: logo.thumbnailUrl,
       userId: logo.userId,
       ownerName: logo.ownerName,
-      totalVotes: logo.totalVotes || 0
+      totalVotes: logo.totalVotes || 0,
+      votes: logo.votes || [],
+      createdAt: logo.createdAt
     }));
 
     // Calculate pagination info
     const totalPages = Math.ceil(total / limit);
     const hasMore = page < totalPages;
 
+    // Sort logos based on query parameter
+    let sortedLogos = transformedLogos;
+    if (sortBy === 'date') {
+      sortedLogos = transformedLogos.sort((a, b) => 
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+    } else if (sortBy === 'votes') {
+      sortedLogos = transformedLogos.sort((a, b) => b.totalVotes - a.totalVotes);
+    }
+
     return NextResponse.json({
-      logos: transformedLogos,
+      logos: sortedLogos,
       pagination: {
         current: page,
         total: totalPages,
@@ -122,7 +134,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getServerSession(authConfig);
     
     if (!session?.user) {
       return NextResponse.json(

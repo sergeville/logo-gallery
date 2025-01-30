@@ -12,8 +12,73 @@ import React from 'react'
 // Mock next/image
 jest.mock('next/image', () => ({
   __esModule: true,
-  default: (props: any) => {
-    return <img {...props} data-testid="next-image" />
+  default: ({
+    src,
+    alt,
+    width,
+    height,
+    fill,
+    sizes,
+    priority,
+    loading,
+    quality,
+    className,
+    style,
+    onError,
+    onLoad,
+    onLoadingComplete,
+    'data-testid': testId = 'next-image',
+    ...props
+  }: {
+    src: string;
+    alt: string;
+    width?: number;
+    height?: number;
+    fill?: boolean;
+    sizes?: string;
+    priority?: boolean;
+    loading?: 'lazy' | 'eager';
+    quality?: number;
+    className?: string;
+    style?: React.CSSProperties;
+    onError?: (error: Error) => void;
+    onLoad?: (event: React.SyntheticEvent<HTMLImageElement, Event>) => void;
+    onLoadingComplete?: (result: { naturalWidth: number; naturalHeight: number }) => void;
+    'data-testid'?: string;
+  }) => {
+    React.useEffect(() => {
+      // Simulate image load
+      const img = new Image();
+      img.onload = () => {
+        onLoadingComplete?.({
+          naturalWidth: width || 1920,
+          naturalHeight: height || 1080
+        });
+        onLoad?.(new Event('load') as any);
+      };
+      img.onerror = () => {
+        onError?.(new Error('Failed to load image'));
+      };
+      img.src = src;
+    }, [src, onLoad, onLoadingComplete, onError]);
+
+    return (
+      <img
+        src={src}
+        alt={alt}
+        width={width}
+        height={height}
+        sizes={sizes}
+        className={className}
+        style={{
+          ...style,
+          ...(fill ? { position: 'absolute', height: '100%', width: '100%', inset: 0 } : {})
+        }}
+        data-testid={testId}
+        loading={priority ? 'eager' : loading}
+        {...props}
+      />
+    );
   },
 }))
 

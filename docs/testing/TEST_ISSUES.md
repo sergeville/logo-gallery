@@ -8,7 +8,7 @@
 3. [✓] Fix `createdAt` type handling in date tests
 
 ### Mock Issues
-1. [ ] Improve Next/Image mock to handle all required props
+1. [✓] Improve Next/Image mock to handle all required props
 2. [ ] Add proper mock for LogoImage component with responsive image handling
 3. [ ] Add proper error handling in DeleteLogoButton mock
 4. [✓] Add proper mock for useTheme hook
@@ -36,9 +36,9 @@
 ## Progress Tracking
 
 - Total Issues: 17
-- Fixed: 9
+- Fixed: 10
 - In Progress: 0
-- Remaining: 8
+- Remaining: 7
 
 ## Notes
 

@@ -25,6 +25,34 @@
   - ✅ Set up visual regression testing
   - ✅ Expand visual test coverage
   - ✅ Add Percy.io integration
+  - 🔴➤ Fix LogoCard Component Tests
+    - Type Issues
+      - [ ] Fix `title` property missing in Logo interface
+      - [ ] Fix `style` prop type in LogoImage mock
+      - [ ] Fix `data-testid` prop type in LogoImage mock
+      - [ ] Fix `createdAt` type handling in date tests
+    - Mock Issues
+      - [ ] Improve Next/Image mock to handle all required props
+      - [ ] Add proper mock for LogoImage component
+      - [ ] Add proper error handling in DeleteLogoButton mock
+      - [ ] Add proper mock for useTheme hook
+    - Test Coverage Issues
+      - [ ] Add tests for dark mode rendering
+      - [ ] Add tests for hover states
+      - [ ] Add tests for image loading states
+      - [ ] Add tests for DeleteLogoButton click handling
+      - [ ] Add tests for accessibility attributes
+      - [ ] Add tests for responsive image breakpoints
+    - Test Organization
+      - [ ] Split tests into smaller files
+      - [ ] Add shared test utilities
+      - [ ] Add common test fixtures
+      - [ ] Add test constants file
+    - Test Reliability Issues
+      - [ ] Add proper cleanup after each test
+      - [ ] Add timeout handling for async operations
+      - [ ] Add error boundary testing
+      - [ ] Add proper event cleanup
 
 - Performance Optimization
   - ✅ Implement image optimization

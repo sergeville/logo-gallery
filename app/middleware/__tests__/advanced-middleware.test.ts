@@ -7,341 +7,404 @@ import { imageCacheService } from '@/app/lib/services/ImageCacheService';
 import { performanceMonitor } from '@/app/lib/services/PerformanceMonitoringService';
 import { cdnService } from '@/app/lib/services/CDNService';
 
-const mockNextResponse = {
-  json: jest.fn().mockImplementation((data, options = {}) => ({
-    data,
-    headers: new Headers(),
-    status: options.status || 200,
-    clone: () => ({
-      arrayBuffer: () => Promise.resolve(Buffer.from(JSON.stringify(data))),
+interface MockResponse extends NextResponse {
+  data?: any;
+  headers: Headers;
+  status: number;
+  clone: () => MockResponse;
+}
+
+describe('Advanced Middleware Tests', () => {
+  let mockNextResponse: MockResponse;
+
+  beforeEach(() => {
+    mockNextResponse = {
+      data: {},
       headers: new Headers(),
-      status: options.status || 200
-    })
-  }))
-};
+      status: 200,
+      clone: jest.fn().mockImplementation(function(this: MockResponse) {
+        return {
+          arrayBuffer: () => Promise.resolve(Buffer.from(JSON.stringify(this.data))),
+          headers: this.headers,
+          status: this.status
+        };
+      })
+    };
 
-jest.mock('@/app/lib/services/ImageCacheService');
-jest.mock('@/app/lib/services/PerformanceMonitoringService');
-jest.mock('@/app/lib/services/CDNService');
+    jest.spyOn(performanceMonitor, 'recordApiMetrics').mockResolvedValue();
+    jest.spyOn(imageCacheService, 'get').mockResolvedValue(null);
+    jest.spyOn(imageCacheService, 'set').mockResolvedValue();
+  });
 
-describe('Rate Limiting Middleware', () => {
-  beforeEach(() => {
+  afterEach(() => {
     jest.clearAllMocks();
   });
 
-  it('should limit requests based on IP address', async () => {
-    const middleware = rateLimitMiddleware({ limit: 2, windowMs: 1000 });
-    const request = new NextRequest('http://localhost:3000/api');
-    request.headers.set('x-forwarded-for', '127.0.0.1');
+  describe('Performance Middleware', () => {
+    it('should track API performance metrics', async () => {
+      const request = new NextRequest('http://localhost:3000/api/test');
+      const handler = jest.fn().mockResolvedValue(mockNextResponse);
 
-    // First request should pass
-    let result = await middleware(request);
-    expect(result.status).toBe(200);
+      const middleware = performanceMiddleware(request, handler);
+      const response = await middleware();
 
-    // Second request should pass
-    result = await middleware(request);
-    expect(result.status).toBe(200);
-
-    // Third request should be rate limited
-    result = await middleware(request);
-    expect(result.status).toBe(429);
-    expect(result.headers.get('Retry-After')).toBeDefined();
-  });
-
-  it('should handle distributed rate limiting', async () => {
-    const middleware = rateLimitMiddleware({ 
-      limit: 5, 
-      windowMs: 1000,
-      distributed: true 
-    });
-    const requests = Array(6).fill(null).map(() => middleware(
-      new NextRequest('http://localhost:3000/api')
-    ));
-
-    const results = await Promise.all(requests);
-    expect(results.filter(r => r.status === 200)).toHaveLength(5);
-    expect(results.filter(r => r.status === 429)).toHaveLength(1);
-  });
-});
-
-describe('Performance Budgets', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
-
-  it('should enforce response time budgets', async () => {
-    const middleware = performanceMiddleware({
-      budgets: {
-        responseTime: 100 // ms
-      }
-    });
-    const request = new NextRequest('http://localhost:3000/api');
-    const slowHandler = () => new Promise(resolve => 
-      setTimeout(() => resolve(mockNextResponse.json({})), 150)
-    );
-
-    const result = await middleware(request, slowHandler);
-    expect(performanceMonitor.recordBudgetViolation).toHaveBeenCalled();
-    expect(result.headers.get('Server-Timing')).toContain('responseTime');
-  });
-
-  it('should track memory usage thresholds', async () => {
-    const middleware = performanceMiddleware({
-      budgets: {
-        memoryMB: 100
-      }
-    });
-    const request = new NextRequest('http://localhost:3000/api');
-    
-    // Simulate high memory usage
-    const originalMemoryUsage = process.memoryUsage;
-    process.memoryUsage = () => ({ heapUsed: 150 * 1024 * 1024 } as any);
-
-    const result = await middleware(request, () => Promise.resolve(mockNextResponse.json({})));
-    expect(performanceMonitor.recordBudgetViolation).toHaveBeenCalled();
-
-    process.memoryUsage = originalMemoryUsage;
-  });
-});
-
-describe('Image Optimization Metrics', () => {
-  it('should track image optimization metrics', async () => {
-    const middleware = performanceMiddleware();
-    const request = new NextRequest('http://localhost:3000/api/images/test.jpg');
-    const response = mockNextResponse.json({
-      originalSize: 1000000,
-      optimizedSize: 500000,
-      format: 'webp'
+      expect(performanceMonitor.recordApiMetrics).toHaveBeenCalled();
+      expect(response).toBeDefined();
+      expect(response.status).toBe(200);
     });
 
-    const result = await middleware(request, () => Promise.resolve(response));
-    expect(performanceMonitor.recordImageMetrics).toHaveBeenCalledWith({
-      compressionRatio: 0.5,
-      format: 'webp',
-      originalSize: 1000000,
-      optimizedSize: 500000
+    it('should handle errors gracefully', async () => {
+      const request = new NextRequest('http://localhost:3000/api/test');
+      const handler = jest.fn().mockRejectedValue(new Error('Test error'));
+
+      const middleware = performanceMiddleware(request, handler);
+      const response = await middleware();
+
+      expect(response.status).toBe(500);
+      expect(performanceMonitor.recordApiMetrics).toHaveBeenCalled();
     });
   });
-});
 
-describe('Concurrent Request Handling', () => {
-  it('should handle multiple concurrent requests', async () => {
-    const middleware = cacheMiddleware();
-    const requests = Array(10).fill(null).map((_, i) => 
-      middleware(new NextRequest(`http://localhost:3000/api/images/${i}.jpg`))
-    );
+  describe('Cache Middleware', () => {
+    it('should cache API responses', async () => {
+      const request = new NextRequest('http://localhost:3000/api/test');
+      const handler = jest.fn().mockResolvedValue(mockNextResponse);
 
-    const results = await Promise.all(requests);
-    expect(results.every(r => r.status === 200)).toBe(true);
-    expect(imageCacheService.getImage).toHaveBeenCalledTimes(10);
+      const middleware = cacheMiddleware(request, handler);
+      const response = await middleware();
+
+      expect(imageCacheService.get).toHaveBeenCalled();
+      expect(imageCacheService.set).toHaveBeenCalled();
+      expect(response).toBeDefined();
+      expect(response.status).toBe(200);
+    });
+
+    it('should return cached response if available', async () => {
+      const request = new NextRequest('http://localhost:3000/api/test');
+      const handler = jest.fn().mockResolvedValue(mockNextResponse);
+      
+      jest.spyOn(imageCacheService, 'get').mockResolvedValueOnce(mockNextResponse);
+
+      const middleware = cacheMiddleware(request, handler);
+      const response = await middleware();
+
+      expect(handler).not.toHaveBeenCalled();
+      expect(response).toBeDefined();
+      expect(response.status).toBe(200);
+    });
   });
 
-  it('should maintain response order', async () => {
-    const middleware = cacheMiddleware();
-    const delays = [300, 200, 100];
-    const requests = delays.map((delay, i) => {
-      const handler = () => new Promise(resolve => 
-        setTimeout(() => resolve(mockNextResponse.json({ id: i })), delay)
+  describe('Rate Limiting Middleware', () => {
+    it('should limit requests based on IP address', async () => {
+      const middleware = rateLimitMiddleware({ limit: 2, windowMs: 1000 });
+      const request = new NextRequest('http://localhost:3000/api');
+      request.headers.set('x-forwarded-for', '127.0.0.1');
+
+      // First request should pass
+      let result = await middleware(request);
+      expect(result.status).toBe(200);
+
+      // Second request should pass
+      result = await middleware(request);
+      expect(result.status).toBe(200);
+
+      // Third request should be rate limited
+      result = await middleware(request);
+      expect(result.status).toBe(429);
+      expect(result.headers.get('Retry-After')).toBeDefined();
+    });
+
+    it('should handle distributed rate limiting', async () => {
+      const middleware = rateLimitMiddleware({ 
+        limit: 5, 
+        windowMs: 1000,
+        distributed: true 
+      });
+      const requests = Array(6).fill(null).map(() => middleware(
+        new NextRequest('http://localhost:3000/api')
+      ));
+
+      const results = await Promise.all(requests);
+      expect(results.filter(r => r.status === 200)).toHaveLength(5);
+      expect(results.filter(r => r.status === 429)).toHaveLength(1);
+    });
+  });
+
+  describe('Performance Budgets', () => {
+    it('should enforce response time budgets', async () => {
+      const middleware = performanceMiddleware({
+        budgets: {
+          responseTime: 100 // ms
+        }
+      });
+      const request = new NextRequest('http://localhost:3000/api');
+      const slowHandler = () => new Promise(resolve => 
+        setTimeout(() => resolve(mockNextResponse.json({})), 150)
       );
-      return middleware(new NextRequest(`http://localhost:3000/api/${i}`), handler);
+
+      const result = await middleware(request, slowHandler);
+      expect(performanceMonitor.recordBudgetViolation).toHaveBeenCalled();
+      expect(result.headers.get('Server-Timing')).toContain('responseTime');
     });
 
-    const results = await Promise.all(requests);
-    const ids = results.map(r => r.data.id);
-    expect(ids).toEqual([0, 1, 2]);
-  });
-});
+    it('should track memory usage thresholds', async () => {
+      const middleware = performanceMiddleware({
+        budgets: {
+          memoryMB: 100
+        }
+      });
+      const request = new NextRequest('http://localhost:3000/api');
+      
+      // Simulate high memory usage
+      const originalMemoryUsage = process.memoryUsage;
+      process.memoryUsage = () => ({ heapUsed: 150 * 1024 * 1024 } as any);
 
-describe('Cache Eviction', () => {
-  it('should evict items based on LRU policy', async () => {
-    const middleware = cacheMiddleware({
-      maxItems: 2,
-      policy: 'lru'
+      const result = await middleware(request, () => Promise.resolve(mockNextResponse.json({})));
+      expect(performanceMonitor.recordBudgetViolation).toHaveBeenCalled();
+
+      process.memoryUsage = originalMemoryUsage;
+    });
+  });
+
+  describe('Image Optimization Metrics', () => {
+    it('should track image optimization metrics', async () => {
+      const middleware = performanceMiddleware();
+      const request = new NextRequest('http://localhost:3000/api/images/test.jpg');
+      const response = mockNextResponse.json({
+        originalSize: 1000000,
+        optimizedSize: 500000,
+        format: 'webp'
+      });
+
+      const result = await middleware(request, () => Promise.resolve(response));
+      expect(performanceMonitor.recordImageMetrics).toHaveBeenCalledWith({
+        compressionRatio: 0.5,
+        format: 'webp',
+        originalSize: 1000000,
+        optimizedSize: 500000
+      });
+    });
+  });
+
+  describe('Concurrent Request Handling', () => {
+    it('should handle multiple concurrent requests', async () => {
+      const middleware = cacheMiddleware();
+      const requests = Array(10).fill(null).map((_, i) => 
+        middleware(new NextRequest(`http://localhost:3000/api/images/${i}.jpg`))
+      );
+
+      const results = await Promise.all(requests);
+      expect(results.every(r => r.status === 200)).toBe(true);
+      expect(imageCacheService.getImage).toHaveBeenCalledTimes(10);
     });
 
-    // Add three items
-    await middleware(new NextRequest('http://localhost:3000/api/1'));
-    await middleware(new NextRequest('http://localhost:3000/api/2'));
-    await middleware(new NextRequest('http://localhost:3000/api/3'));
+    it('should maintain response order', async () => {
+      const middleware = cacheMiddleware();
+      const delays = [300, 200, 100];
+      const requests = delays.map((delay, i) => {
+        const handler = () => new Promise(resolve => 
+          setTimeout(() => resolve(mockNextResponse.json({ id: i })), delay)
+        );
+        return middleware(new NextRequest(`http://localhost:3000/api/${i}`), handler);
+      });
 
-    // First item should be evicted
-    expect(imageCacheService.getImage).toHaveBeenCalledWith('1');
-    expect(imageCacheService.removeImage).toHaveBeenCalledWith('1');
+      const results = await Promise.all(requests);
+      const ids = results.map(r => r.data.id);
+      expect(ids).toEqual([0, 1, 2]);
+    });
   });
 
-  it('should handle memory pressure eviction', async () => {
-    const middleware = cacheMiddleware({
-      maxMemoryMB: 100
+  describe('Cache Eviction', () => {
+    it('should evict items based on LRU policy', async () => {
+      const middleware = cacheMiddleware({
+        maxItems: 2,
+        policy: 'lru'
+      });
+
+      // Add three items
+      await middleware(new NextRequest('http://localhost:3000/api/1'));
+      await middleware(new NextRequest('http://localhost:3000/api/2'));
+      await middleware(new NextRequest('http://localhost:3000/api/3'));
+
+      // First item should be evicted
+      expect(imageCacheService.getImage).toHaveBeenCalledWith('1');
+      expect(imageCacheService.removeImage).toHaveBeenCalledWith('1');
     });
 
-    // Simulate memory pressure
-    const originalMemoryUsage = process.memoryUsage;
-    process.memoryUsage = () => ({ heapUsed: 150 * 1024 * 1024 } as any);
+    it('should handle memory pressure eviction', async () => {
+      const middleware = cacheMiddleware({
+        maxMemoryMB: 100
+      });
 
-    await middleware(new NextRequest('http://localhost:3000/api/test'));
-    expect(imageCacheService.clear).toHaveBeenCalled();
+      // Simulate memory pressure
+      const originalMemoryUsage = process.memoryUsage;
+      process.memoryUsage = () => ({ heapUsed: 150 * 1024 * 1024 } as any);
 
-    process.memoryUsage = originalMemoryUsage;
-  });
-});
+      await middleware(new NextRequest('http://localhost:3000/api/test'));
+      expect(imageCacheService.clear).toHaveBeenCalled();
 
-describe('CDN Integration', () => {
-  it('should route requests through CDN', async () => {
-    const middleware = cdnMiddleware();
-    const request = new NextRequest('http://localhost:3000/api/images/test.jpg');
-
-    await middleware(request);
-    expect(cdnService.getUrl).toHaveBeenCalledWith('test.jpg');
-    expect(cdnService.upload).toHaveBeenCalled();
+      process.memoryUsage = originalMemoryUsage;
+    });
   });
 
-  it('should handle CDN failures gracefully', async () => {
-    const middleware = cdnMiddleware();
-    const request = new NextRequest('http://localhost:3000/api/images/test.jpg');
+  describe('CDN Integration', () => {
+    it('should route requests through CDN', async () => {
+      const middleware = cdnMiddleware();
+      const request = new NextRequest('http://localhost:3000/api/images/test.jpg');
 
-    (cdnService.getUrl as jest.Mock).mockRejectedValueOnce(new Error('CDN Error'));
+      await middleware(request);
+      expect(cdnService.getUrl).toHaveBeenCalledWith('test.jpg');
+      expect(cdnService.upload).toHaveBeenCalled();
+    });
 
-    const result = await middleware(request);
-    expect(result.status).toBe(200); // Should fall back to direct serving
+    it('should handle CDN failures gracefully', async () => {
+      const middleware = cdnMiddleware();
+      const request = new NextRequest('http://localhost:3000/api/images/test.jpg');
+
+      (cdnService.getUrl as jest.Mock).mockRejectedValueOnce(new Error('CDN Error'));
+
+      const result = await middleware(request);
+      expect(result.status).toBe(200); // Should fall back to direct serving
+    });
   });
-});
 
-describe('Error Recovery', () => {
-  it('should retry failed requests', async () => {
-    const middleware = performanceMiddleware({
-      retry: {
-        attempts: 3,
-        backoff: 100
+  describe('Error Recovery', () => {
+    it('should retry failed requests', async () => {
+      const middleware = performanceMiddleware({
+        retry: {
+          attempts: 3,
+          backoff: 100
+        }
+      });
+      const request = new NextRequest('http://localhost:3000/api');
+      const handler = jest.fn()
+        .mockRejectedValueOnce(new Error('Temporary failure'))
+        .mockRejectedValueOnce(new Error('Temporary failure'))
+        .mockResolvedValueOnce(mockNextResponse.json({}));
+
+      const result = await middleware(request, handler);
+      expect(result.status).toBe(200);
+      expect(handler).toHaveBeenCalledTimes(3);
+    });
+
+    it('should implement circuit breaker', async () => {
+      const middleware = performanceMiddleware({
+        circuitBreaker: {
+          failureThreshold: 3,
+          resetTimeout: 1000
+        }
+      });
+      const request = new NextRequest('http://localhost:3000/api');
+
+      // Trigger circuit breaker
+      for (let i = 0; i < 3; i++) {
+        await middleware(request, () => Promise.reject(new Error('Service down')));
       }
-    });
-    const request = new NextRequest('http://localhost:3000/api');
-    const handler = jest.fn()
-      .mockRejectedValueOnce(new Error('Temporary failure'))
-      .mockRejectedValueOnce(new Error('Temporary failure'))
-      .mockResolvedValueOnce(mockNextResponse.json({}));
 
-    const result = await middleware(request, handler);
-    expect(result.status).toBe(200);
-    expect(handler).toHaveBeenCalledTimes(3);
+      // Circuit should be open
+      const result = await middleware(request, () => Promise.resolve(mockNextResponse.json({})));
+      expect(result.status).toBe(503);
+    });
   });
 
-  it('should implement circuit breaker', async () => {
-    const middleware = performanceMiddleware({
-      circuitBreaker: {
-        failureThreshold: 3,
-        resetTimeout: 1000
+  describe('Resource Cleanup', () => {
+    it('should clean up temporary files', async () => {
+      const middleware = performanceMiddleware();
+      const request = new NextRequest('http://localhost:3000/api/upload');
+      const cleanup = jest.fn();
+
+      await middleware(request, async () => {
+        const response = mockNextResponse.json({});
+        response.cleanup = cleanup;
+        return response;
+      });
+
+      expect(cleanup).toHaveBeenCalled();
+    });
+
+    it('should release database connections', async () => {
+      const middleware = performanceMiddleware();
+      const request = new NextRequest('http://localhost:3000/api/db');
+      const releaseConnection = jest.fn();
+
+      await middleware(request, async () => {
+        const response = mockNextResponse.json({});
+        response.releaseConnection = releaseConnection;
+        return response;
+      });
+
+      expect(releaseConnection).toHaveBeenCalled();
+    });
+  });
+
+  describe('Memory Usage', () => {
+    it('should track memory leaks', async () => {
+      const middleware = performanceMiddleware();
+      const request = new NextRequest('http://localhost:3000/api');
+      const initialMemory = process.memoryUsage().heapUsed;
+
+      // Make multiple requests
+      for (let i = 0; i < 100; i++) {
+        await middleware(request, () => Promise.resolve(mockNextResponse.json({})));
       }
-    });
-    const request = new NextRequest('http://localhost:3000/api');
 
-    // Trigger circuit breaker
-    for (let i = 0; i < 3; i++) {
-      await middleware(request, () => Promise.reject(new Error('Service down')));
-    }
-
-    // Circuit should be open
-    const result = await middleware(request, () => Promise.resolve(mockNextResponse.json({})));
-    expect(result.status).toBe(503);
-  });
-});
-
-describe('Resource Cleanup', () => {
-  it('should clean up temporary files', async () => {
-    const middleware = performanceMiddleware();
-    const request = new NextRequest('http://localhost:3000/api/upload');
-    const cleanup = jest.fn();
-
-    await middleware(request, async () => {
-      const response = mockNextResponse.json({});
-      response.cleanup = cleanup;
-      return response;
+      const finalMemory = process.memoryUsage().heapUsed;
+      const leak = finalMemory - initialMemory;
+      expect(leak).toBeLessThan(1024 * 1024); // Less than 1MB growth
     });
 
-    expect(cleanup).toHaveBeenCalled();
+    it('should handle memory intensive operations', async () => {
+      const middleware = performanceMiddleware();
+      const request = new NextRequest('http://localhost:3000/api/memory');
+
+      const result = await middleware(request, async () => {
+        // Simulate memory intensive operation
+        const data = Buffer.alloc(50 * 1024 * 1024); // 50MB
+        return mockNextResponse.json({ size: data.length });
+      });
+
+      expect(result.status).toBe(200);
+      expect(performanceMonitor.recordMemoryUsage).toHaveBeenCalled();
+    });
   });
 
-  it('should release database connections', async () => {
-    const middleware = performanceMiddleware();
-    const request = new NextRequest('http://localhost:3000/api/db');
-    const releaseConnection = jest.fn();
+  describe('Load Balancing', () => {
+    it('should distribute requests across instances', async () => {
+      const middleware = performanceMiddleware({
+        loadBalancing: {
+          strategy: 'round-robin',
+          instances: ['instance1', 'instance2', 'instance3']
+        }
+      });
 
-    await middleware(request, async () => {
-      const response = mockNextResponse.json({});
-      response.releaseConnection = releaseConnection;
-      return response;
+      const requests = Array(6).fill(null).map(() => 
+        middleware(new NextRequest('http://localhost:3000/api'))
+      );
+
+      const results = await Promise.all(requests);
+      const instances = results.map(r => r.headers.get('X-Served-by'));
+      
+      expect(instances).toEqual([
+        'instance1', 'instance2', 'instance3',
+        'instance1', 'instance2', 'instance3'
+      ]);
     });
 
-    expect(releaseConnection).toHaveBeenCalled();
-  });
-});
+    it('should handle instance failures', async () => {
+      const middleware = performanceMiddleware({
+        loadBalancing: {
+          strategy: 'failover',
+          instances: ['primary', 'secondary', 'backup']
+        }
+      });
 
-describe('Memory Usage', () => {
-  it('should track memory leaks', async () => {
-    const middleware = performanceMiddleware();
-    const request = new NextRequest('http://localhost:3000/api');
-    const initialMemory = process.memoryUsage().heapUsed;
+      // Mock primary instance failure
+      const handler = jest.fn()
+        .mockRejectedValueOnce(new Error('Primary down'))
+        .mockResolvedValueOnce(mockNextResponse.json({ instance: 'secondary' }));
 
-    // Make multiple requests
-    for (let i = 0; i < 100; i++) {
-      await middleware(request, () => Promise.resolve(mockNextResponse.json({})));
-    }
-
-    const finalMemory = process.memoryUsage().heapUsed;
-    const leak = finalMemory - initialMemory;
-    expect(leak).toBeLessThan(1024 * 1024); // Less than 1MB growth
-  });
-
-  it('should handle memory intensive operations', async () => {
-    const middleware = performanceMiddleware();
-    const request = new NextRequest('http://localhost:3000/api/memory');
-
-    const result = await middleware(request, async () => {
-      // Simulate memory intensive operation
-      const data = Buffer.alloc(50 * 1024 * 1024); // 50MB
-      return mockNextResponse.json({ size: data.length });
+      const result = await middleware(new NextRequest('http://localhost:3000/api'), handler);
+      expect(result.data.instance).toBe('secondary');
     });
-
-    expect(result.status).toBe(200);
-    expect(performanceMonitor.recordMemoryUsage).toHaveBeenCalled();
-  });
-});
-
-describe('Load Balancing', () => {
-  it('should distribute requests across instances', async () => {
-    const middleware = performanceMiddleware({
-      loadBalancing: {
-        strategy: 'round-robin',
-        instances: ['instance1', 'instance2', 'instance3']
-      }
-    });
-
-    const requests = Array(6).fill(null).map(() => 
-      middleware(new NextRequest('http://localhost:3000/api'))
-    );
-
-    const results = await Promise.all(requests);
-    const instances = results.map(r => r.headers.get('X-Served-by'));
-    
-    expect(instances).toEqual([
-      'instance1', 'instance2', 'instance3',
-      'instance1', 'instance2', 'instance3'
-    ]);
-  });
-
-  it('should handle instance failures', async () => {
-    const middleware = performanceMiddleware({
-      loadBalancing: {
-        strategy: 'failover',
-        instances: ['primary', 'secondary', 'backup']
-      }
-    });
-
-    // Mock primary instance failure
-    const handler = jest.fn()
-      .mockRejectedValueOnce(new Error('Primary down'))
-      .mockResolvedValueOnce(mockNextResponse.json({ instance: 'secondary' }));
-
-    const result = await middleware(new NextRequest('http://localhost:3000/api'), handler);
-    expect(result.data.instance).toBe('secondary');
   });
 }); 

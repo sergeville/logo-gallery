@@ -3,11 +3,18 @@ import { ObjectId } from 'mongodb';
 export interface User {
   _id: ObjectId;
   email: string;
-  name: string;
-  password?: string;
-  favorites?: ObjectId[];
+  username: string;
+  password: string;
   createdAt: Date;
-  updatedAt: Date;
+  profile?: {
+    bio?: string;
+    website?: string;
+    avatar?: string;
+    location?: string;
+    skills?: string[];
+  };
+  role?: 'user' | 'admin';
+  isAdmin?: boolean;
 }
 
 export interface UserProfile {
@@ -24,36 +31,83 @@ export interface LogoDimensions {
 }
 
 export interface Logo {
-  _id?: ObjectId;
+  _id: ObjectId;
   name: string;
-  description: string;
-  url: string;
+  description?: string;
   imageUrl: string;
   thumbnailUrl: string;
   userId: ObjectId;
-  ownerName: string;
   tags: string[];
+  category?: string;
+  dimensions?: {
+    width: number;
+    height: number;
+  };
+  fileSize?: number;
+  fileType?: string;
   createdAt: Date;
   updatedAt: Date;
+  totalVotes: number;
+  votes: Array<{
+    userId: ObjectId;
+    timestamp: Date;
+  }>;
+  votingDeadline?: Date;
+}
+
+export interface Comment {
+  _id: ObjectId;
+  logoId: ObjectId;
+  userId: ObjectId;
+  content: string;
+  parentId?: ObjectId;
+  createdAt: Date;
+  likes?: number;
+  mentions?: ObjectId[];
+}
+
+export interface Collection {
+  _id: ObjectId;
+  name: string;
+  userId: ObjectId;
+  logos: ObjectId[];
+  createdAt: Date;
+  isPublic: boolean;
+  sharedWith?: ObjectId[];
 }
 
 export interface ValidationError {
+  code: string;
   field: string;
   message: string;
-  type: 'error' | 'warning';
 }
 
 export interface ValidationResult {
-  isValid: boolean;
   errors: ValidationError[];
   warnings: ValidationError[];
+  fixes: ValidationError[];
 }
 
-export interface FixSuggestion {
-  field: string;
-  action: string;
-  example: string;
-  autoFixable: boolean;
+export interface ImageOptimizationService {
+  analyzeImage(buffer: Buffer): Promise<{
+    dimensions: { width: number; height: number };
+    size: number;
+    format: string;
+    quality?: number;
+  }>;
+  optimizeImage(buffer: Buffer, options?: {
+    maxWidth?: number;
+    maxHeight?: number;
+    quality?: number;
+    format?: string;
+  }): Promise<Buffer>;
+}
+
+export interface ImageCacheService {
+  cacheImage(key: string, data: { blob: Blob; timestamp: number }): Promise<void>;
+  getCachedImage(key: string): Promise<{ blob: Blob; timestamp: number } | null>;
+  removeImage(key: string): Promise<void>;
+  clear(): Promise<void>;
 }
 
 // Client-side types (using string IDs)

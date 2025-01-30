@@ -49,14 +49,14 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json(
-      { success: true, message: 'Password successfully reset' },
+      { success: true, message: 'Password updated successfully' },
       { status: 200 }
     );
 
   } catch (error) {
     console.error('Password reset error:', error);
     return NextResponse.json(
-      { success: false, message: 'Failed to reset password' },
+      { success: false, message: 'An error occurred while resetting password' },
       { status: 500 }
     );
   }

@@ -1,56 +1,66 @@
-import { ObjectId } from 'mongodb';
-import { seedLogos, createTestLogo } from '@/scripts/seed/logos';
-import { Logo } from '@/app/types';
+import { Logo } from '@/app/lib/models/logo';
+import { User } from '@/app/lib/models/user';
+import { generateTestLogos } from '../logos';
+import { generateTestUsers } from '../users';
+import { Types } from 'mongoose';
 
-describe('Logo Seeding', () => {
-  it('creates the specified number of logos', async () => {
-    const userId = new ObjectId();
-    const logos = await seedLogos({ 
-      count: 3,
-      userIds: [userId]
-    });
+describe('Logo Generator', () => {
+  it('generates logos with required fields', async () => {
+    const users = await generateTestUsers(1);
+    const userIds = users.map(user => user._id);
+    const logos = await generateTestLogos(1, userIds);
+    const logo = logos[0];
 
-    expect(logos).toHaveLength(3);
-    logos.forEach(logo => {
-      expect(logo._id).toBeDefined();
-      expect(typeof logo._id.toString()).toBe('string');
-      expect(logo.url).toMatch(/^https:\/\/example\.com\/logos\//);
-      expect(logo.description).toBeTruthy();
-      expect(logo.userId).toBeDefined();
-      expect(typeof logo.userId.toString()).toBe('string');
-      expect(logo.createdAt).toBeInstanceOf(Date);
-    });
+    expect(logo._id).toBeDefined();
+    expect(logo.title).toBeDefined();
+    expect(typeof logo.title).toBe('string');
+    expect(logo.description).toBeDefined();
+    expect(typeof logo.description).toBe('string');
+    expect(logo.imageUrl).toBeDefined();
+    expect(typeof logo.imageUrl).toBe('string');
+    expect(logo.thumbnailUrl).toBeDefined();
+    expect(typeof logo.thumbnailUrl).toBe('string');
+    expect(logo.userId).toBeDefined();
+    expect(Types.ObjectId.isValid(logo.userId)).toBe(true);
+    expect(logo.createdAt).toBeDefined();
+    expect(logo.createdAt instanceof Date).toBe(true);
   });
 
-  it('assigns logos to specified users', async () => {
-    const userIds = [new ObjectId(), new ObjectId()];
-    const logos = await seedLogos({ 
-      count: 4,
-      userIds
-    });
+  it('generates multiple logos', async () => {
+    const users = await generateTestUsers(2);
+    const userIds = users.map(user => user._id);
+    const count = 5;
+    const logos = await generateTestLogos(count, userIds);
 
-    expect(logos).toHaveLength(4);
+    expect(logos).toHaveLength(count);
     logos.forEach(logo => {
+      expect(logo._id).toBeDefined();
+      expect(logo.title).toBeDefined();
+      expect(logo.description).toBeDefined();
+      expect(logo.imageUrl).toBeDefined();
+      expect(logo.thumbnailUrl).toBeDefined();
       expect(userIds.map(id => id.toString())).toContain(logo.userId.toString());
     });
   });
 
-  it('creates a test logo with custom data', async () => {
-    const userId = new ObjectId();
+  it('accepts custom data', async () => {
+    const users = await generateTestUsers(1);
+    const userId = users[0]._id;
     const customData = {
-      description: 'Custom Logo',
-      url: 'https://example.com/custom-logo.png',
-      name: 'Custom Test Logo'
+      title: 'Custom Logo',
+      description: 'A custom description',
+      imageUrl: 'custom-image.jpg',
+      thumbnailUrl: 'custom-thumbnail.jpg'
     };
 
-    const logo = await createTestLogo(userId, customData);
+    const logos = await generateTestLogos(1, [userId], customData);
+    const logo = logos[0];
 
-    expect(logo._id).toBeDefined();
-    expect(typeof logo._id.toString()).toBe('string');
+    expect(logo.title).toBe(customData.title);
     expect(logo.description).toBe(customData.description);
-    expect(logo.url).toBe(customData.url);
-    expect(logo.name).toBe(customData.name);
+    expect(logo.imageUrl).toBe(customData.imageUrl);
+    expect(logo.thumbnailUrl).toBe(customData.thumbnailUrl);
     expect(logo.userId).toBeDefined();
-    expect(typeof logo.userId.toString()).toBe('string');
+    expect(Types.ObjectId.isValid(logo.userId)).toBe(true);
   });
 }); 

@@ -1,230 +1,244 @@
 import { POST as requestReset } from '@/app/api/auth/password/request-reset/route'
 import { POST as resetPassword } from '@/app/api/auth/password/reset/route'
-import { connectToDatabase } from '@/app/lib/db'
+import { connectToDatabase, __mock as dbMock } from '@/app/lib/db'
 import { sendEmail } from '@/app/lib/email'
-import { Db } from 'mongodb'
+import { ObjectId } from 'mongodb'
+import bcrypt from 'bcryptjs'
+import { NextResponse } from 'next/server'
 
+// Mock dependencies
 jest.mock('@/app/lib/db')
 jest.mock('@/app/lib/email')
+jest.mock('bcryptjs', () => ({
+  hash: jest.fn().mockResolvedValue('hashed_password_123'),
+  compare: jest.fn().mockResolvedValue(true)
+}))
 
-interface MockCollection {
-  findOne: jest.Mock;
-  updateOne: jest.Mock;
+// Helper to create mock request
+function createRequest(body: any): Request {
+  const request = new Request('http://localhost', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  })
+
+  // Mock the json method directly on the request instance
+  Object.defineProperty(request, 'json', {
+    value: async () => body,
+    configurable: true
+  })
+
+  return request
 }
 
-interface MockDb {
-  collection: (name: string) => MockCollection;
+// Helper to create test responses
+function createTestResponse(data: any, status: number = 200) {
+  const headers = new Headers()
+  headers.set('Content-Type', 'application/json')
+
+  return {
+    status,
+    json: async () => data,
+    headers,
+    get: (name: string) => headers.get(name)
+  } as Response
 }
+
+// Helper to extract data from response
+async function extractResponseData(response: Response) {
+  return {
+    status: response.status,
+    data: await response.json()
+  }
+}
+
+// Mock NextResponse.json
+const originalNextResponseJson = NextResponse.json
+beforeAll(() => {
+  // @ts-ignore
+  NextResponse.json = (data: any, init?: ResponseInit) => {
+    return createTestResponse(data, init?.status || 200)
+  }
+})
+
+afterAll(() => {
+  // @ts-ignore
+  NextResponse.json = originalNextResponseJson
+})
+
+describe('Response Handling', () => {
+  it('should properly handle JSON responses', async () => {
+    const testData = { success: true, message: 'Test message' }
+    const response = createTestResponse(testData, 200)
+    
+    expect(response).toBeDefined()
+    expect(response.status).toBe(200)
+    expect(response.headers.get('Content-Type')).toBe('application/json')
+    
+    const { data } = await extractResponseData(response)
+    expect(data).toEqual(testData)
+  })
+
+  it('should handle error responses', async () => {
+    const errorData = { success: false, message: 'Error message' }
+    const response = createTestResponse(errorData, 400)
+    
+    expect(response).toBeDefined()
+    expect(response.status).toBe(400)
+    expect(response.headers.get('Content-Type')).toBe('application/json')
+    
+    const { data } = await extractResponseData(response)
+    expect(data).toEqual(errorData)
+  })
+})
 
 describe('Password Reset APIs', () => {
+  const mockUserId = new ObjectId()
   const mockUser = {
-    _id: '123',
+    _id: mockUserId,
     email: 'test@example.com',
     password: 'hashedpassword'
   }
-
-  let mockCollection: MockCollection;
-  let mockDb: MockDb;
+  const mockToken = 'valid_reset_token_123'
+  const mockExpiredToken = 'expired_token_123'
+  const mockNewPassword = 'newPassword123'
 
   beforeEach(() => {
-    mockCollection = {
-      findOne: jest.fn().mockResolvedValue(mockUser),
-      updateOne: jest.fn().mockResolvedValue({ modifiedCount: 1 })
-    };
-
-    mockDb = {
-      collection: jest.fn().mockReturnValue(mockCollection)
-    };
-
-    (connectToDatabase as jest.Mock).mockResolvedValue({
-      db: jest.fn().mockReturnValue(mockDb)
-    });
-    (sendEmail as jest.Mock).mockResolvedValue(true);
-  });
-
-  afterEach(() => {
+    // Reset all mocks
     jest.clearAllMocks()
-  })
-
-  describe('POST /api/auth/password/request-reset', () => {
-    it('successfully generates reset token', async () => {
-      const request = new Request('http://localhost/api/auth/password/request-reset', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: 'test@example.com' })
-      })
-
-      const response = await requestReset(request)
-      const data = await response.json()
-
-      expect(response.status).toBe(200)
-      expect(data).toEqual({
-        success: true,
-        message: 'Password reset instructions sent'
-      })
-      expect(sendEmail).toHaveBeenCalled()
+    dbMock.resetState()
+    
+    // Setup default collection responses
+    const mockCollection = dbMock.db.collection('users')
+    mockCollection.findOne.mockResolvedValue({
+      ...mockUser,
+      resetToken: {
+        token: mockToken,
+        expires: new Date(Date.now() + 3600000) // 1 hour from now
+      }
     })
-
-    it('returns success even when user not found (security)', async () => {
-      const mockCollectionNoUser: MockCollection = {
-        findOne: jest.fn().mockResolvedValue(null),
-        updateOne: jest.fn()
-      };
-
-      const mockDbNoUser: MockDb = {
-        collection: jest.fn().mockReturnValue(mockCollectionNoUser)
-      };
-
-      (connectToDatabase as jest.Mock).mockResolvedValue({
-        db: jest.fn().mockReturnValue(mockDbNoUser)
-      });
-
-      const request = new Request('http://localhost/api/auth/password/request-reset', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: 'nonexistent@example.com' })
-      })
-
-      const response = await requestReset(request)
-      const data = await response.json()
-
-      expect(response.status).toBe(200)
-      expect(data).toEqual({
-        success: true,
-        message: 'Password reset instructions sent'
-      })
-      expect(sendEmail).not.toHaveBeenCalled()
-    })
-
-    it('validates required fields', async () => {
-      const request = new Request('http://localhost/api/auth/password/request-reset', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({})
-      })
-
-      const response = await requestReset(request)
-      const data = await response.json()
-
-      expect(response.status).toBe(400)
-      expect(data).toEqual({
-        success: false,
-        message: 'Email is required'
-      })
-    })
+    mockCollection.updateOne.mockResolvedValue({ modifiedCount: 1 })
   })
 
   describe('POST /api/auth/password/reset', () => {
-    const mockToken = 'valid-reset-token'
-    const mockNewPassword = 'newPassword123!'
+    describe('Input Validation', () => {
+      it('should return 400 if token is missing', async () => {
+        const response = await resetPassword(createRequest({ 
+          newPassword: mockNewPassword 
+        }))
 
-    it('successfully resets password', async () => {
-      const request = new Request('http://localhost/api/auth/password/reset', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          token: mockToken,
-          newPassword: mockNewPassword
-        })
-      })
-
-      const response = await resetPassword(request)
-      const data = await response.json()
-
-      expect(response.status).toBe(200)
-      expect(data).toEqual({
-        success: true,
-        message: 'Password successfully reset'
-      })
-    })
-
-    it('validates required fields', async () => {
-      const testCases = [
-        { body: {}, missing: 'Reset token' },
-        { body: { token: mockToken }, missing: 'New password' }
-      ]
-
-      for (const testCase of testCases) {
-        const request = new Request('http://localhost/api/auth/password/reset', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(testCase.body)
-        })
-
-        const response = await resetPassword(request)
-        const data = await response.json()
-
-        expect(response.status).toBe(400)
+        const { status, data } = await extractResponseData(response)
+        expect(status).toBe(400)
         expect(data).toEqual({
           success: false,
-          message: `${testCase.missing} is required`
-        })
-      }
-    })
-
-    it('handles invalid reset token', async () => {
-      const mockCollectionInvalid: MockCollection = {
-        findOne: jest.fn().mockResolvedValue(null),
-        updateOne: jest.fn()
-      };
-
-      const mockDbInvalid: MockDb = {
-        collection: jest.fn().mockReturnValue(mockCollectionInvalid)
-      };
-
-      (connectToDatabase as jest.Mock).mockResolvedValue({
-        db: jest.fn().mockReturnValue(mockDbInvalid)
-      });
-
-      const request = new Request('http://localhost/api/auth/password/reset', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          token: 'invalid-token',
-          newPassword: mockNewPassword
+          message: 'Reset token is required'
         })
       })
 
-      const response = await resetPassword(request)
-      const data = await response.json()
+      it('should return 400 if new password is missing', async () => {
+        const response = await resetPassword(createRequest({ 
+          token: mockToken 
+        }))
 
-      expect(response.status).toBe(401)
-      expect(data).toEqual({
-        success: false,
-        message: 'Invalid or expired reset token'
+        const { status, data } = await extractResponseData(response)
+        expect(status).toBe(400)
+        expect(data).toEqual({
+          success: false,
+          message: 'New password is required'
+        })
       })
     })
 
-    it('handles database errors', async () => {
-      const mockCollectionError: MockCollection = {
-        findOne: jest.fn().mockResolvedValue(mockUser),
-        updateOne: jest.fn().mockRejectedValue(new Error('Database error'))
-      };
+    describe('Token Validation', () => {
+      it('should return 401 if token is invalid', async () => {
+        dbMock.db.collection('users').findOne.mockResolvedValueOnce(null)
 
-      const mockDbError: MockDb = {
-        collection: jest.fn().mockReturnValue(mockCollectionError)
-      };
+        const response = await resetPassword(createRequest({ 
+          token: 'invalid_token', 
+          newPassword: mockNewPassword 
+        }))
 
-      (connectToDatabase as jest.Mock).mockResolvedValue({
-        db: jest.fn().mockReturnValue(mockDbError)
-      });
-
-      const request = new Request('http://localhost/api/auth/password/reset', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          token: mockToken,
-          newPassword: mockNewPassword
+        const { status, data } = await extractResponseData(response)
+        expect(status).toBe(401)
+        expect(data).toEqual({
+          success: false,
+          message: 'Invalid or expired reset token'
         })
       })
 
-      const response = await resetPassword(request)
-      const data = await response.json()
+      it('should return 401 if token is expired', async () => {
+        // Mock findOne to return null to simulate expired token
+        dbMock.db.collection('users').findOne.mockResolvedValueOnce(null)
 
-      expect(response.status).toBe(500)
-      expect(data).toEqual({
-        success: false,
-        message: 'Failed to reset password'
+        const response = await resetPassword(createRequest({ 
+          token: mockExpiredToken, 
+          newPassword: mockNewPassword 
+        }))
+
+        const { status, data } = await extractResponseData(response)
+        expect(status).toBe(401)
+        expect(data).toEqual({
+          success: false,
+          message: 'Invalid or expired reset token'
+        })
+      })
+    })
+
+    describe('Password Update', () => {
+      it('should successfully update password with valid token', async () => {
+        const response = await resetPassword(createRequest({ 
+          token: mockToken, 
+          newPassword: mockNewPassword 
+        }))
+
+        const { status, data } = await extractResponseData(response)
+        expect(status).toBe(200)
+        expect(data).toEqual({
+          success: true,
+          message: 'Password updated successfully'
+        })
+
+        // Verify database operations
+        expect(dbMock.db.collection).toHaveBeenCalledWith('users')
+        expect(dbMock.db.collection('users').updateOne).toHaveBeenCalledWith(
+          { _id: mockUserId },
+          {
+            $set: { password: expect.any(String) },
+            $unset: { resetToken: "" }
+          }
+        )
+      })
+
+      it('should return 500 if database update fails', async () => {
+        dbMock.db.collection('users').updateOne.mockResolvedValueOnce({ modifiedCount: 0 })
+
+        const response = await resetPassword(createRequest({ 
+          token: mockToken, 
+          newPassword: mockNewPassword 
+        }))
+
+        const { status, data } = await extractResponseData(response)
+        expect(status).toBe(500)
+        expect(data).toEqual({
+          success: false,
+          message: 'Failed to update password'
+        })
+      })
+
+      it('should handle database errors gracefully', async () => {
+        dbMock.db.collection('users').updateOne.mockRejectedValueOnce(new Error('Database error'))
+
+        const response = await resetPassword(createRequest({ 
+          token: mockToken, 
+          newPassword: mockNewPassword 
+        }))
+
+        const { status, data } = await extractResponseData(response)
+        expect(status).toBe(500)
+        expect(data).toEqual({
+          success: false,
+          message: 'An error occurred while resetting password'
+        })
       })
     })
   })

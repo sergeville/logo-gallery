@@ -1,63 +1,73 @@
 'use client';
 
-import React, { createContext, useContext } from 'react';
-import { useSession, signIn, signOut } from 'next-auth/react';
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { AUTH_URL } from '@/config/constants';
 
 interface User {
-  id: string;
-  email: string;
-  name: string | null;
-  image: string | null;
+  username: string;
 }
 
 interface AuthContextType {
   user: User | null;
-  loading: boolean;
-  error: Error | null;
-  login: (email: string, password: string) => Promise<void>;
-  logout: () => Promise<void>;
+  signIn: (credentials: { email: string; password: string }) => Promise<void>;
+  signOut: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const { data: session, status } = useSession();
-  const loading = status === 'loading';
-  const error = null;
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [user, setUser] = useState<User | null>(null);
 
-  const user = session?.user ? {
-    id: session.user.id as string,
-    email: session.user.email as string,
-    name: session.user.name ?? null,
-    image: session.user.image ?? null,
-  } : null;
+  useEffect(() => {
+    // Check for stored user data on mount
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
+  }, []);
 
-  const login = async (email: string, password: string) => {
-    const result = await signIn('credentials', {
-      redirect: false,
-      email,
-      password,
-    });
+  const signIn = async (credentials: { email: string; password: string }) => {
+    try {
+      const response = await fetch(`${AUTH_URL}/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(credentials),
+      });
 
-    if (result?.error) {
-      throw new Error(result.error);
+      if (!response.ok) {
+        throw new Error('Authentication failed');
+      }
+
+      const data = await response.json();
+      const userData = { username: data.username };
+      
+      setUser(userData);
+      localStorage.setItem('user', JSON.stringify(userData));
+    } catch (error) {
+      console.error('Sign in error:', error);
+      throw error;
     }
   };
 
-  const logout = async () => {
-    await signOut({ redirect: false });
+  const signOut = () => {
+    setUser(null);
+    localStorage.removeItem('user');
   };
 
-  return (
-    <AuthContext.Provider value={{ user, loading, error, login, logout }}>
-      {children}
-    </AuthContext.Provider>
-  );
-};
+  const value = {
+    user,
+    signIn,
+    signOut,
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+}
 
 export function useAuth() {
   const context = useContext(AuthContext);
-  if (!context) {
+  if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;

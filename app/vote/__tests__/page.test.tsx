@@ -1,8 +1,10 @@
+import React from 'react'
 import { render, screen, fireEvent, waitFor, within, act } from '@testing-library/react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import VotePage from '@/app/vote/page'
 import { useState } from 'react'
+import { fetchLogos, submitVote } from '@/app/api/logos'
 
 // Mock next-auth
 jest.mock('next-auth/react')
@@ -22,6 +24,27 @@ describe('VotePage Component', () => {
     refresh: jest.fn()
   }
 
+  const mockLogos = [
+    {
+      _id: '1',
+      title: 'Logo 1',
+      description: 'Description 1',
+      imageUrl: '/logo1.jpg',
+      thumbnailUrl: '/logo1-thumb.jpg',
+      totalVotes: 5,
+      userId: 'user1',
+    },
+    {
+      _id: '2',
+      title: 'Logo 2',
+      description: 'Description 2',
+      imageUrl: '/logo2.jpg',
+      thumbnailUrl: '/logo2-thumb.jpg',
+      totalVotes: 3,
+      userId: 'user2',
+    },
+  ]
+
   beforeEach(() => {
     // Reset all mocks
     mockFetch.mockReset()
@@ -40,33 +63,7 @@ describe('VotePage Component', () => {
     mockFetch.mockImplementation(() => 
       new Promise(resolve => setTimeout(() => resolve({
         ok: true,
-        json: () => Promise.resolve({
-          logos: [
-            {
-              _id: '1',
-              name: 'Logo 1',
-              imageUrl: '/',
-              thumbnailUrl: '/',
-              description: '',
-              userId: 'user1',
-              ownerName: '',
-              totalVotes: 0,
-              votingDeadline: '2024-12-31'
-            },
-            {
-              _id: '2',
-              name: 'Logo 2',
-              imageUrl: '/',
-              thumbnailUrl: '/',
-              description: '',
-              userId: 'user2',
-              ownerName: '',
-              totalVotes: 0,
-              votingDeadline: '2024-12-31'
-            }
-          ],
-          deadline: '2024-12-31'
-        })
+        json: () => Promise.resolve(mockLogos),
       }), 100))
     )
   })
@@ -134,125 +131,44 @@ describe('VotePage Component', () => {
   })
 
   it('should submit vote successfully', async () => {
-    // Mock successful vote submission
-    mockFetch
-      .mockImplementationOnce(() => // First call for fetching logos (using default mock)
-        Promise.resolve({
-          ok: true,
-          json: () => Promise.resolve({
-            logos: [
-              {
-                _id: '1',
-                name: 'Logo 1',
-                imageUrl: '/',
-                thumbnailUrl: '/',
-                description: '',
-                userId: 'user1',
-                ownerName: '',
-                totalVotes: 0,
-                votingDeadline: '2024-12-31'
-              }
-            ],
-            deadline: '2024-12-31'
-          })
-        })
-      )
-      .mockImplementationOnce(() => // Second call for submitting vote
-        Promise.resolve({
-          ok: true,
-          json: () => Promise.resolve({
-            message: 'Vote submitted successfully',
-            logo: {
-              _id: '1',
-              title: 'Logo 1',
-              totalVotes: 1
-            }
-          })
-        })
-      )
-
-    await act(async () => {
-      render(<VotePage />)
-    })
+    (submitVote as jest.Mock).mockResolvedValue({ success: true })
+    
+    render(<VotePage />)
 
     await waitFor(() => {
-      const logoCards = screen.getAllByTestId('logo-card')
-      expect(logoCards).toHaveLength(1)
+      expect(screen.getAllByTestId('logo-card')).toHaveLength(2)
     })
 
-    const logoCards = screen.getAllByTestId('logo-card')
-    const radioButton = within(logoCards[0]).getByRole('radio')
-    
-    await act(async () => {
-      fireEvent.click(radioButton)
-    })
+    const firstLogoCard = screen.getAllByTestId('logo-card')[0]
+    fireEvent.click(firstLogoCard)
 
-    const submitButton = screen.getByTestId('submit-button')
-    
-    await act(async () => {
-      fireEvent.click(submitButton)
-    })
+    const submitButton = screen.getByRole('button', { name: /submit vote/i })
+    expect(submitButton).not.toBeDisabled()
+
+    fireEvent.click(submitButton)
 
     await waitFor(() => {
-      expect(mockRouter.push).toHaveBeenCalledWith('/gallery')
-    }, { timeout: 2000 })
+      expect(submitVote).toHaveBeenCalledWith('1')
+    })
   })
 
   it('should handle voting errors', async () => {
-    // Mock failed vote submission
-    mockFetch
-      .mockImplementationOnce(() => // First call for fetching logos (using default mock)
-        Promise.resolve({
-          ok: true,
-          json: () => Promise.resolve({
-            logos: [
-              {
-                _id: '1',
-                name: 'Logo 1',
-                imageUrl: '/',
-                thumbnailUrl: '/',
-                description: '',
-                userId: 'user1',
-                ownerName: '',
-                totalVotes: 0,
-                votingDeadline: '2024-12-31'
-              }
-            ],
-            deadline: '2024-12-31'
-          })
-        })
-      )
-      .mockImplementationOnce(() => // Second call for submitting vote
-        Promise.resolve({
-          ok: false,
-          json: () => Promise.resolve({ error: 'Voting failed' })
-        })
-      )
-
-    await act(async () => {
-      render(<VotePage />)
-    })
+    (submitVote as jest.Mock).mockRejectedValue(new Error('Voting failed'))
+    
+    render(<VotePage />)
 
     await waitFor(() => {
-      const logoCards = screen.getAllByTestId('logo-card')
-      expect(logoCards).toHaveLength(1)
+      expect(screen.getAllByTestId('logo-card')).toHaveLength(2)
     })
 
-    const logoCards = screen.getAllByTestId('logo-card')
-    const radioButton = within(logoCards[0]).getByRole('radio')
-    
-    await act(async () => {
-      fireEvent.click(radioButton)
-    })
+    const firstLogoCard = screen.getAllByTestId('logo-card')[0]
+    fireEvent.click(firstLogoCard)
 
-    const submitButton = screen.getByTestId('submit-button')
-    
-    await act(async () => {
-      fireEvent.click(submitButton)
-    })
+    const submitButton = screen.getByRole('button', { name: /submit vote/i })
+    fireEvent.click(submitButton)
 
     await waitFor(() => {
-      expect(screen.getByTestId('error-message')).toHaveTextContent('Voting failed')
+      expect(screen.getByText(/error submitting vote/i)).toBeInTheDocument()
     })
   })
 
@@ -351,6 +267,48 @@ describe('VotePage Component', () => {
       const errorMessage = screen.getByTestId('error-message')
       expect(errorMessage).toBeInTheDocument()
       expect(errorMessage).toHaveTextContent('Please select a logo to vote')
+    })
+  })
+
+  it('allows admin to edit voting deadline', async () => {
+    ;(useSession as jest.Mock).mockReturnValue({
+      data: {
+        user: {
+          id: 'admin123',
+          email: process.env.NEXT_PUBLIC_ADMIN_EMAIL
+        }
+      },
+      status: 'authenticated'
+    })
+
+    render(<VotePage />)
+
+    await waitFor(() => {
+      const deadlineText = screen.getByTestId('voting-deadline')
+      expect(deadlineText).toBeInTheDocument()
+    })
+
+    // Find and click edit button
+    const editButton = screen.getByLabelText('Edit deadline')
+    fireEvent.click(editButton)
+
+    // Should show datetime input
+    expect(screen.getByRole('button', { name: 'Save' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument()
+  })
+
+  it('handles empty logo list', async () => {
+    ;(global.fetch as jest.Mock).mockImplementationOnce(() =>
+      Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({ logos: [] })
+      })
+    )
+
+    render(<VotePage />)
+
+    await waitFor(() => {
+      expect(screen.getByText('No logos available to vote on at this time.')).toBeInTheDocument()
     })
   })
 }) 

@@ -1,31 +1,57 @@
-import { render, screen, waitFor } from '@testing-library/react'
-import { AuthProvider, useAuth } from '@/app/context/AuthContext'
+import React from 'react'
+import { render, screen, act, waitFor } from '@testing-library/react'
+import { AuthProvider, useAuth } from '../AuthContext'
+import { ReactNode } from 'react'
+import { useSession } from 'next-auth/react'
 
 // Mock fetch
 global.fetch = jest.fn()
 
+jest.mock('next-auth/react')
+
+// Test component that uses the auth context
 const TestComponent = () => {
-  const { user, loading } = useAuth()
-  if (loading) return <div data-testid="loading">Loading...</div>
-  return user ? (
-    <div data-testid="user-info">{user.username} - {user.email}</div>
-  ) : (
-    <div data-testid="no-user">Not logged in</div>
+  const { user, status } = useAuth()
+  return (
+    <div>
+      <div data-testid="status">{status}</div>
+      {user && (
+        <div data-testid="user">
+          {user.name} - {user.email}
+        </div>
+      )}
+    </div>
   )
+}
+
+const renderWithAuthProvider = (component: ReactNode) => {
+  return render(<AuthProvider>{component}</AuthProvider>)
 }
 
 describe('AuthContext', () => {
   beforeEach(() => {
+    // Clear any mocks and localStorage before each test
     jest.clearAllMocks()
-  })
-
-  it('shows loading state initially', async () => {
-    ;(global.fetch as jest.Mock).mockImplementationOnce(() =>
+    localStorage.clear()
+    (global.fetch as jest.Mock).mockImplementation(() =>
       Promise.resolve({
         ok: true,
-        json: () => Promise.resolve({ user: null })
+        json: () => Promise.resolve({ username: 'testuser' }),
       })
     )
+  })
+
+  it('provides authentication status and user data', () => {
+    (useSession as jest.Mock).mockReturnValue({
+      data: {
+        user: {
+          name: 'Test User',
+          email: 'test@example.com',
+          image: 'https://example.com/avatar.jpg'
+        }
+      },
+      status: 'authenticated'
+    })
 
     render(
       <AuthProvider>
@@ -33,72 +59,124 @@ describe('AuthContext', () => {
       </AuthProvider>
     )
 
-    expect(screen.getByTestId('loading')).toBeInTheDocument()
+    expect(screen.getByTestId('status')).toHaveTextContent('authenticated')
+    expect(screen.getByTestId('user')).toHaveTextContent('Test User - test@example.com')
+  })
+
+  it('handles unauthenticated state', () => {
+    (useSession as jest.Mock).mockReturnValue({
+      data: null,
+      status: 'unauthenticated'
+    })
+
+    render(
+      <AuthProvider>
+        <TestComponent />
+      </AuthProvider>
+    )
+
+    expect(screen.getByTestId('status')).toHaveTextContent('unauthenticated')
+    expect(screen.queryByTestId('user')).not.toBeInTheDocument()
+  })
+
+  it('handles loading state', () => {
+    (useSession as jest.Mock).mockReturnValue({
+      data: null,
+      status: 'loading'
+    })
+
+    render(
+      <AuthProvider>
+        <TestComponent />
+      </AuthProvider>
+    )
+
+    expect(screen.getByTestId('status')).toHaveTextContent('loading')
+    expect(screen.queryByTestId('user')).not.toBeInTheDocument()
+  })
+
+  it('provides initial auth state', () => {
+    renderWithAuthProvider(<TestComponent />)
     
+    expect(screen.queryByTestId('username')).not.toBeInTheDocument()
+    expect(screen.getByText('Sign In')).toBeInTheDocument()
+  })
+
+  it('updates auth state on successful sign in', async () => {
+    renderWithAuthProvider(<TestComponent />)
+    
+    const signInButton = screen.getByText('Sign In')
+    
+    await act(async () => {
+      signInButton.click()
+    })
+
     await waitFor(() => {
-      expect(screen.queryByTestId('loading')).not.toBeInTheDocument()
+      expect(screen.getByTestId('username')).toBeInTheDocument()
+      expect(screen.queryByText('Sign In')).not.toBeInTheDocument()
     })
   })
 
-  it('loads user from API if authenticated', async () => {
-    const mockUser = {
-      _id: '1',
-      username: 'testuser',
-      email: 'test@example.com',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    }
-
-    ;(global.fetch as jest.Mock).mockImplementationOnce(() =>
-      Promise.resolve({
-        ok: true,
-        json: () => Promise.resolve({ user: mockUser })
-      })
-    )
-
-    render(
-      <AuthProvider>
-        <TestComponent />
-      </AuthProvider>
-    )
+  it('clears auth state on sign out', async () => {
+    // Start with a signed-in state
+    localStorage.setItem('user', JSON.stringify({ username: 'testuser' }))
+    
+    renderWithAuthProvider(<TestComponent />)
+    
+    const signOutButton = screen.getByText('Sign Out')
+    
+    await act(async () => {
+      signOutButton.click()
+    })
 
     await waitFor(() => {
-      expect(screen.getByTestId('user-info')).toHaveTextContent('testuser - test@example.com')
+      expect(screen.queryByTestId('username')).not.toBeInTheDocument()
+      expect(screen.getByText('Sign In')).toBeInTheDocument()
     })
   })
 
-  it('shows not logged in when no user present', async () => {
-    ;(global.fetch as jest.Mock).mockImplementationOnce(() =>
-      Promise.resolve({
-        ok: true,
-        json: () => Promise.resolve({ user: null })
-      })
-    )
-
-    render(
-      <AuthProvider>
-        <TestComponent />
-      </AuthProvider>
-    )
+  it('persists auth state in localStorage', async () => {
+    renderWithAuthProvider(<TestComponent />)
+    
+    const signInButton = screen.getByText('Sign In')
+    
+    await act(async () => {
+      signInButton.click()
+    })
 
     await waitFor(() => {
-      expect(screen.getByTestId('no-user')).toBeInTheDocument()
+      const storedUser = JSON.parse(localStorage.getItem('user') || 'null')
+      expect(storedUser).toBeTruthy()
+      expect(storedUser.username).toBeTruthy()
     })
   })
 
-  it('handles API error gracefully', async () => {
-    ;(global.fetch as jest.Mock).mockImplementationOnce(() =>
-      Promise.reject(new Error('API Error'))
+  it('loads persisted auth state from localStorage', () => {
+    const testUser = { username: 'testuser' }
+    localStorage.setItem('user', JSON.stringify(testUser))
+    
+    renderWithAuthProvider(<TestComponent />)
+    
+    expect(screen.getByTestId('username')).toHaveTextContent(testUser.username)
+  })
+
+  it('handles sign in errors', async () => {
+    // Mock fetch to simulate an error response
+    (global.fetch as jest.Mock).mockImplementationOnce(() =>
+      Promise.reject(new Error('Failed to sign in'))
     )
 
-    render(
-      <AuthProvider>
-        <TestComponent />
-      </AuthProvider>
-    )
+    renderWithAuthProvider(<TestComponent />)
+    
+    const signInButton = screen.getByText('Sign In')
+    
+    await act(async () => {
+      signInButton.click()
+    })
 
     await waitFor(() => {
-      expect(screen.getByTestId('no-user')).toBeInTheDocument()
+      expect(screen.queryByTestId('username')).not.toBeInTheDocument()
+      expect(screen.getByText('Sign In')).toBeInTheDocument()
     })
   })
 }) 

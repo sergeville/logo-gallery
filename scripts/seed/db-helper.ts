@@ -1,5 +1,5 @@
 import { MongoClient, Db, ObjectId } from 'mongodb';
-import { User, Comment, Collection, Relationships, TestDataOptions, TestData, Logo } from '@/scripts/seed/types';
+import { User, Comment, Collection, Relationships, TestDataOptions, TestData, Logo } from './types';
 import { faker } from '@faker-js/faker';
 import '@testing-library/jest-dom'
 
@@ -356,7 +356,7 @@ export class DatabaseHelper {
       if (collection.name.length > rules.COLLECTION_NAME_MAX_LENGTH) {
         throw new Error(`Collection name cannot exceed ${rules.COLLECTION_NAME_MAX_LENGTH} characters`);
       }
-      if (collection.collaborators && collection.collaborators.length > rules.MAX_SHARED_USERS) {
+      if (collection.sharedWith && collection.sharedWith.length > rules.MAX_SHARED_USERS) {
         throw new Error(`Cannot share with more than ${rules.MAX_SHARED_USERS} users`);
       }
     });
@@ -402,7 +402,7 @@ export class DatabaseHelper {
     sharedCollections?: boolean;
     sharingStrategy?: (collection: Collection, availableUsers: User[]) => ObjectId[];
   }): Promise<Relationships> {
-    const relationships = {
+    const relationships: Relationships = {
       comments: [],
       collections: []
     };
@@ -546,7 +546,7 @@ export class DatabaseHelper {
           name: `Collection ${Date.now()}`,
           logos: [],
           isPublic: true,
-          collaborators: [],
+          sharedWith: [],
           ...overrides
         };
       default:

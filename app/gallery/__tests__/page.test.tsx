@@ -10,12 +10,15 @@ describe('Gallery Page', () => {
   it('renders logo cards', async () => {
     const mockLogo = {
       _id: '123',
-      name: 'Test Logo',
-      url: 'https://example.com/logo.png',
+      title: 'Test Logo',
       description: 'Test Logo Description',
-      ownerId: '456',
+      imageUrl: 'https://example.com/logo.png',
+      thumbnailUrl: 'https://example.com/logo-thumb.png',
+      userId: '456',
       tags: ['test'],
-      totalVotes: 0,
+      fileSize: 1024,
+      optimizedSize: 512,
+      compressionRatio: '50%',
       createdAt: new Date().toISOString()
     };
 

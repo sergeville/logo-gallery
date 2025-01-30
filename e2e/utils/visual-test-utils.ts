@@ -104,4 +104,69 @@ export async function ensurePageReady(page: Page) {
   await page.waitForLoadState('networkidle');
   await page.waitForLoadState('domcontentloaded');
   await page.waitForTimeout(1000); // Additional settling time
+}
+
+export interface Viewport {
+  width: number;
+  height: number;
+}
+
+export interface TestSetup {
+  name: string;
+  setup: () => Promise<void>;
+}
+
+export const VIEWPORTS: Viewport[] = [
+  { width: 375, height: 667 },  // Mobile
+  { width: 768, height: 1024 }, // Tablet
+  { width: 1280, height: 800 }, // Desktop
+  { width: 1920, height: 1080 } // Large Desktop
+];
+
+export async function testResponsiveLayouts(
+  page: Page,
+  testName: string,
+  callback: (viewport: Viewport) => Promise<void>
+): Promise<void> {
+  for (const viewport of VIEWPORTS) {
+    await page.setViewportSize(viewport);
+    await callback(viewport);
+  }
+}
+
+export async function waitForImagesLoaded(page: Page): Promise<void> {
+  await page.waitForFunction(() => {
+    const images = document.getElementsByTagName('img');
+    return Array.from(images).every((img: HTMLImageElement) => img.complete);
+  });
+}
+
+export async function setupTestEnvironment(page: Page): Promise<void> {
+  // Add any common setup logic here
+  await page.setViewportSize(VIEWPORTS[2]); // Default to desktop size
+}
+
+export const TEST_SETUPS: TestSetup[] = [
+  {
+    name: 'default',
+    setup: async () => {
+      // Default setup logic
+    }
+  },
+  {
+    name: 'authenticated',
+    setup: async () => {
+      // Authentication setup logic
+    }
+  }
+];
+
+export async function runVisualTest(
+  page: Page,
+  name: string,
+  callback: () => Promise<void>
+): Promise<void> {
+  await setupTestEnvironment(page);
+  await callback();
+  await waitForImagesLoaded(page);
 } 

@@ -36,7 +36,18 @@ jest.mock('next/navigation', () => ({
 // Mock LogoImage component with loading states
 jest.mock('@/app/components/LogoImage', () => ({
   __esModule: true,
-  default: ({ src, responsiveUrls, ...props }: any) => {
+  default: ({ src, responsiveUrls, ...props }: {
+    src: string;
+    responsiveUrls?: Record<string, string>;
+    alt: string;
+    className?: string;
+    priority?: boolean;
+    quality?: number;
+    width?: number;
+    height?: number;
+    style?: React.CSSProperties;
+    'data-testid'?: string;
+  }) => {
     const [isLoading, setIsLoading] = React.useState(true)
     const [error, setError] = React.useState(false)
 
@@ -69,7 +80,7 @@ jest.mock('@/app/components/LogoImage', () => ({
     const imageUrl = !src ? '/placeholder.png' : src.startsWith('http') || src.startsWith('/') ? src : `/${src}`
     
     // Handle responsive URLs
-    let srcSet = ''
+    let srcSet: string | undefined;
     if (responsiveUrls) {
       srcSet = Object.entries(responsiveUrls)
         .map(([size, url]) => {
@@ -87,7 +98,7 @@ jest.mock('@/app/components/LogoImage', () => ({
     return (
       <img 
         src={imageUrl} 
-        srcSet={srcSet || undefined}
+        srcSet={srcSet}
         {...props} 
         data-testid="logo-image"
         responsiveUrls={responsiveUrls ? JSON.stringify(responsiveUrls) : undefined}

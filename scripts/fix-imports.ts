@@ -33,7 +33,7 @@ export async function fixImportPaths(directory: string, dryRun: boolean = false)
     const importMatches = Array.from(line.matchAll(/from\s+(['"])([^'"]+)(['"])/g));
     for (const match of importMatches) {
       const [_, quote, from] = match;
-      let to = issue.suggestedFix;
+      let to = from;
 
       // Handle src/ imports
       if (from.startsWith('src/')) {
@@ -51,22 +51,12 @@ export async function fixImportPaths(directory: string, dryRun: boolean = false)
         const importInSrc = relativePath.startsWith('src/');
         const importPath = importInSrc ? relativePath.slice(4) : relativePath;
         
-        // If the file is in src/ and the import is a sibling/child import
-        if (fileInSrc && from.startsWith('./')) {
-          const currentDir = path.dirname(filePath);
-          const srcRelativePath = path.relative(path.join(directory, 'src'), currentDir);
-          const importFullPath = path.join(srcRelativePath, from.slice(2));
-          
-          // If we're in a component directory or importing from components, don't add src/ prefix
-          if (currentDir.includes('/components/') || importFullPath.startsWith('components/')) {
-            to = '@/' + importFullPath;
-          } else {
-            to = '@/src/' + importFullPath;
-          }
-        } else {
-          // For parent imports or imports outside src/
-          to = '@/' + importPath;
-        }
+        // Convert relative paths to absolute paths with @/ prefix
+        to = '@/' + importPath.replace(/\/index(\.js|\.ts)?$/, '');
+      }
+      // Handle existing aliases
+      else if (from.startsWith('~') || from.startsWith('$lib')) {
+        to = '@/' + from.slice(from.indexOf('/') + 1).replace(/\/index(\.js|\.ts)?$/, '');
       }
 
       // Only add the edit if the path needs to be fixed
@@ -98,15 +88,12 @@ export async function fixImportPaths(directory: string, dryRun: boolean = false)
 
       if (dryRun) {
         console.log(chalk.yellow(`\nWould fix ${path.relative(directory, filePath)}:`));
-        edits.forEach(({ from, to }) => {
-          console.log(`  ${chalk.red(from)} → ${chalk.green(to)}`);
-        });
+        for (const { from, to } of edits) {
+          console.log(`  ${from} -> ${to}`);
+        }
       } else {
-        await fs.writeFile(filePath, newContent, 'utf-8');
-        console.log(chalk.green(`✓ Fixed ${path.relative(directory, filePath)}`));
-        edits.forEach(({ from, to }) => {
-          console.log(`  ${chalk.red(from)} → ${chalk.green(to)}`);
-        });
+        await fs.writeFile(filePath, newContent);
+        console.log(chalk.green(`Fixed ${path.relative(directory, filePath)}`));
       }
     } catch (error) {
       console.error(chalk.red(`Error fixing ${filePath}:`), error);

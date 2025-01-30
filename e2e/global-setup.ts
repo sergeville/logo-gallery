@@ -1,26 +1,23 @@
-import { chromium, FullConfig } from '@playwright/test';
-import { LOCALHOST_URL } from '@/config/constants';
+import { FullConfig } from '@playwright/test';
+import { connectToDatabase } from '@/lib/mongodb';
 
 async function globalSetup(config: FullConfig) {
-  const browser = await chromium.launch();
-  const page = await browser.newPage();
-
-  // Set up authentication state
-  await page.goto(`${LOCALHOST_URL}/auth/signin`);
-  await page.waitForSelector('form', { state: 'visible' });
-  await page.fill('input[type="email"]', 'test@example.com');
-  await page.fill('input[type="password"]', 'password123');
-  await Promise.all([
-    page.waitForNavigation(),
-    page.click('button[type="submit"]')
-  ]);
-
-  // Save authentication state
-  await page.context().storageState({
-    path: 'e2e/.auth/user.json'
+  const { client, db } = await connectToDatabase();
+  
+  // Clear test data
+  await db.collection('logos').deleteMany({});
+  await db.collection('users').deleteMany({});
+  await db.collection('comments').deleteMany({});
+  
+  // Create test data
+  await db.collection('users').insertOne({
+    username: 'testuser',
+    email: 'test@example.com',
+    password: 'hashedpassword123',
+    role: 'user'
   });
-
-  await browser.close();
+  
+  await client.close();
 }
 
 export default globalSetup; 

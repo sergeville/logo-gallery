@@ -1,3 +1,5 @@
+import { config } from './config';
+
 export interface ValidationRule {
   field: string;
   message: string;
@@ -25,8 +27,15 @@ export interface FixSuggestion {
 
 export interface ValidationResult {
   errors: ValidationError[];
-  warnings: ValidationWarning[];
-  fixes: FixSuggestion[];
+  warnings: ValidationError[];
+  fixes: ValidationError[];
+}
+
+export class ConfigurationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'ConfigurationError';
+  }
 }
 
 export function createValidationResult(): ValidationResult {
@@ -158,4 +167,116 @@ export function validateUserProfile(profile: any): ValidationResult {
 
   result.errors.push(...errors);
   return result;
-} 
+}
+
+export function validateEnvironmentVariables(env: Record<string, string | undefined>): ValidationResult {
+  const result: ValidationResult = {
+    errors: [],
+    warnings: [],
+    fixes: []
+  };
+
+  // Required environment variables
+  const requiredVars = [
+    'MONGODB_URI',
+    'MONGODB_DB',
+    'AUTH_SECRET'
+  ];
+
+  for (const varName of requiredVars) {
+    if (!env[varName]) {
+      result.errors.push({
+        code: 'MISSING_ENV_VAR',
+        field: varName,
+        message: `Missing required environment variable: ${varName}`
+      });
+    }
+  }
+
+  return result;
+}
+
+export function validateMongoDBUri(uri: string): ValidationResult {
+  const result: ValidationResult = {
+    errors: [],
+    warnings: [],
+    fixes: []
+  };
+
+  if (!uri.startsWith('mongodb://') && !uri.startsWith('mongodb+srv://')) {
+    result.errors.push({
+      code: 'INVALID_MONGODB_URI',
+      field: 'MONGODB_URI',
+      message: 'MongoDB URI must start with mongodb:// or mongodb+srv://'
+    });
+  }
+
+  return result;
+}
+
+export function validatePort(port: string | number): ValidationResult {
+  const result: ValidationResult = {
+    errors: [],
+    warnings: [],
+    fixes: []
+  };
+
+  const portNum = typeof port === 'string' ? parseInt(port, 10) : port;
+
+  if (isNaN(portNum) || portNum < 1 || portNum > 65535) {
+    result.errors.push({
+      code: 'INVALID_PORT',
+      field: 'PORT',
+      message: 'Port must be a number between 1 and 65535'
+    });
+  }
+
+  return result;
+}
+
+export function validateApiUrl(url: string): ValidationResult {
+  const result: ValidationResult = {
+    errors: [],
+    warnings: [],
+    fixes: []
+  };
+
+  try {
+    new URL(url);
+  } catch {
+    result.errors.push({
+      code: 'INVALID_API_URL',
+      field: 'API_URL',
+      message: 'Invalid API URL format'
+    });
+  }
+
+  return result;
+}
+
+export function validateDatabaseName(name: string): ValidationResult {
+  const result: ValidationResult = {
+    errors: [],
+    warnings: [],
+    fixes: []
+  };
+
+  if (!/^[a-zA-Z0-9-_]+$/.test(name)) {
+    result.errors.push({
+      code: 'INVALID_DB_NAME',
+      field: 'MONGODB_DB',
+      message: 'Database name can only contain letters, numbers, hyphens, and underscores'
+    });
+  }
+
+  return result;
+}
+
+export type EnvironmentVariables = {
+  MONGODB_URI: string;
+  MONGODB_DB: string;
+  AUTH_SECRET: string;
+  PORT?: string;
+  API_URL?: string;
+  NODE_ENV?: string;
+}; 

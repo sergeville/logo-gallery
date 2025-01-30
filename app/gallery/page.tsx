@@ -22,6 +22,13 @@ interface Logo {
   tags?: string[];
 }
 
+interface SessionUser {
+  id: string;
+  name?: string | null;
+  email?: string | null;
+  image?: string | null;
+}
+
 export default function GalleryPage() {
   const router = useRouter();
   const { data: session, status } = useSession();
@@ -240,7 +247,8 @@ export default function GalleryPage() {
                 <LogoCard
                   logo={logo}
                   showStats={true}
-                  isOwner={session?.user?.id === logo.userId}
+                  showDelete={true}
+                  isOwner={(session?.user as SessionUser)?.id === logo.userId}
                 />
               </div>
             ))}

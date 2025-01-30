@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { performanceMonitor } from '@/lib/services/PerformanceMonitoringService';
+import { performanceMonitor } from '@/app/lib/services/PerformanceMonitoringService';
 
 export async function performanceMiddleware(
   req: NextRequest,
@@ -21,11 +21,16 @@ export async function performanceMiddleware(
   } catch (error) {
     const duration = performance.now() - startTime;
     
-    // Record error metrics
-    performanceMonitor.recordApiMetrics(req, new NextResponse(null, { status: 500 }), duration).catch(err => {
+    // Record error metrics and return error response
+    const errorResponse = NextResponse.json(
+      { error: 'Internal Server Error' },
+      { status: 500 }
+    );
+    
+    performanceMonitor.recordApiMetrics(req, errorResponse, duration).catch(err => {
       console.error('Failed to record error metrics:', err);
     });
 
-    throw error;
+    return errorResponse;
   }
 } 

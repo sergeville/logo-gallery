@@ -1,7 +1,7 @@
 import mongoose, { Document, Model } from 'mongoose';
 
 interface Vote {
-  userId: string;
+  userId: mongoose.Types.ObjectId;
   timestamp: Date;
 }
 
@@ -14,7 +14,7 @@ export interface ILogo extends Document {
   thumbnailUrl: string;
   originalUrl: string;
   responsiveUrls: Map<string, string>;
-  userId: string;
+  userId: mongoose.Types.ObjectId;
   ownerName?: string;
   dimensions?: {
     width: number;
@@ -30,7 +30,7 @@ export interface ILogo extends Document {
   createdAt: Date;
   updatedAt: Date;
   uploadedAt?: Date;
-  votingDeadline: Date; // New field for voting deadline
+  votingDeadline: Date;
   fullImageUrl: string; // Virtual property
   votes: Vote[];
   totalVotes: number;
@@ -48,8 +48,9 @@ interface ILogoModel extends Model<ILogo> {
 
 const voteSchema = new mongoose.Schema({
   userId: {
-    type: String,
-    required: true
+    type: mongoose.Schema.Types.ObjectId,
+    required: true,
+    ref: 'User'
   },
   timestamp: {
     type: Date,
@@ -123,25 +124,18 @@ const logoSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
-  votes: [{
-    userId: {
-      type: mongoose.Schema.Types.ObjectId,
-      required: true,
-      ref: 'User',
-    },
-    timestamp: {
-      type: Date,
-      default: Date.now,
-    },
-  }],
+  votes: [voteSchema],
   totalVotes: {
     type: Number,
     default: 0,
   },
   votingDeadline: {
     type: Date,
-    required: [true, 'Please provide a voting deadline'],
-    default: () => new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // Default 30 days from creation
+    default: function() {
+      const date = new Date();
+      date.setDate(date.getDate() + 7); // 7 days from creation
+      return date;
+    }
   },
 }, {
   timestamps: true,
@@ -182,13 +176,13 @@ logoSchema.virtual('fullImageUrl').get(function(this: ILogo) {
 
 // Virtual for compression ratio
 logoSchema.virtual('compressionRatio').get(function() {
-  if (!this.fileSize || !this.optimizedSize) return 0;
+  if (!this.fileSize || !this.optimizedSize) return '0';
   return ((this.fileSize - this.optimizedSize) / this.fileSize * 100).toFixed(2);
 });
 
 // Instance methods
 logoSchema.methods.isOwnedBy = function(userId: string): boolean {
-  return this.userId === userId;
+  return this.userId.toString() === userId;
 };
 
 logoSchema.methods.updateTitle = async function(newTitle: string): Promise<void> {
@@ -239,36 +233,18 @@ logoSchema.index({ createdAt: -1 });
 logoSchema.index({ 'votes.userId': 1 });
 logoSchema.index({ totalVotes: -1 });
 
-// Pre-save middleware
-logoSchema.pre('save', function(next) {
-  if (this.isModified('title') || this.isModified('description')) {
-    this.updatedAt = new Date();
-  }
-  next();
-});
-
 // Initialize model with better error handling and logging
 function initializeModel(): ILogoModel {
-  console.log('Initializing Logo model...');
-  
   try {
     // Check if model is already registered
     if (mongoose.models.Logo) {
-      console.log('Using existing Logo model');
       return mongoose.models.Logo as ILogoModel;
     }
 
     // Create new model
-    console.log('Creating new Logo model');
-    const model = mongoose.model<ILogo, ILogoModel>('Logo', logoSchema);
-    console.log('Logo model created successfully');
-    return model;
+    return mongoose.model<ILogo, ILogoModel>('Logo', logoSchema);
   } catch (err) {
-    console.error('Error creating Logo model:', {
-      name: err.name,
-      message: err.message,
-      stack: err.stack
-    });
+    console.error('Error creating Logo model:', err);
     throw err;
   }
 }

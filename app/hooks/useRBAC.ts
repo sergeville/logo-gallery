@@ -1,5 +1,5 @@
-import { useSession } from \"next-auth/react\";
-import { Permission } from \"@/config/roles.config\";
+import { useSession } from 'next-auth/react';
+import { Permission } from '@/config/roles.config';
 
 export function useRBAC() {
   const { data: session } = useSession();

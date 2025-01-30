@@ -1,22 +1,37 @@
 import { ObjectId } from 'mongodb';
 
 export interface Logo {
-  _id: ObjectId;
-  url: string;
+  _id: string;
+  title: string;
   description: string;
-  ownerId: ObjectId;
-  tags: string[];
-  totalVotes: number;
-  createdAt: Date;
-  updatedAt: Date;
+  imageUrl: string;
+  thumbnailUrl: string;
+  responsiveUrls?: Record<string, string>;
+  userId: string;
+  createdAt: string;
+  totalVotes?: number;
+  fileSize?: number;
+  optimizedSize?: number;
+  compressionRatio?: string;
+  votingDeadline?: string;
 }
 
 export interface User {
-  _id: ObjectId;
-  email: string;
-  name?: string;
-  image?: string;
-  role: 'user' | 'admin';
-  createdAt: Date;
-  updatedAt: Date;
+  _id: string;
+  name?: string | null;
+  email?: string | null;
+  image?: string | null;
+  id: string;
+}
+
+export interface ValidationError {
+  field: string;
+  message: string;
+  code: string;
+}
+
+export interface ValidationResult {
+  errors: ValidationError[];
+  warnings: ValidationError[];
+  fixes: ValidationError[];
 } 

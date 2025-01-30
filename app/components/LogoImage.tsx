@@ -43,7 +43,7 @@ export default function LogoImage({
   }
 
   // Normalize image URL
-  const imageUrl = src.startsWith('http') || src.startsWith('/') ? src : `/${src}`;
+  const imageUrl = !src ? '' : src.startsWith('http') || src.startsWith('/') ? src : `/${src}`;
 
   // Generate srcSet if responsive URLs are available
   const generateSrcSet = () => {
@@ -65,17 +65,16 @@ export default function LogoImage({
   return (
     <div className={`relative ${className}`} style={{ aspectRatio: width && height ? width / height : '1' }}>
       <Image
-        src={imageUrl}
+        src={imageUrl || '/placeholder.png'}
         alt={alt}
-        fill
-        className="object-contain"
+        style={{ objectFit: 'contain' }}
         onError={() => setError(true)}
         sizes={
           responsiveUrls
             ? "(max-width: 640px) 100vw, (max-width: 768px) 80vw, (max-width: 1024px) 50vw, 33vw"
             : undefined
         }
-        priority={priority}
+        {...(priority ? { priority: true } : {})}
         quality={quality}
         loading={priority ? 'eager' : 'lazy'}
         {...(width && height ? { width, height } : {})}

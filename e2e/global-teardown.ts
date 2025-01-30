@@ -1,17 +1,15 @@
 import { FullConfig } from '@playwright/test';
-import fs from 'fs';
-import path from 'path';
+import { connectToDatabase } from '@/lib/mongodb';
 
 async function globalTeardown(config: FullConfig) {
-  // Clean up auth state
-  try {
-    const authFile = path.join(process.cwd(), 'e2e/.auth/user.json');
-    if (fs.existsSync(authFile)) {
-      fs.unlinkSync(authFile);
-    }
-  } catch (error) {
-    console.error('Error cleaning up auth state:', error);
-  }
+  const { client, db } = await connectToDatabase();
+  
+  // Clean up test data
+  await db.collection('logos').deleteMany({});
+  await db.collection('users').deleteMany({});
+  await db.collection('comments').deleteMany({});
+  
+  await client.close();
 }
 
 export default globalTeardown; 

@@ -1,11 +1,13 @@
 import React from 'react'
-import { render, screen } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 import { useAuth } from '@/app/contexts/AuthContext'
-import Header from '@/app/components/Header'
+import Header from '../Header'
+import { useSession } from 'next-auth/react'
 
 // Mock the AuthContext
-jest.mock('../../contexts/AuthContext')
-const mockUseAuth = useAuth as jest.MockedFunction<typeof useAuth>
+jest.mock('@/app/contexts/AuthContext', () => ({
+  useAuth: jest.fn(),
+}))
 
 // Mock next/link since we're not testing navigation
 jest.mock('next/link', () => {
@@ -19,69 +21,116 @@ jest.mock('../ThemeToggle', () => {
   return () => <div data-testid="theme-toggle">Theme Toggle</div>
 })
 
+jest.mock('next-auth/react')
+
 describe('Header', () => {
+  const mockSignOut = jest.fn()
+
   beforeEach(() => {
     // Clear all mocks before each test
     jest.clearAllMocks()
-  })
 
-  it('shows Sign In button when user is not authenticated', () => {
     // Mock the useAuth hook to return no user
-    mockUseAuth.mockReturnValue({
+    (useAuth as jest.Mock).mockReturnValue({
       user: null,
-      loading: false,
-      error: null,
-      login: jest.fn(),
-      logout: jest.fn()
+      signOut: mockSignOut,
     })
 
-    render(<Header />)
-    
-    // Check if Sign In button is present
-    const signInButton = screen.getByText('Sign In')
-    expect(signInButton).toBeInTheDocument()
-    expect(signInButton.closest('a')).toHaveAttribute('href', '/api/auth/signin')
-  })
-
-  it('shows user-specific buttons when user is authenticated', () => {
-    // Mock the useAuth hook to return a user
-    mockUseAuth.mockReturnValue({
-      user: {
-        id: '123',
-        email: 'test@example.com',
-        name: 'Test User',
-        image: null
+    (useSession as jest.Mock).mockReturnValue({
+      data: {
+        user: {
+          name: 'Test User',
+          email: 'test@example.com',
+          image: 'https://example.com/avatar.jpg'
+        }
       },
-      loading: false,
-      error: null,
-      login: jest.fn(),
-      logout: jest.fn()
+      status: 'authenticated'
     })
-
-    render(<Header />)
-    
-    // Check if user-specific buttons are present
-    expect(screen.getByText('My Profile')).toBeInTheDocument()
-    expect(screen.getByText('Upload Logo')).toBeInTheDocument()
-    
-    // Check if Sign In button is not present
-    expect(screen.queryByText('Sign In')).not.toBeInTheDocument()
   })
 
-  it('shows navigation links regardless of authentication status', () => {
-    // Mock the useAuth hook to return no user
-    mockUseAuth.mockReturnValue({
-      user: null,
-      loading: false,
-      error: null,
-      login: jest.fn(),
-      logout: jest.fn()
-    })
+  afterEach(() => {
+    jest.clearAllMocks()
+  })
 
+  it('renders logo and navigation links', () => {
     render(<Header />)
     
-    // Check if common navigation links are present
+    expect(screen.getByText('Logo Gallery')).toBeInTheDocument()
     expect(screen.getByText('Gallery')).toBeInTheDocument()
     expect(screen.getByText('Voting')).toBeInTheDocument()
+  })
+
+  it('shows user profile when authenticated', () => {
+    render(<Header />)
+    expect(screen.getByText('Test User')).toBeInTheDocument()
+    expect(screen.getByAltText('User avatar')).toHaveAttribute(
+      'src',
+      'https://example.com/avatar.jpg'
+    )
+  })
+
+  it('shows sign in button when not authenticated', () => {
+    (useSession as jest.Mock).mockReturnValue({
+      data: null,
+      status: 'unauthenticated'
+    })
+
+    render(<Header />)
+    expect(screen.getByText('Sign In')).toBeInTheDocument()
+  })
+
+  it('shows loading state while checking authentication', () => {
+    (useSession as jest.Mock).mockReturnValue({
+      data: null,
+      status: 'loading'
+    })
+
+    render(<Header />)
+    expect(screen.getByRole('status')).toBeInTheDocument()
+  })
+
+  it('shows sign in link when user is not logged in', () => {
+    render(<Header />)
+    
+    expect(screen.getByText('Sign In')).toBeInTheDocument()
+    expect(screen.queryByText('Profile')).not.toBeInTheDocument()
+    expect(screen.queryByText('Upload')).not.toBeInTheDocument()
+    expect(screen.queryByText('Sign Out')).not.toBeInTheDocument()
+  })
+
+  it('shows user menu when user is logged in', () => {
+    (useAuth as jest.Mock).mockReturnValue({
+      user: { username: 'testuser' },
+      signOut: mockSignOut,
+    })
+
+    render(<Header />)
+    
+    expect(screen.queryByText('Sign In')).not.toBeInTheDocument()
+    expect(screen.getByText('Profile')).toBeInTheDocument()
+    expect(screen.getByText('Upload')).toBeInTheDocument()
+    expect(screen.getByText('Sign Out')).toBeInTheDocument()
+  })
+
+  it('calls signOut when sign out button is clicked', () => {
+    (useAuth as jest.Mock).mockReturnValue({
+      user: { username: 'testuser' },
+      signOut: mockSignOut,
+    })
+
+    render(<Header />)
+    
+    fireEvent.click(screen.getByText('Sign Out'))
+    expect(mockSignOut).toHaveBeenCalled()
+  })
+
+  it('navigates to correct routes when links are clicked', () => {
+    render(<Header />)
+    
+    const galleryLink = screen.getByText('Gallery').closest('a')
+    const votingLink = screen.getByText('Voting').closest('a')
+    
+    expect(galleryLink).toHaveAttribute('href', '/gallery')
+    expect(votingLink).toHaveAttribute('href', '/vote')
   })
 }) 

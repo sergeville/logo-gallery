@@ -1,5 +1,5 @@
 import { parse } from '@typescript-eslint/typescript-estree';
-import chalk from 'chalk';
+const chalk = require('chalk');
 import { glob } from 'glob';
 import fs from 'fs/promises';
 import path from 'path';

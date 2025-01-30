@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { useSession } from 'next-auth/react'
 import DeleteLogoButton from '@/app/components/DeleteLogoButton'
 import LogoImage from '@/app/components/LogoImage'
+import { Trash2 } from 'lucide-react'
 
 interface Logo {
   _id: string
@@ -26,15 +27,17 @@ interface LogoCardProps {
   logo: Logo
   showDelete?: boolean
   showStats?: boolean
+  isOwner?: boolean
 }
 
 export default function LogoCard({ 
   logo, 
   showDelete = false,
   showStats = false,
+  isOwner = false,
 }: LogoCardProps) {
   const { data: session } = useSession()
-  const isOwner = session?.user?.id === logo.userId
+  const userIsOwner = isOwner || session?.user?.id === logo.userId
 
   const getUploadedDate = () => {
     try {
@@ -87,15 +90,16 @@ export default function LogoCard({
             {logo.totalVotes || 0}
           </span>
         </div>
-        <LogoImage
-          src={logo.thumbnailUrl}
-          alt={`Logo: ${logo.title} - ${logo.description}`}
-          responsiveUrls={logo.responsiveUrls}
-          className="w-full aspect-square"
-          data-testid="logo-image"
-        />
+        <div className="relative w-full aspect-square">
+          <LogoImage
+            src={logo.thumbnailUrl}
+            alt={`Logo: ${logo.title} - ${logo.description}`}
+            responsiveUrls={logo.responsiveUrls}
+            style={{ objectFit: 'contain' }}
+            data-testid="logo-image"
+          />
+        </div>
       </div>
-
       <div className="p-4">
         <h3 
           data-testid="logo-title"
@@ -109,46 +113,40 @@ export default function LogoCard({
         >
           {logo.description}
         </p>
-
         {showStats && (
-          <div className="mb-4 text-sm">
-            <div className="grid grid-cols-2 gap-2 text-gray-600 dark:text-gray-400">
-              <div>
-                <span className="font-medium">Original:</span>{' '}
-                {formatFileSize(logo.fileSize)}
-              </div>
-              <div>
-                <span className="font-medium">Optimized:</span>{' '}
-                {formatFileSize(logo.optimizedSize)}
-              </div>
-              {logo.compressionRatio && (
-                <div className="col-span-2">
-                  <span className="font-medium">Compression:</span>{' '}
-                  {logo.compressionRatio}% saved
-                </div>
-              )}
-            </div>
+          <div className="space-y-2 mb-4">
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              Uploaded {getUploadedDate()}
+            </p>
+            {logo.fileSize && (
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Original size: {formatFileSize(logo.fileSize)}
+              </p>
+            )}
+            {logo.optimizedSize && (
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Optimized size: {formatFileSize(logo.optimizedSize)}
+              </p>
+            )}
+            {logo.compressionRatio && (
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Compression ratio: {logo.compressionRatio}
+              </p>
+            )}
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              Total votes: {logo.totalVotes || 0}
+            </p>
           </div>
         )}
-
-        <div className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-300">
-          <span 
-            data-testid="upload-date"
-            className="text-gray-500 dark:text-gray-400"
-          >
-            {getUploadedDate()}
-          </span>
-        </div>
-
-        <div className="flex justify-between items-center mt-4">
+        <div className="flex justify-between items-center">
           <Link
             href={`/logos/${logo._id}`}
-            className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 text-sm font-medium"
+            className="text-primary-blue hover:text-blue-700 text-sm font-medium"
             data-testid="view-details-link"
           >
             View Details
           </Link>
-          {showDelete && isOwner && (
+          {showDelete && userIsOwner && (
             <DeleteLogoButton logoId={logo._id} />
           )}
         </div>

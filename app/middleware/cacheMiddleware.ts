@@ -85,12 +85,13 @@ async function getCachedResponse(key: string): Promise<NextResponse | null> {
   try {
     const cached = await imageCacheService.getImage(key);
     if (cached) {
-      return new NextResponse(cached.buffer, {
+      const response = NextResponse.json(cached.buffer, {
         headers: {
           'Content-Type': cached.contentType,
           'X-Cache': 'HIT'
         }
       });
+      return response;
     }
   } catch (error) {
     console.error('Error getting cached response:', error);
@@ -104,7 +105,7 @@ async function cacheResponse(key: string, response: NextResponse): Promise<void>
     const buffer = await clone.arrayBuffer();
     const contentType = clone.headers.get('Content-Type') || 'application/octet-stream';
     
-    await imageCacheService.getImage(key, {
+    await imageCacheService.cacheImage(key, {
       buffer: Buffer.from(buffer),
       contentType
     });

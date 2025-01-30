@@ -3,7 +3,26 @@
   "compilerOptions": {
     "jsx": "react-jsx",
     "esModuleInterop": true,
-    "module": "ESNext",
-    "moduleResolution": "node"
-  }
+    "module": "commonjs",
+    "isolatedModules": false,
+    "types": ["jest", "node", "@testing-library/jest-dom"],
+    "strict": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./*", "./src/*", "./app/*"]
+    },
+    "noImplicitAny": false,
+    "allowJs": true,
+    "downlevelIteration": true,
+    "skipLibCheck": true
+  },
+  "include": [
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.spec.ts",
+    "**/*.spec.tsx",
+    "jest.setup.js",
+    "**/__mocks__/**/*"
+  ],
+  "exclude": ["node_modules", ".next", "e2e"]
 } 

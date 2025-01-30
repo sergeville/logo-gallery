@@ -101,7 +101,6 @@ jest.mock('@/app/components/LogoImage', () => ({
         srcSet={srcSet}
         {...props} 
         data-testid="logo-image"
-        responsiveUrls={responsiveUrls ? JSON.stringify(responsiveUrls) : undefined}
       />
     )
   },

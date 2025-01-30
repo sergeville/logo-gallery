@@ -181,4 +181,117 @@ describe('Import Path Checker', () => {
       expect(result.stats.fixableIssues).toBe(3);
     });
   });
+
+  describe('CI/CD Integration', () => {
+    it('should generate machine-readable output', async () => {
+      await createTestFile(
+        'src/test.tsx',
+        `import { a } from '../a';
+         import { b } from './b/index';`
+      );
+
+      const result = await checkImportPaths(testDir);
+      expect(result).toEqual(expect.objectContaining({
+        issues: expect.any(Array),
+        stats: expect.objectContaining({
+          filesChecked: expect.any(Number),
+          issuesFound: expect.any(Number),
+          fixableIssues: expect.any(Number)
+        })
+      }));
+    });
+
+    it('should respect CI environment settings', async () => {
+      process.env.CI = 'true';
+      process.env.IMPORT_CHECK_STRICT = 'true';
+
+      await createTestFile(
+        'src/test.tsx',
+        `import { a } from '../a';`
+      );
+
+      const result = await checkImportPaths(testDir);
+      expect(result.stats.issuesFound).toBeGreaterThan(0);
+
+      delete process.env.CI;
+      delete process.env.IMPORT_CHECK_STRICT;
+    });
+  });
+
+  describe('Backward Compatibility', () => {
+    it('should handle legacy import patterns', async () => {
+      await createTestFile(
+        'src/legacy.tsx',
+        `import { oldUtil } from 'app/utils';
+         import { oldComponent } from 'app/components';`
+      );
+
+      const result = await checkImportPaths(testDir);
+      expect(result.issues).toHaveLength(2);
+      expect(result.issues[0].suggestedFix).toBe('@/utils');
+      expect(result.issues[1].suggestedFix).toBe('@/components');
+    });
+
+    it('should handle mixed import styles', async () => {
+      await createTestFile(
+        'src/mixed.tsx',
+        `import { newUtil } from '@/utils';
+         import { oldUtil } from 'app/utils';
+         import { relativeUtil } from '../utils';`
+      );
+
+      const result = await checkImportPaths(testDir);
+      expect(result.issues).toHaveLength(2);
+      expect(result.issues.some(i => i.message.includes('app/'))).toBe(true);
+      expect(result.issues.some(i => i.message.includes('Relative'))).toBe(true);
+    });
+  });
+
+  describe('Custom Configurations', () => {
+    it('should respect custom import patterns', async () => {
+      const customPatterns = {
+        ...VALID_IMPORT_PATTERNS,
+        features: '@/features/',
+        modules: '@/modules/'
+      };
+
+      await createTestFile(
+        'src/custom.tsx',
+        `import { feature } from '../features/auth';
+         import { module } from '../modules/dashboard';`
+      );
+
+      // Mock the patterns temporarily
+      const originalPatterns = { ...VALID_IMPORT_PATTERNS };
+      Object.assign(VALID_IMPORT_PATTERNS, customPatterns);
+
+      const result = await checkImportPaths(testDir);
+      
+      // Restore original patterns
+      Object.assign(VALID_IMPORT_PATTERNS, originalPatterns);
+
+      expect(result.issues).toHaveLength(2);
+      expect(result.issues[0].suggestedFix).toBe('@/features/auth');
+      expect(result.issues[1].suggestedFix).toBe('@/modules/dashboard');
+    });
+
+    it('should handle custom ignore patterns', async () => {
+      await createTestFile(
+        'src/generated/api.ts',
+        `import { type } from '../types';`
+      );
+
+      // Add generated files to ignored patterns
+      const originalIgnored = [...IGNORED_PATTERNS];
+      IGNORED_PATTERNS.push('**/generated/**');
+
+      const result = await checkImportPaths(testDir);
+
+      // Restore original patterns
+      IGNORED_PATTERNS.length = 0;
+      IGNORED_PATTERNS.push(...originalIgnored);
+
+      expect(result.stats.filesChecked).toBe(0);
+    });
+  });
 }); 

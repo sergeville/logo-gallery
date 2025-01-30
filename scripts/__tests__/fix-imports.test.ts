@@ -196,4 +196,150 @@ describe('Import Path Fixer', () => {
       expect(totalTime).toBeLessThan(5); // Should complete in less than 5 seconds
     });
   });
+
+  describe('Integration with Tools', () => {
+    it('should preserve prettier formatting', async () => {
+      const filePath = 'src/formatted.tsx';
+      const formattedContent = 
+        `import { useState } from 'react';\n\n` +
+        `import { utils } from '../utils';\n` +
+        `import { styles } from './styles';\n\n` +
+        `export function Component() {\n` +
+        `  return null;\n` +
+        `}\n`;
+
+      await createTestFile(filePath, formattedContent);
+      await fixImportPaths(testDir);
+      const content = await readTestFile(filePath);
+
+      // Check that blank lines and indentation are preserved
+      expect(content).toMatch(/import.*from 'react';\n\nimport/);
+      expect(content).toMatch(/from '@\/utils';\nimport/);
+      expect(content).toMatch(/}\n$/);
+    });
+
+    it('should work with eslint-disable comments', async () => {
+      const filePath = 'src/with-eslint.tsx';
+      await createTestFile(
+        filePath,
+        `// eslint-disable-next-line import/no-relative-paths
+         import { utils } from '../utils';
+         /* eslint-disable import/no-relative-paths */
+         import { styles } from './styles';
+         /* eslint-enable import/no-relative-paths */`
+      );
+
+      await fixImportPaths(testDir);
+      const content = await readTestFile(filePath);
+
+      // Check that eslint comments are preserved
+      expect(content).toContain('eslint-disable-next-line');
+      expect(content).toContain('eslint-disable import/no-relative-paths');
+      expect(content).toContain('eslint-enable import/no-relative-paths');
+      // Check that imports are still fixed
+      expect(content).toContain(`from '@/utils'`);
+      expect(content).toContain(`from '@/src/styles'`);
+    });
+
+    it('should handle typescript path aliases', async () => {
+      const filePath = 'src/with-aliases.tsx';
+      await createTestFile(
+        filePath,
+        `import { Button } from '~/components/Button';
+         import { utils } from '@app/utils';
+         import { styles } from '$lib/styles';`
+      );
+
+      await fixImportPaths(testDir);
+      const content = await readTestFile(filePath);
+
+      // Check that all aliases are converted to @/
+      expect(content).toContain(`from '@/components/Button'`);
+      expect(content).toContain(`from '@/utils'`);
+      expect(content).toContain(`from '@/styles'`);
+    });
+  });
+
+  describe('Large Codebase Handling', () => {
+    it('should handle deeply nested imports', async () => {
+      // Create a deep directory structure
+      const depth = 10;
+      let importPath = '';
+      let expectedPath = '';
+      
+      for (let i = 0; i < depth; i++) {
+        importPath += '../';
+        expectedPath += 'nested/';
+        await createTestFile(
+          `src/${expectedPath}file.ts`,
+          'export const value = true;'
+        );
+      }
+
+      const filePath = `src/${expectedPath}deep.tsx`;
+      await createTestFile(
+        filePath,
+        `import { value } from '${importPath}file';`
+      );
+
+      await fixImportPaths(testDir);
+      const content = await readTestFile(filePath);
+
+      expect(content).toContain(`from '@/file'`);
+    });
+
+    it('should handle multiple files in parallel', async () => {
+      const fileCount = 100;
+      const filePromises = [];
+
+      for (let i = 0; i < fileCount; i++) {
+        filePromises.push(
+          createTestFile(
+            `src/components/Component${i}.tsx`,
+            `import { utils } from '../../utils';
+             import { styles } from './styles';`
+          )
+        );
+      }
+
+      await Promise.all(filePromises);
+      
+      const startTime = process.hrtime();
+      await fixImportPaths(testDir);
+      const [seconds, nanoseconds] = process.hrtime(startTime);
+      const totalTime = seconds + nanoseconds / 1e9;
+
+      // Should process files efficiently
+      expect(totalTime).toBeLessThan(10);
+
+      // Verify all files were fixed
+      const content = await readTestFile('src/components/Component0.tsx');
+      expect(content).toContain(`from '@/utils'`);
+      expect(content).toContain(`from '@/components/styles'`);
+    });
+
+    it('should handle large monorepo structures', async () => {
+      // Create a monorepo-like structure
+      const packages = ['shared', 'web', 'mobile', 'desktop'];
+      const filePromises = [];
+
+      for (const pkg of packages) {
+        filePromises.push(
+          createTestFile(
+            `packages/${pkg}/src/index.ts`,
+            `import { utils } from '../../shared/src/utils';
+             import { components } from '../components';`
+          )
+        );
+      }
+
+      await Promise.all(filePromises);
+      await fixImportPaths(testDir);
+
+      // Check that imports are correctly resolved
+      const content = await readTestFile('packages/web/src/index.ts');
+      expect(content).toContain(`from '@/shared/src/utils'`);
+      expect(content).toContain(`from '@/web/components'`);
+    });
+  });
 }); 

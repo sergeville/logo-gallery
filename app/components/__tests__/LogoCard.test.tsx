@@ -216,37 +216,55 @@ jest.mock('@/app/components/LogoImage', () => ({
 jest.mock('@/app/components/DeleteLogoButton', () => ({
   __esModule: true,
   default: ({ logoId }: { logoId: string }) => {
-    const [isOpen, setIsOpen] = React.useState(false)
-    const [isDeleting, setIsDeleting] = React.useState(false)
-    const [error, setError] = React.useState<string | null>(null)
+    const [isOpen, setIsOpen] = React.useState(false);
+    const [isDeleting, setIsDeleting] = React.useState(false);
+    const [error, setError] = React.useState<string | null>(null);
+    const { theme } = useTheme();
 
     const handleDelete = async () => {
       try {
-        setIsDeleting(true)
-        setError(null)
+        setIsDeleting(true);
+        setError(null);
+        
+        // Simulate network delay
+        await new Promise(resolve => setTimeout(resolve, 500));
         
         const response = await fetch(`/api/logos/${logoId}`, {
           method: 'DELETE',
-        })
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
 
         if (!response.ok) {
-          throw new Error('Failed to delete logo')
+          const data = await response.json().catch(() => ({}));
+          throw new Error(data.message || 'Failed to delete logo');
         }
 
-        setIsOpen(false)
+        setIsOpen(false);
       } catch (error) {
-        setError(error instanceof Error ? error.message : 'Failed to delete logo')
+        if (error instanceof Error) {
+          if (error.name === 'AbortError') {
+            setError('Request was cancelled');
+          } else if (error.name === 'TypeError') {
+            setError('Network error occurred');
+          } else {
+            setError(error.message || 'Failed to delete logo');
+          }
+        } else {
+          setError('An unexpected error occurred');
+        }
       } finally {
-        setIsDeleting(false)
+        setIsDeleting(false);
       }
-    }
+    };
 
     return (
       <>
         <button
           data-testid="delete-button"
           onClick={() => setIsOpen(true)}
-          className="text-gray-500 hover:text-red-600"
+          className="text-gray-500 hover:text-red-600 transition-colors"
           aria-label="Delete logo"
           type="button"
         >
@@ -258,21 +276,45 @@ jest.mock('@/app/components/DeleteLogoButton', () => ({
             role="dialog" 
             aria-modal="true" 
             aria-labelledby="dialog-title"
-            className="fixed inset-0 z-50"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
           >
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg">
-              <h3 id="dialog-title">Delete Logo</h3>
+            <div 
+              className={`bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl max-w-md w-full mx-4 ${
+                isDeleting ? 'opacity-75' : ''
+              }`}
+            >
+              <h3 
+                id="dialog-title" 
+                className="text-xl font-semibold mb-4 text-gray-900 dark:text-white"
+              >
+                Delete Logo
+              </h3>
+              <p className="text-gray-600 dark:text-gray-300 mb-4">
+                Are you sure you want to delete this logo? This action cannot be undone.
+              </p>
               {error && (
-                <p className="text-red-600" role="alert">
-                  {error}
-                </p>
+                <div 
+                  className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded p-3 mb-4" 
+                  role="alert"
+                >
+                  <p className="text-red-600 dark:text-red-400">{error}</p>
+                </div>
               )}
-              <div className="mt-4 flex justify-end gap-3">
+              <div className="flex justify-end gap-3">
                 <button 
-                  onClick={() => setIsOpen(false)}
+                  onClick={() => {
+                    setError(null);
+                    setIsOpen(false);
+                  }}
                   data-testid="cancel-button"
                   type="button"
+                  className={`px-4 py-2 rounded ${
+                    theme === 'dark' 
+                      ? 'bg-gray-700 hover:bg-gray-600 text-gray-200' 
+                      : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                  }`}
                   aria-label="Cancel deletion"
+                  disabled={isDeleting}
                 >
                   Cancel
                 </button>
@@ -281,16 +323,31 @@ jest.mock('@/app/components/DeleteLogoButton', () => ({
                   disabled={isDeleting}
                   data-testid="confirm-delete-button"
                   type="button"
+                  className={`px-4 py-2 rounded ${
+                    isDeleting
+                      ? 'bg-red-400 cursor-not-allowed'
+                      : 'bg-red-600 hover:bg-red-700'
+                  } text-white`}
                   aria-label={isDeleting ? "Deleting logo..." : "Confirm deletion"}
                 >
-                  {isDeleting ? 'Deleting...' : 'Delete'}
+                  {isDeleting ? (
+                    <span className="flex items-center gap-2">
+                      <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                      </svg>
+                      Deleting...
+                    </span>
+                  ) : (
+                    'Delete'
+                  )}
                 </button>
               </div>
             </div>
           </div>
         )}
       </>
-    )
+    );
   },
 }))
 
@@ -450,24 +507,31 @@ describe('LogoCard', () => {
     })
 
     it('handles deletion errors correctly', async () => {
-      // Mock fetch to simulate an error
+      // Mock fetch to simulate a network error
       global.fetch = jest.fn().mockImplementationOnce(() => 
-        Promise.reject(new Error('Failed to delete logo'))
+        Promise.reject(new TypeError('Network error occurred'))
       )
 
-      renderWithTheme(<LogoCard logo={mockLogo} showDelete={true} isOwner={true} />)
+      renderWithTheme(<LogoCard logo={mockLogo} isOwner={true} showDelete={true} />)
+      
+      // Wait for image to load
+      await screen.findByTestId('logo-image')
+      
+      // Click delete button
       const deleteButton = screen.getByTestId('delete-button')
       fireEvent.click(deleteButton)
+      
+      // Click confirm delete
       const confirmButton = screen.getByTestId('confirm-delete-button')
       fireEvent.click(confirmButton)
       
       // Wait for error message
-      const errorMessage = await screen.findByText('Failed to delete logo')
+      const errorMessage = await screen.findByText('Network error occurred')
       expect(errorMessage).toBeInTheDocument()
     })
 
     it('closes modal on successful deletion', async () => {
-      // Mock fetch to simulate success
+      // Mock successful deletion
       global.fetch = jest.fn().mockImplementationOnce(() => 
         Promise.resolve({
           ok: true,
@@ -475,16 +539,23 @@ describe('LogoCard', () => {
         })
       )
 
-      renderWithTheme(<LogoCard logo={mockLogo} showDelete={true} isOwner={true} />)
+      renderWithTheme(<LogoCard logo={mockLogo} isOwner={true} showDelete={true} />)
+      
+      // Wait for image to load
+      await screen.findByTestId('logo-image')
+      
+      // Click delete button
       const deleteButton = screen.getByTestId('delete-button')
       fireEvent.click(deleteButton)
+      
+      // Click confirm delete
       const confirmButton = screen.getByTestId('confirm-delete-button')
       fireEvent.click(confirmButton)
       
       // Wait for modal to close
       await waitFor(() => {
         expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
-      })
+      }, { timeout: 2000 })
     })
   })
 

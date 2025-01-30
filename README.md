@@ -66,17 +66,37 @@ Before submitting a pull request, please:
 
 ## Documentation
 
+### Core Documentation
 - [API Documentation](docs/api.md)
 - [Development Setup](docs/development.md)
 - [Testing Guide](docs/testing.md)
 - [Deployment Guide](docs/deployment.md)
 - [Design Standards](STANDARDS.md)
-  - Import path conventions
-  - Project structure
-  - Code style guidelines
-  - Database schema
-  - Authentication flow
-  - Testing patterns
+- [Database Schema](docs/DATABASE.md)
+- [TODO List](docs/TODO.md)
+
+### Design Documentation
+- [Authentication Flow](docs/design/auth-signin.md)
+- [Upload Form](docs/design/upload-form.md)
+
+### Testing Documentation
+- [Test Data Generation](docs/test-data.md)
+
+### Component Documentation
+- [Vote Component](app/vote/README.md)
+
+### Additional Resources
+- [Command Reference](cmd.md)
+
+Each document covers specific aspects of the project:
+- Import path conventions
+- Project structure
+- Code style guidelines
+- Database schema
+- Authentication flow
+- Testing patterns
+- Component specifications
+- Development workflows
 
 ## License
 

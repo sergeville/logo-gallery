@@ -6,7 +6,7 @@ import {
   mockAuthenticatedSession, 
   mockUnauthenticatedSession 
 } from '@/app/__tests__/utils/test-utils'
-import { ThemeProvider } from 'next-themes'
+import { ThemeProvider, useTheme } from 'next-themes'
 import React from 'react'
 
 // Mock next/image
@@ -101,73 +101,114 @@ jest.mock('next/navigation', () => ({
 // Mock LogoImage component with loading states
 jest.mock('@/app/components/LogoImage', () => ({
   __esModule: true,
-  default: ({ src, responsiveUrls, 'data-testid': testId = 'logo-image', ...props }: {
+  default: ({ 
+    src,
+    alt,
+    className = '',
+    priority = false,
+    quality = 75,
+    responsiveUrls,
+    width,
+    height,
+    style,
+    'data-testid': testId = 'logo-image',
+    ...props 
+  }: {
     src: string;
-    responsiveUrls?: Record<string, string>;
     alt: string;
     className?: string;
     priority?: boolean;
     quality?: number;
+    responsiveUrls?: Record<string, string>;
     width?: number;
     height?: number;
     style?: React.CSSProperties;
     'data-testid'?: string;
   }) => {
-    const [isLoading, setIsLoading] = React.useState(true)
-    const [error, setError] = React.useState(false)
+    const [isLoading, setIsLoading] = React.useState(true);
+    const [error, setError] = React.useState(false);
+    const { theme } = useTheme();
 
     React.useEffect(() => {
       // Simulate image loading
       const timer = setTimeout(() => {
-        setIsLoading(false)
+        setIsLoading(false);
         if (src === 'error.jpg') {
-          setError(true)
+          setError(true);
         }
-      }, 100)
-      return () => clearTimeout(timer)
-    }, [src])
+      }, 100);
+      return () => clearTimeout(timer);
+    }, [src]);
 
+    // Error fallback
     if (error) {
       return (
         <div 
           data-testid={`${testId}-error`}
-          className="flex items-center justify-center bg-gray-100 dark:bg-gray-800"
+          className={`flex items-center justify-center ${
+            theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'
+          } ${className}`}
+          style={{ aspectRatio: width && height ? width / height : '1' }}
         >
           <span className="text-gray-400">Image not available</span>
         </div>
-      )
+      );
     }
 
+    // Loading state
     if (isLoading) {
-      return <div data-testid={`${testId}-loading`} className="animate-pulse bg-gray-200 dark:bg-gray-700" />
+      return (
+        <div 
+          data-testid={`${testId}-loading`}
+          className={`animate-pulse bg-gray-200 dark:bg-gray-700 ${className}`}
+          style={{ aspectRatio: width && height ? width / height : '1' }}
+        />
+      );
     }
 
-    const imageUrl = !src ? '/placeholder.png' : src.startsWith('http') || src.startsWith('/') ? src : `/${src}`
-    
-    // Handle responsive URLs
-    let srcSet: string | undefined;
-    if (responsiveUrls) {
-      srcSet = Object.entries(responsiveUrls)
-        .map(([size, url]) => {
-          const breakpoints = {
-            sm: '640w',
-            md: '768w',
-            lg: '1024w',
-            xl: '1280w'
-          }
-          return `${url} ${breakpoints[size as keyof typeof breakpoints]}`
-        })
-        .join(', ')
-    }
+    // Normalize image URL
+    const imageUrl = !src ? '/placeholder.png' : src.startsWith('http') || src.startsWith('/') ? src : `/${src}`;
+
+    // Generate srcSet if responsive URLs are available
+    const generateSrcSet = () => {
+      if (!responsiveUrls) return undefined;
+
+      const breakpoints = {
+        sm: 640,
+        md: 768,
+        lg: 1024,
+        xl: 1280,
+        '2xl': 1536,
+      };
+
+      return Object.entries(responsiveUrls)
+        .map(([size, url]) => `${url} ${breakpoints[size as keyof typeof breakpoints]}w`)
+        .join(', ');
+    };
 
     return (
-      <img 
-        {...props}
-        src={imageUrl} 
-        srcSet={srcSet}
-        data-testid={testId}
-      />
-    )
+      <div 
+        className={`relative ${className}`} 
+        style={{ aspectRatio: width && height ? width / height : '1' }}
+      >
+        <img
+          {...props}
+          src={imageUrl}
+          alt={alt}
+          width={width}
+          height={height}
+          style={{ ...style, objectFit: 'contain' }}
+          data-testid={testId}
+          loading={priority ? 'eager' : 'lazy'}
+          sizes={
+            responsiveUrls
+              ? "(max-width: 640px) 100vw, (max-width: 768px) 80vw, (max-width: 1024px) 50vw, 33vw"
+              : undefined
+          }
+          srcSet={generateSrcSet()}
+        />
+      </div>
+    );
   },
 }))
 

@@ -9,7 +9,7 @@
 
 ### Mock Issues
 1. [✓] Improve Next/Image mock to handle all required props
-2. [ ] Add proper mock for LogoImage component with responsive image handling
+2. [✓] Add proper mock for LogoImage component with responsive image handling
 3. [ ] Add proper error handling in DeleteLogoButton mock
 4. [✓] Add proper mock for useTheme hook
 
@@ -36,9 +36,9 @@
 ## Progress Tracking
 
 - Total Issues: 17
-- Fixed: 10
+- Fixed: 11
 - In Progress: 0
-- Remaining: 7
+- Remaining: 6
 
 ## Notes
 

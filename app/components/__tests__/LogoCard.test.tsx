@@ -548,7 +548,10 @@ describe('LogoCard', () => {
     it('passes responsive URLs to LogoImage component', async () => {
       renderWithTheme(<LogoCard logo={logoWithResponsiveUrls} />)
       const image = await screen.findByTestId('logo-image')
-      expect(image).toHaveAttribute('responsiveurls', JSON.stringify(mockResponsiveUrls))
+      expect(image).toHaveAttribute('srcset', expect.stringContaining('/test-logo-sm.jpg'))
+      expect(image).toHaveAttribute('srcset', expect.stringContaining('/test-logo-md.jpg'))
+      expect(image).toHaveAttribute('srcset', expect.stringContaining('/test-logo-lg.jpg'))
+      expect(image).toHaveAttribute('srcset', expect.stringContaining('/test-logo-xl.jpg'))
     })
 
     it('uses default thumbnail when no responsive URLs provided', async () => {
@@ -572,7 +575,8 @@ describe('LogoCard', () => {
       }
       renderWithTheme(<LogoCard logo={logoWithPartialUrls} />)
       const image = await screen.findByTestId('logo-image')
-      expect(image).toHaveAttribute('responsiveurls', JSON.stringify(logoWithPartialUrls.responsiveUrls))
+      expect(image).toHaveAttribute('srcset', expect.stringContaining('/test-logo-sm.jpg'))
+      expect(image).toHaveAttribute('sizes', expect.stringContaining('640px'))
     })
 
     it('maintains aspect ratio across breakpoints', async () => {

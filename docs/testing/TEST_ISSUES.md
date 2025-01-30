@@ -4,8 +4,8 @@
 
 ### Type Issues
 1. [✓] Fix `style` prop type in LogoImage mock
-2. [ ] Fix `data-testid` prop type in LogoImage mock
-3. [ ] Fix `createdAt` type handling in date tests
+2. [✓] Fix `data-testid` prop type in LogoImage mock
+3. [✓] Fix `createdAt` type handling in date tests
 
 ### Mock Issues
 1. [ ] Improve Next/Image mock to handle all required props
@@ -36,9 +36,9 @@
 ## Progress Tracking
 
 - Total Issues: 17
-- Fixed: 7
+- Fixed: 9
 - In Progress: 0
-- Remaining: 10
+- Remaining: 8
 
 ## Notes
 

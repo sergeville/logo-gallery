@@ -16,7 +16,7 @@ interface Logo {
   thumbnailUrl: string
   responsiveUrls?: Record<string, string>
   userId: string
-  createdAt: string | Date
+  createdAt: string | Date | undefined
   totalVotes?: number
   fileSize?: number
   optimizedSize?: number

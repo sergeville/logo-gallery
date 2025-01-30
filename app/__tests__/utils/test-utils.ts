@@ -43,7 +43,7 @@ export const mockLogo = {
   optimizedSize: 512 * 1024, // 512KB
   compressionRatio: '50%',
   totalVotes: 0,
-  createdAt: new Date().toISOString(),
+  createdAt: '2024-01-01T12:00:00.000Z', // Fixed date for test consistency
 }
 
 export const createMockLogoProps = (overrides = {}) => ({

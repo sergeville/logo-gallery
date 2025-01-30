@@ -476,4 +476,32 @@ describe('LogoCard', () => {
       expect(imageContainer).toHaveClass('aspect-square')
     })
   })
+
+  describe('Date Handling', () => {
+    it('handles string dates correctly', () => {
+      const dateString = '2024-01-01T12:00:00.000Z'
+      const logoWithStringDate = { ...mockLogo, createdAt: dateString }
+      renderWithTheme(<LogoCard logo={logoWithStringDate} showStats={true} />)
+      expect(screen.getByText(/Uploaded/)).toBeInTheDocument()
+    })
+
+    it('handles Date objects correctly', () => {
+      const dateObject = new Date('2024-01-01T12:00:00.000Z')
+      const logoWithDateObject = { ...mockLogo, createdAt: dateObject }
+      renderWithTheme(<LogoCard logo={logoWithDateObject} showStats={true} />)
+      expect(screen.getByText(/Uploaded/)).toBeInTheDocument()
+    })
+
+    it('handles invalid dates gracefully', () => {
+      const logoWithInvalidDate = { ...mockLogo, createdAt: 'invalid-date' }
+      renderWithTheme(<LogoCard logo={logoWithInvalidDate} showStats={true} />)
+      expect(screen.getByText('Uploaded Unknown date')).toBeInTheDocument()
+    })
+
+    it('handles missing dates gracefully', () => {
+      const logoWithoutDate = { ...mockLogo, createdAt: undefined }
+      renderWithTheme(<LogoCard logo={logoWithoutDate} showStats={true} />)
+      expect(screen.getByText('Uploaded Unknown date')).toBeInTheDocument()
+    })
+  })
 }) 

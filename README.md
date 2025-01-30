@@ -71,11 +71,11 @@ Before submitting a pull request, please:
 - [Development Setup](docs/development.md)
 - [Testing Guide](docs/testing.md)
 - [Deployment Guide](docs/deployment.md)
-- [Design Standards](STANDARDS.md)
 - [Database Schema](docs/DATABASE.md)
 - [TODO List](docs/TODO.md)
 
 ### Design Documentation
+- [Design Standards](docs/design/STANDARDS.md)
 - [Authentication Flow](docs/design/auth-signin.md)
 - [Upload Form](docs/design/upload-form.md)
 

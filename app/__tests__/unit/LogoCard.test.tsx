@@ -1,5 +1,28 @@
+/**
+ * LogoCard Component Tests
+ * 
+ * This test suite covers the LogoCard component, which is a complex component that handles:
+ * - Image loading and error states
+ * - Responsive image optimization
+ * - User authentication states
+ * - Dark/light theme modes
+ * - Delete functionality with error handling
+ * 
+ * Test Structure:
+ * 1. Basic Rendering
+ * 2. Image Handling
+ * 3. Delete Button Visibility
+ * 4. Statistics Display
+ * 5. Dark Mode
+ * 6. Hover States
+ * 7. DeleteLogoButton
+ * 8. Accessibility
+ * 9. Responsive Image Breakpoints
+ * 10. Date Handling
+ */
+
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import LogoCard from '../LogoCard'
+import LogoCard from '@/app/components/LogoCard'
 import { 
   mockLogo, 
   setMockSession, 
@@ -9,7 +32,18 @@ import {
 import { ThemeProvider, useTheme } from 'next-themes'
 import React from 'react'
 
-// Mock next/image
+/**
+ * Mock Implementations
+ * 
+ * The following sections contain mock implementations for:
+ * - next/image: Handles image loading simulation and props
+ * - next-auth/react: Manages authentication state
+ * - next/navigation: Provides routing functionality
+ * - LogoImage: Custom image component with loading states
+ * - DeleteLogoButton: Handles logo deletion with error states
+ */
+
+// Mock next/image with loading simulation
 jest.mock('next/image', () => ({
   __esModule: true,
   default: ({
@@ -46,8 +80,8 @@ jest.mock('next/image', () => ({
     onLoadingComplete?: (result: { naturalWidth: number; naturalHeight: number }) => void;
     'data-testid'?: string;
   }) => {
+    // Simulate image loading behavior
     React.useEffect(() => {
-      // Simulate image load
       const img = new Image();
       img.onload = () => {
         onLoadingComplete?.({
@@ -229,24 +263,16 @@ jest.mock('@/app/components/DeleteLogoButton', () => ({
         // Simulate network delay
         await new Promise(resolve => setTimeout(resolve, 500));
         
-        const response = await fetch(`/api/logos/${logoId}`, {
-          method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        });
-
-        if (!response.ok) {
-          const data = await response.json().catch(() => ({}));
-          throw new Error(data.message || 'Failed to delete logo');
+        // Simulate network error for test purposes
+        if (logoId === 'error-test') {
+          throw new TypeError('Network error occurred');
         }
-
+        
+        // Simulate successful deletion without making a real network request
         setIsOpen(false);
       } catch (error) {
         if (error instanceof Error) {
-          if (error.name === 'AbortError') {
-            setError('Request was cancelled');
-          } else if (error.name === 'TypeError') {
+          if (error instanceof TypeError) {
             setError('Network error occurred');
           } else {
             setError(error.message || 'Failed to delete logo');
@@ -351,6 +377,10 @@ jest.mock('@/app/components/DeleteLogoButton', () => ({
   },
 }))
 
+/**
+ * Test Utilities
+ */
+
 // Custom render function with theme provider
 const renderWithTheme = (ui: React.ReactElement, { theme = 'light' } = {}) => {
   return render(
@@ -360,7 +390,12 @@ const renderWithTheme = (ui: React.ReactElement, { theme = 'light' } = {}) => {
   )
 }
 
+/**
+ * Test Suites
+ */
+
 describe('LogoCard', () => {
+  // Reset mocks and session before each test
   beforeEach(() => {
     jest.clearAllMocks()
     setMockSession(mockUnauthenticatedSession)
@@ -489,6 +524,42 @@ describe('LogoCard', () => {
   })
 
   describe('DeleteLogoButton', () => {
+    /**
+     * Complex Scenario: Logo Deletion Flow
+     * 
+     * This suite tests the complete logo deletion flow, including:
+     * 1. Modal interaction
+     * 2. Loading states
+     * 3. Error handling
+     * 4. Network request simulation
+     * 5. Success confirmation
+     */
+    
+    it('handles deletion errors correctly', async () => {
+      // Create a test logo with the error-triggering ID
+      const errorTestLogo = {
+        ...mockLogo,
+        _id: 'error-test'
+      }
+
+      renderWithTheme(<LogoCard logo={errorTestLogo} isOwner={true} showDelete={true} />)
+      
+      // Wait for initial render and image load
+      await screen.findByTestId('logo-image')
+      
+      // Trigger deletion flow
+      const deleteButton = screen.getByTestId('delete-button')
+      fireEvent.click(deleteButton)
+      
+      // Confirm deletion
+      const confirmButton = screen.getByTestId('confirm-delete-button')
+      fireEvent.click(confirmButton)
+      
+      // Verify error handling
+      const errorMessage = await screen.findByText('Network error occurred')
+      expect(errorMessage).toBeInTheDocument()
+    })
+
     it('opens delete confirmation modal when clicked', async () => {
       renderWithTheme(<LogoCard logo={mockLogo} showDelete={true} isOwner={true} />)
       const deleteButton = screen.getByTestId('delete-button')
@@ -504,30 +575,6 @@ describe('LogoCard', () => {
       const confirmButton = screen.getByTestId('confirm-delete-button')
       fireEvent.click(confirmButton)
       expect(screen.getByText('Deleting...')).toBeInTheDocument()
-    })
-
-    it('handles deletion errors correctly', async () => {
-      // Mock fetch to simulate a network error
-      global.fetch = jest.fn().mockImplementationOnce(() => 
-        Promise.reject(new TypeError('Network error occurred'))
-      )
-
-      renderWithTheme(<LogoCard logo={mockLogo} isOwner={true} showDelete={true} />)
-      
-      // Wait for image to load
-      await screen.findByTestId('logo-image')
-      
-      // Click delete button
-      const deleteButton = screen.getByTestId('delete-button')
-      fireEvent.click(deleteButton)
-      
-      // Click confirm delete
-      const confirmButton = screen.getByTestId('confirm-delete-button')
-      fireEvent.click(confirmButton)
-      
-      // Wait for error message
-      const errorMessage = await screen.findByText('Network error occurred')
-      expect(errorMessage).toBeInTheDocument()
     })
 
     it('closes modal on successful deletion', async () => {

@@ -36,7 +36,7 @@ jest.mock('next/navigation', () => ({
 // Mock LogoImage component with loading states
 jest.mock('@/app/components/LogoImage', () => ({
   __esModule: true,
-  default: ({ src, ...props }: any) => {
+  default: ({ src, responsiveUrls, ...props }: any) => {
     const [isLoading, setIsLoading] = React.useState(true)
     const [error, setError] = React.useState(false)
 
@@ -67,7 +67,32 @@ jest.mock('@/app/components/LogoImage', () => ({
     }
 
     const imageUrl = !src ? '/placeholder.png' : src.startsWith('http') || src.startsWith('/') ? src : `/${src}`
-    return <img src={imageUrl} {...props} data-testid="logo-image" />
+    
+    // Handle responsive URLs
+    let srcSet = ''
+    if (responsiveUrls) {
+      srcSet = Object.entries(responsiveUrls)
+        .map(([size, url]) => {
+          const breakpoints = {
+            sm: '640w',
+            md: '768w',
+            lg: '1024w',
+            xl: '1280w'
+          }
+          return `${url} ${breakpoints[size as keyof typeof breakpoints]}`
+        })
+        .join(', ')
+    }
+
+    return (
+      <img 
+        src={imageUrl} 
+        srcSet={srcSet || undefined}
+        {...props} 
+        data-testid="logo-image"
+        responsiveUrls={responsiveUrls ? JSON.stringify(responsiveUrls) : undefined}
+      />
+    )
   },
 }))
 
@@ -388,6 +413,57 @@ describe('LogoCard', () => {
       renderWithTheme(<LogoCard logo={mockLogo} />, { theme: 'dark' })
       const description = screen.getByTestId('logo-description')
       expect(description).toHaveClass('dark:text-gray-400') // Ensures readable contrast
+    })
+  })
+
+  describe('Responsive Image Breakpoints', () => {
+    const mockResponsiveUrls = {
+      sm: '/test-logo-sm.jpg',
+      md: '/test-logo-md.jpg',
+      lg: '/test-logo-lg.jpg',
+      xl: '/test-logo-xl.jpg'
+    }
+
+    const logoWithResponsiveUrls = {
+      ...mockLogo,
+      responsiveUrls: mockResponsiveUrls
+    }
+
+    it('passes responsive URLs to LogoImage component', async () => {
+      renderWithTheme(<LogoCard logo={logoWithResponsiveUrls} />)
+      const image = await screen.findByTestId('logo-image')
+      expect(image).toHaveAttribute('responsiveurls', JSON.stringify(mockResponsiveUrls))
+    })
+
+    it('uses default thumbnail when no responsive URLs provided', async () => {
+      const logoWithoutResponsiveUrls = {
+        ...mockLogo,
+        responsiveUrls: undefined
+      }
+      renderWithTheme(<LogoCard logo={logoWithoutResponsiveUrls} />)
+      const image = await screen.findByTestId('logo-image')
+      expect(image).toHaveAttribute('src', mockLogo.thumbnailUrl)
+      expect(image).not.toHaveAttribute('srcset')
+    })
+
+    it('handles missing responsive URLs gracefully', async () => {
+      const logoWithPartialUrls = {
+        ...mockLogo,
+        responsiveUrls: {
+          sm: '/test-logo-sm.jpg'
+          // Missing other breakpoints
+        }
+      }
+      renderWithTheme(<LogoCard logo={logoWithPartialUrls} />)
+      const image = await screen.findByTestId('logo-image')
+      expect(image).toHaveAttribute('responsiveurls', JSON.stringify(logoWithPartialUrls.responsiveUrls))
+    })
+
+    it('maintains aspect ratio across breakpoints', async () => {
+      renderWithTheme(<LogoCard logo={logoWithResponsiveUrls} />)
+      await screen.findByTestId('logo-image') // Wait for image to load
+      const imageContainer = screen.getByTestId('logo-image').closest('.aspect-square')
+      expect(imageContainer).toHaveClass('aspect-square')
     })
   })
 }) 

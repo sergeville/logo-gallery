@@ -3,7 +3,7 @@ import {
   testComponentStates,
   preparePageForVisualTest,
   compareScreenshots
-} from '@/e2e/utils/visual-test-utils';
+} from '@/e2e/visual-tests/utils/visual-test-utils';
 
 test.describe('Middleware Chain Tests', () => {
   test('should test protected resource access', async ({ page }) => {

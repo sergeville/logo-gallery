@@ -15,6 +15,8 @@ interface Logo {
   fileSize?: number;
   optimizedSize?: number;
   compressionRatio?: string;
+  width?: number;
+  height?: number;
 }
 
 /**
@@ -38,16 +40,20 @@ export default function LogoGallery() {
       name: 'Logo 1',
       title: 'Logo 1',
       description: 'Sample logo description',
-      imageUrl: '/placeholder/200/200',
-      thumbnailUrl: '/placeholder/200/200',
+      imageUrl: '/api/images/sample-logo.png',
+      thumbnailUrl: '/api/images/sample-logo.png',
+      width: 200,
+      height: 200
     },
     { 
       id: '2',
       name: 'Logo 2',
       title: 'Logo 2',
-      description: 'Sample logo description',
-      imageUrl: '/placeholder/200/200',
-      thumbnailUrl: '/placeholder/200/200',
+      description: 'Another sample logo',
+      imageUrl: '/api/images/sample-logo-2.png',
+      thumbnailUrl: '/api/images/sample-logo-2.png',
+      width: 200,
+      height: 200
     },
     { 
       id: '3',
@@ -56,6 +62,8 @@ export default function LogoGallery() {
       description: 'Sample logo description',
       imageUrl: '/placeholder/200/200',
       thumbnailUrl: '/placeholder/200/200',
+      width: 200,
+      height: 200
     }
   ];
 

@@ -1,39 +1,31 @@
-import { MongoClient, ObjectId } from 'mongodb';
-import { connectToDatabase, disconnectFromDatabase } from '@/app/lib/db';
-import { hashPassword } from '@/app/lib/auth';
+import { User } from '../app/lib/models/user';
+import mongoose from 'mongoose';
+import { Role, DEFAULT_ROLE } from '../app/config/roles.config';
 
-async function addUser(email: string, password: string, name: string) {
-  const { db } = await connectToDatabase();
-  const collection = db.collection('users');
+const DATABASE_URL = 'mongodb://localhost:27017/logo-gallery-dev';
 
-  const hashedPassword = await hashPassword(password);
-  const user = {
-    _id: new ObjectId(),
-    email,
-    password: hashedPassword,
-    name,
-    role: 'user',
-    createdAt: new Date()
-  };
-
-  await collection.insertOne(user);
-  await disconnectFromDatabase();
-  return user._id.toString();
-}
-
-async function main() {
+async function createTestUser() {
   try {
-    const email = process.argv[2];
-    const password = process.argv[3];
-    const name = process.argv[4];
+    await mongoose.connect(DATABASE_URL);
 
-    if (!email || !password || !name) {
-      console.error('Usage: npm run create-test-user <email> <password> <name>');
-      process.exit(1);
+    const testUser = {
+      email: 'test@example.com',
+      password: 'testpassword123',
+      name: 'Test User',
+      role: DEFAULT_ROLE as Role,
+    };
+
+    // Check if user already exists
+    const existingUser = await User.findOne({ email: testUser.email });
+    if (existingUser) {
+      console.log('Test user already exists');
+      process.exit(0);
     }
 
-    const userId = await addUser(email, password, name);
-    console.log(`Created test user with ID: ${userId}`);
+    // Create new user
+    const user = new User(testUser);
+    await user.save();
+    console.log('Test user created successfully');
     process.exit(0);
   } catch (error) {
     console.error('Error creating test user:', error);
@@ -41,4 +33,4 @@ async function main() {
   }
 }
 
-main(); 
+createTestUser(); 

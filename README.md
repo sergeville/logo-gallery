@@ -1,116 +1,123 @@
 # Logo Gallery
 
-A Next.js application for showcasing and voting on logos.
+A modern, responsive logo gallery built with Next.js, TypeScript, and Tailwind CSS. Features include:
 
-## Features
-
-- Logo showcase with voting system
-- Admin dashboard for logo management
-- User authentication
-- Responsive design
-- Performance optimized
+- 🎨 Beautiful, responsive grid layout
+- 🌓 Dark mode support
+- 🔍 Search and filter functionality
+- ⚡️ Fast image loading with Next.js Image optimization
+- 📱 Mobile-friendly design
+- ✨ Smooth animations with Framer Motion
+- 🎯 Accessible UI components
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js 18+
-- MongoDB
+- Node.js 18.x or later
 - npm or yarn
 
 ### Installation
 
-1. Clone the repository
+1. Clone the repository:
 ```bash
 git clone https://github.com/yourusername/logo-gallery.git
 cd logo-gallery
 ```
 
-2. Install dependencies
+2. Install dependencies:
 ```bash
 npm install
 # or
 yarn install
 ```
 
-3. Set up environment variables
-```bash
-cp .env.example .env.local
-```
-Edit `.env.local` with your configuration
+3. Create a `public/logos` directory and add your logo images.
 
-4. Run the development server
+4. Start the development server:
 ```bash
 npm run dev
 # or
 yarn dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) to view the application.
+5. Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-## Contributing
+## Usage
 
-We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details on:
+### Adding Logos
 
-- Project structure
-- Code standards
-- Development workflow
-- Testing requirements
-- Documentation guidelines
+1. Place your logo images in the `public/logos` directory
+2. Update the logo data in `app/page.tsx` with your logo information:
 
-Before submitting a pull request, please:
-1. Read the contributing guidelines
-2. Check existing issues/PRs
-3. Follow our coding standards
-4. Include tests and documentation
+```typescript
+const logos = [
+  {
+    id: '1',
+    name: 'Logo Name',
+    url: '/logos/your-logo.svg',
+    category: 'Category',
+    description: 'Logo description',
+  },
+  // Add more logos...
+];
+```
+
+### Customization
+
+- Modify the theme in `tailwind.config.js`
+- Update global styles in `app/globals.css`
+- Customize components in the `app/components` directory
+
+## Features
+
+### Logo Image Component
+
+The `LogoImage` component handles:
+- Responsive image loading
+- Error states
+- Loading states
+- Image optimization
+- Dark mode compatibility
+
+### Logo Gallery Component
+
+The `LogoGallery` component provides:
+- Grid/List view toggle
+- Search functionality
+- Sort options
+- Smooth animations
+- Responsive layout
 
 ## Documentation
 
-### Core Documentation
-- [API Documentation](docs/api.md)
-- [Development Setup](docs/development.md)
-- [Testing Guide](docs/testing.md)
-- [Deployment Guide](docs/deployment.md)
-- [Database Schema](docs/DATABASE.md)
-- [Contributing Guidelines](docs/CONTRIBUTING.md)
-- [TODO List](docs/TODO.md)
+### Design System
+Our comprehensive design system documentation is available in [docs/DESIGN.md](docs/DESIGN.md). It covers:
+- 🎨 UI/UX Guidelines
+- 📐 Layout & Grid System
+- 🎯 Navigation Structure
+- 🌓 Dark Mode Implementation
+- 📱 Responsive Design
+- 🚀 Performance Optimizations
+- 🔌 API Documentation
 
-### Design Documentation
-- [Design Standards](docs/design/STANDARDS.md)
-- [Authentication Flow](docs/design/auth-signin.md)
-- [Upload Form](docs/design/upload-form.md)
+### Development Standards
+Our development standards and conventions are documented in [docs/design/STANDARDS.md](docs/design/STANDARDS.md). Key areas include:
+- 📦 Import Path Standards
+- 🏗 Project Structure
+- 💾 Database Connections
+- 🔐 Authentication
+- 🧪 Testing Guidelines
+- 📝 Code Style
+- 🔄 Git Practices
 
-### Development Documentation
-- [Next.js Build Fixes](docs/development/nextjs-build-fixes.md)
-- [AI Instructions](docs/development/AICustomInstructions.md)
+## Contributing
 
-### Testing Documentation
-- [Test Data Generation](docs/test-data.md)
-
-### Component Documentation
-- [Vote Component](app/vote/README.md)
-
-### Additional Resources
-- [Command Reference](cmd.md)
-
-Each document covers specific aspects of the project:
-- Import path conventions
-- Project structure
-- Code style guidelines
-- Database schema
-- Authentication flow
-- Testing patterns
-- Component specifications
-- Development workflows
+Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Acknowledgments
-
-- Next.js team for the amazing framework
-- All contributors who have helped shape this project
+This project is licensed under the MIT License - see the LICENSE file for details.
 
 # Image Handling Examples
 

@@ -55,7 +55,7 @@ Our visual tests cover:
 
 ```typescript
 import { test, expect } from '@playwright/test';
-import { preparePageForVisualTest } from '../utils/visual-test-utils';
+import { preparePageForVisualTest } from '../e2e/visual-tests/utils/visual-test-utils';
 
 test('Component appearance', async ({ page }) => {
   await preparePageForVisualTest(page);
@@ -67,7 +67,7 @@ test('Component appearance', async ({ page }) => {
 ### Testing Component States
 
 ```typescript
-import { testComponentStates, COMPONENT_STATES } from '../utils/visual-test-utils';
+import { testComponentStates, COMPONENT_STATES } from '../e2e/visual-tests/utils/visual-test-utils';
 
 test('Button states', async ({ page }) => {
   await testComponentStates(page, 'button.primary', {
@@ -81,7 +81,7 @@ test('Button states', async ({ page }) => {
 ### Testing Responsive Layouts
 
 ```typescript
-import { testResponsiveLayouts, VIEWPORT_SIZES } from '../utils/visual-test-utils';
+import { testResponsiveLayouts, VIEWPORT_SIZES } from '../e2e/visual-tests/utils/visual-test-utils';
 
 test('Responsive layout', async ({ page }) => {
   await testResponsiveLayouts(page, [

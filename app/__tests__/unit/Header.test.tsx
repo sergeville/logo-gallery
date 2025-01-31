@@ -1,8 +1,10 @@
 import React from 'react'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { useAuth } from '@/app/contexts/AuthContext'
-import Header from '../Header'
+import Header from '@/app/components/Header'
+import ThemeToggle from '@/app/components/ThemeToggle'
 import { useSession } from 'next-auth/react'
+import { useTheme } from 'next-themes'
 
 // Mock the AuthContext
 jest.mock('@/app/contexts/AuthContext', () => ({
@@ -16,12 +18,26 @@ jest.mock('next/link', () => {
   }
 })
 
+// Mock next-auth/react
+jest.mock('next-auth/react', () => ({
+  useSession: jest.fn(() => ({
+    data: null,
+    status: 'unauthenticated',
+  })),
+}))
+
+// Mock next-themes
+jest.mock('next-themes', () => ({
+  useTheme: jest.fn(() => ({
+    theme: 'light',
+    setTheme: jest.fn(),
+  })),
+}))
+
 // Mock ThemeToggle since we're not testing theme functionality
-jest.mock('../ThemeToggle', () => {
+jest.mock('@/app/components/ThemeToggle', () => {
   return () => <div data-testid="theme-toggle">Theme Toggle</div>
 })
-
-jest.mock('next-auth/react')
 
 describe('Header', () => {
   const mockSignOut = jest.fn()

@@ -89,16 +89,19 @@ export async function GET(request: NextRequest) {
 
     // Transform the data to match the frontend interface
     const transformedLogos = logos.map(logo => ({
-      _id: logo._id,
+      _id: logo._id?.toString() || '',
       name: logo.title,
       description: logo.description || '',
       imageUrl: logo.imageUrl,
       thumbnailUrl: logo.thumbnailUrl,
-      userId: logo.userId,
+      userId: logo.userId?.toString() || '',
       ownerName: logo.ownerName,
       totalVotes: logo.totalVotes || 0,
-      votes: logo.votes || [],
-      createdAt: logo.createdAt
+      votes: (logo.votes || []).map(vote => ({
+        ...vote,
+        userId: vote.userId?.toString() || ''
+      })),
+      createdAt: logo.createdAt ? new Date(logo.createdAt).toISOString() : new Date().toISOString()
     }));
 
     // Calculate pagination info

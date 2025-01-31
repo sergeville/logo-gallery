@@ -35,7 +35,7 @@ export default async function MyLogos() {
       title: logo.title || '',
       description: logo.description || '',
       imageUrl: logo.imageUrl || '',
-      userId: logo.userId || '',
+      userId: logo.userId?.toString() || '',
       createdAt: safeISOString(logo.createdAt)
     }));
 

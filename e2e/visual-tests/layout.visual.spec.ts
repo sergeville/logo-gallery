@@ -7,7 +7,7 @@ import {
   compareScreenshots,
   waitForElement,
   ensurePageReady
-} from '../utils/visual-test-utils';
+} from '@/e2e/visual-tests/utils/visual-test-utils';
 
 test.describe('Visual Regression Tests - Layout', () => {
   test.beforeEach(async ({ page }) => {

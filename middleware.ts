@@ -1,8 +1,14 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { cacheMiddleware } from '@/middleware/cacheMiddleware'
+import { sessionMiddleware } from '@/app/middleware/sessionMiddleware'
 
 export async function middleware(request: NextRequest) {
+  // Handle session requests first
+  if (request.url.includes('/api/auth/session')) {
+    return sessionMiddleware(request)
+  }
+
   const response = NextResponse.next()
 
   response.headers.set('Access-Control-Allow-Credentials', 'true')
@@ -17,5 +23,10 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: '/api/:path*',
+  matcher: [
+    '/api/auth/session',
+    '/api/protected/:path*',
+    '/api/images/:path*',
+    '/api/logos/:path*'
+  ],
 } 

@@ -1,12 +1,11 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
 import { formatDistanceToNow, isValid, parseISO } from 'date-fns'
 import Link from 'next/link'
 import { useSession } from 'next-auth/react'
 import DeleteLogoButton from '@/app/components/DeleteLogoButton'
-import LogoImage from '@/app/components/LogoImage'
-import { Trash2 } from 'lucide-react'
+import Image from 'next/image'
 
 interface Logo {
   _id: string
@@ -38,6 +37,8 @@ export default function LogoCard({
 }: LogoCardProps) {
   const { data: session } = useSession()
   const userIsOwner = isOwner || session?.user?.id === logo.userId
+  const [imageError, setImageError] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
 
   const getUploadedDate = () => {
     try {
@@ -78,28 +79,40 @@ export default function LogoCard({
   return (
     <div 
       data-testid="logo-card"
-      className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden transition-transform hover:scale-[1.02]"
+      className="bg-white dark:bg-gray-800/50 rounded-lg shadow-lg overflow-hidden transition-all hover:scale-[1.02] hover:shadow-xl border border-gray-100 dark:border-gray-700"
     >
-      <div className="relative">
+      <div className="relative aspect-square bg-gray-50 dark:bg-gray-900/50">
+        {/* Loading skeleton */}
+        {isLoading && (
+          <div className="absolute inset-0 bg-gray-100 dark:bg-gray-800 animate-pulse" />
+        )}
+
         {/* Vote count overlay */}
         <div 
           data-testid="vote-count"
-          className="absolute top-4 left-1/2 transform -translate-x-1/2 z-10 bg-black bg-opacity-50 rounded-full px-4 py-2"
+          className="absolute top-4 left-1/2 transform -translate-x-1/2 z-10 bg-black/70 backdrop-blur-sm rounded-full px-4 py-1"
         >
-          <span className="text-3xl font-bold text-white">
+          <span className="text-2xl font-bold text-white">
             {logo.totalVotes || 0}
           </span>
         </div>
-        <div className="relative w-full aspect-square">
-          <LogoImage
-            src={logo.thumbnailUrl}
-            alt={`Logo: ${logo.title} - ${logo.description}`}
-            responsiveUrls={logo.responsiveUrls}
-            style={{ objectFit: 'contain' }}
-            data-testid="logo-image"
-          />
-        </div>
+
+        {/* Image */}
+        <Image
+          src={imageError ? '/placeholder.png' : (logo.thumbnailUrl || logo.imageUrl)}
+          alt={logo.title}
+          fill
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          className="object-contain p-4"
+          onLoad={() => setIsLoading(false)}
+          onError={() => {
+            setImageError(true)
+            setIsLoading(false)
+          }}
+          priority={false}
+        />
       </div>
+
       <div className="p-4">
         <h3 
           data-testid="logo-title"
@@ -109,7 +122,7 @@ export default function LogoCard({
         </h3>
         <p 
           data-testid="logo-description"
-          className="text-gray-600 dark:text-gray-400 text-sm mb-4"
+          className="text-gray-600 dark:text-gray-300 text-sm mb-4 line-clamp-2"
         >
           {logo.description}
         </p>
@@ -133,15 +146,12 @@ export default function LogoCard({
                 Compression ratio: {logo.compressionRatio}
               </p>
             )}
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              Total votes: {logo.totalVotes || 0}
-            </p>
           </div>
         )}
         <div className="flex justify-between items-center">
           <Link
             href={`/logos/${logo._id}`}
-            className="text-primary-blue hover:text-blue-700 text-sm font-medium"
+            className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium"
             data-testid="view-details-link"
           >
             View Details

@@ -81,7 +81,17 @@ export default function GalleryPage() {
         throw new Error(data.error);
       }
       
-      setLogos(prev => resetPage ? data.logos : [...prev, ...data.logos]);
+      // Transform MongoDB documents to match LogoCard interface exactly
+      const transformedLogos = data.logos.map((logo: any) => ({
+        _id: logo._id?.toString() || '',
+        title: logo.title || '',
+        description: logo.description || '',
+        imageUrl: logo.imageUrl || '',
+        userId: logo.userId?.toString() || '',
+        createdAt: logo.createdAt
+      }));
+      
+      setLogos(prev => resetPage ? transformedLogos : [...prev, ...transformedLogos]);
       setHasMore(data.pagination.hasMore);
       
       // Extract unique tags only on first load

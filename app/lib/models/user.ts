@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
-import { Role, DEFAULT_ROLE } from '@/app/config/roles.config';
+import { Role, DEFAULT_ROLE } from '../../config/roles.config';
 
 const userSchema = new mongoose.Schema({
   email: {
@@ -57,14 +57,23 @@ userSchema.pre('save', async function(next) {
 
 // Method to compare password for login
 userSchema.methods.comparePassword = async function(candidatePassword: string) {
-  console.log('Comparing passwords for user:', this.email);
+  if (!candidatePassword) {
+    console.error('No password provided for comparison');
+    return false;
+  }
+
+  if (!this.password) {
+    console.error('User has no password set');
+    return false;
+  }
+
   try {
     const isMatch = await bcrypt.compare(candidatePassword, this.password);
-    console.log('Password match:', isMatch);
+    console.log('Password comparison completed for user:', this.email);
     return isMatch;
   } catch (error) {
     console.error('Error comparing passwords:', error);
-    return false;
+    throw new Error('Password comparison failed');
   }
 };
 

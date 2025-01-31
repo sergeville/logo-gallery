@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { AuthModal } from '../AuthModal';
+import AuthModal from '@/app/components/AuthModal';
 import { useAuth } from '@/app/contexts/AuthContext';
 import { signIn } from 'next-auth/react';
 

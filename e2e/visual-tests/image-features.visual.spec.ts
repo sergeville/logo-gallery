@@ -4,7 +4,7 @@ import {
   testResponsiveLayouts,
   preparePageForVisualTest,
   compareScreenshots
-} from '@/e2e/utils/visual-test-utils';
+} from '@/e2e/visual-tests/utils/visual-test-utils';
 
 test.describe('Image Features', () => {
   test('should test image loading states', async ({ page }) => {

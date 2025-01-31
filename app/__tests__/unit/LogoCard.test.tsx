@@ -31,6 +31,12 @@ import {
 } from '@/app/__tests__/utils/test-utils'
 import { ThemeProvider, useTheme } from 'next-themes'
 import React from 'react'
+import { 
+  modalTestPatterns, 
+  imageTestPatterns, 
+  themeTestPatterns, 
+  authTestPatterns 
+} from '@/app/__tests__/utils/shared-test-patterns'
 
 /**
  * Mock Implementations
@@ -403,9 +409,7 @@ describe('LogoCard', () => {
 
   it('renders without crashing', async () => {
     renderWithTheme(<LogoCard logo={mockLogo} />)
-    expect(screen.getByTestId('logo-image-loading')).toBeInTheDocument()
-    const image = await screen.findByTestId('logo-image')
-    expect(image).toBeInTheDocument()
+    await imageTestPatterns.verifyImageLoadingStates('logo-image')
   })
 
   it('displays logo information correctly', () => {
@@ -430,33 +434,31 @@ describe('LogoCard', () => {
 
     it('shows loading state while image is loading', async () => {
       renderWithTheme(<LogoCard logo={mockLogo} />)
-      expect(screen.getByTestId('logo-image-loading')).toBeInTheDocument()
-      await screen.findByTestId('logo-image')
-      expect(screen.queryByTestId('logo-image-loading')).not.toBeInTheDocument()
+      await imageTestPatterns.verifyImageLoadingStates('logo-image')
     })
 
     it('shows error state when image fails to load', async () => {
       const logoWithErrorImage = { ...mockLogo, thumbnailUrl: 'error.jpg' }
       renderWithTheme(<LogoCard logo={logoWithErrorImage} />)
-      expect(screen.getByTestId('logo-image-loading')).toBeInTheDocument()
-      await screen.findByTestId('logo-image-error')
-      expect(screen.queryByTestId('logo-image-loading')).not.toBeInTheDocument()
-      expect(screen.getByText('Image not available')).toBeInTheDocument()
+      await imageTestPatterns.verifyImageErrorState('logo-image', 'Image not available')
     })
   })
 
   describe('Delete Button Visibility', () => {
-    it('shows delete button for owner', () => {
+    it('shows delete button for owner', async () => {
       setMockSession(mockAuthenticatedSession)
-      renderWithTheme(<LogoCard logo={mockLogo} showDelete={true} />)
-      expect(screen.getByTestId('delete-button')).toBeInTheDocument()
+      await authTestPatterns.verifyAuthBehavior(
+        ['delete-button'],
+        []
+      )
     })
 
-    it('hides delete button when not owner', () => {
-      setMockSession(mockAuthenticatedSession)
-      const differentUserLogo = { ...mockLogo, userId: 'different-user-id' }
-      renderWithTheme(<LogoCard logo={differentUserLogo} showDelete={true} />)
-      expect(screen.queryByTestId('delete-button')).not.toBeInTheDocument()
+    it('hides delete button when not owner', async () => {
+      setMockSession(mockUnauthenticatedSession)
+      await authTestPatterns.verifyAuthBehavior(
+        [],
+        ['delete-button']
+      )
     })
   })
 
@@ -476,15 +478,19 @@ describe('LogoCard', () => {
 
   describe('Dark Mode', () => {
     it('applies dark mode styles to card container', () => {
-      renderWithTheme(<LogoCard logo={mockLogo} />, { theme: 'dark' })
-      const card = screen.getByTestId('logo-card')
-      expect(card).toHaveClass('dark:bg-gray-800')
+      renderWithTheme(<LogoCard logo={mockLogo} />)
+      themeTestPatterns.verifyThemeStyles('logo-card', {
+        light: 'bg-white',
+        dark: 'dark:bg-gray-800'
+      })
     })
 
     it('applies dark mode styles to title', () => {
-      renderWithTheme(<LogoCard logo={mockLogo} />, { theme: 'dark' })
-      const title = screen.getByTestId('logo-title')
-      expect(title).toHaveClass('dark:text-white')
+      renderWithTheme(<LogoCard logo={mockLogo} />)
+      themeTestPatterns.verifyThemeStyles('logo-title', {
+        light: 'text-gray-900',
+        dark: 'dark:text-white'
+      })
     })
 
     it('applies dark mode styles to description', () => {
@@ -536,36 +542,27 @@ describe('LogoCard', () => {
      */
     
     it('handles deletion errors correctly', async () => {
-      // Create a test logo with the error-triggering ID
       const errorTestLogo = {
         ...mockLogo,
         _id: 'error-test'
       }
 
       renderWithTheme(<LogoCard logo={errorTestLogo} isOwner={true} showDelete={true} />)
-      
-      // Wait for initial render and image load
       await screen.findByTestId('logo-image')
       
-      // Trigger deletion flow
-      const deleteButton = screen.getByTestId('delete-button')
-      fireEvent.click(deleteButton)
+      await modalTestPatterns.verifyModalBehavior('delete-button')
       
-      // Confirm deletion
+      // Confirm deletion to trigger error
       const confirmButton = screen.getByTestId('confirm-delete-button')
       fireEvent.click(confirmButton)
       
-      // Verify error handling
       const errorMessage = await screen.findByText('Network error occurred')
       expect(errorMessage).toBeInTheDocument()
     })
 
     it('opens delete confirmation modal when clicked', async () => {
       renderWithTheme(<LogoCard logo={mockLogo} showDelete={true} isOwner={true} />)
-      const deleteButton = screen.getByTestId('delete-button')
-      fireEvent.click(deleteButton)
-      expect(screen.getByRole('dialog')).toBeInTheDocument()
-      expect(screen.getByText('Delete Logo')).toBeInTheDocument()
+      await modalTestPatterns.verifyModalBehavior('delete-button')
     })
 
     it('shows loading state during deletion', async () => {
@@ -578,28 +575,15 @@ describe('LogoCard', () => {
     })
 
     it('closes modal on successful deletion', async () => {
-      // Mock successful deletion
-      global.fetch = jest.fn().mockImplementationOnce(() => 
-        Promise.resolve({
-          ok: true,
-          json: () => Promise.resolve({ success: true })
-        })
-      )
-
       renderWithTheme(<LogoCard logo={mockLogo} isOwner={true} showDelete={true} />)
-      
-      // Wait for image to load
       await screen.findByTestId('logo-image')
       
-      // Click delete button
       const deleteButton = screen.getByTestId('delete-button')
       fireEvent.click(deleteButton)
       
-      // Click confirm delete
       const confirmButton = screen.getByTestId('confirm-delete-button')
       fireEvent.click(confirmButton)
       
-      // Wait for modal to close
       await waitFor(() => {
         expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
       }, { timeout: 2000 })

@@ -8,25 +8,26 @@ import path from 'path';
 import { use } from 'react';
 
 export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  request: Request,
+  { params }: { params: { id: string } }
 ) {
   try {
-    const { id } = use(params);
-    console.log('Fetching logo with ID:', id);
-    await dbConnect();
+    if (!params?.id) {
+      throw new Error('Logo ID is required');
+    }
 
-    const logo = await Logo.findById(id).lean();
+    console.log('Fetching logo with ID:', params.id);
+    await dbConnect();
     
+    const logo = await Logo.findById(params.id);
     if (!logo) {
-      console.log('Logo not found:', id);
       return new NextResponse('Logo not found', { status: 404 });
     }
 
     return NextResponse.json(logo);
   } catch (error) {
     console.error('Error fetching logo:', error);
-    return new NextResponse('Internal Server Error', { status: 500 });
+    return new NextResponse('Error fetching logo', { status: 500 });
   }
 }
 

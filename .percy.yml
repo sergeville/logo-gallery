@@ -1,25 +1,14 @@
 version: 2
 snapshot:
-  widths:
-    - 375  # Mobile
-    - 768  # Tablet
-    - 1024 # Desktop
-    - 1440 # Large Desktop
-  minHeight: 1024
-  percyCSS: |
-    /* Hide dynamic content that may cause flaky tests */
-    .timestamp { visibility: hidden; }
-    .random-id { visibility: hidden; }
-    /* Disable animations during testing */
-    * {
-      animation: none !important;
-      transition: none !important;
-    }
+  widths: [375, 768, 1280]
+  min-height: 1024
+  percy-css: |
+    iframe { display: none; }
 discovery:
-  allowedHostnames: []  # Add any external domains that need to be loaded
-  disallowedHostnames: []  # Add any domains that should be blocked
-static:
-  baseUrl: /  # Base URL for static file serving
-  files: "**/*.{png,jpg,jpeg,gif,svg}"  # Files to include
-cli:
-  uploadThreads: 5  # Number of concurrent upload threads 
+  allowed-hostnames: []
+  network-idle-timeout: 100
+  page-pool-size-min: 1
+  page-pool-size-max: 5
+upload:
+  files: "**/*.{png,jpg,jpeg}"
+  ignore: "node_modules/**/*" 

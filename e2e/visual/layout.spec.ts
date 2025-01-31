@@ -37,6 +37,8 @@ test.describe('Visual Regression Tests', () => {
               description: 'Test Description 1',
               userId: 'user1',
               ownerName: 'User 1',
+              width: 200,
+              height: 200
             },
             {
               _id: '2',
@@ -46,6 +48,8 @@ test.describe('Visual Regression Tests', () => {
               description: 'Test Description 2',
               userId: 'user2',
               ownerName: 'User 2',
+              width: 200,
+              height: 200
             },
           ],
         }),

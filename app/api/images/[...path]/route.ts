@@ -1,36 +1,57 @@
-import { type NextRequest, NextResponse } from 'next/server';
-import { cacheMiddleware } from '@/middleware/cacheMiddleware';
-import { use } from 'react';
+import { NextRequest, NextResponse } from 'next/server';
+import { promises as fs } from 'fs';
+import path from 'path';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ path: string[] }> }
-): Promise<NextResponse> {
+  { params }: { params: { path: string[] } }
+) {
   try {
-    const { path } = use(params);
-    
-    // Create base response
-    const response = NextResponse.next();
-
-    // Apply cache middleware
-    const cachedResponse = await cacheMiddleware(request, response);
-    if (cachedResponse) {
-      return Promise.resolve(cachedResponse);
+    // Validate params
+    const pathSegments = await Promise.resolve(params.path);
+    if (!pathSegments || !Array.isArray(pathSegments)) {
+      return new NextResponse('Invalid path parameter', { status: 400 });
     }
 
-    // For testing purposes, return a sample image
-    // In production, this would fetch from your image storage
-    return Promise.resolve(new NextResponse(Buffer.from('Sample image data'), {
-      headers: {
-        'Content-Type': 'image/png',
-        'Cache-Control': 'public, max-age=3600',
-      },
-    }));
+    // Sanitize path to prevent directory traversal
+    const sanitizedPath = pathSegments.map(segment => 
+      segment.replace(/[^a-zA-Z0-9-_.]/g, '')
+    );
+
+    // Construct the file path
+    const filePath = path.join(process.cwd(), 'public', 'logos', ...sanitizedPath);
+
+    try {
+      // Check if file exists and read it
+      const fileBuffer = await fs.readFile(filePath);
+      
+      // Determine content type based on file extension
+      const ext = path.extname(filePath).toLowerCase();
+      const contentType = {
+        '.png': 'image/png',
+        '.jpg': 'image/jpeg',
+        '.jpeg': 'image/jpeg',
+        '.gif': 'image/gif',
+        '.svg': 'image/svg+xml',
+        '.webp': 'image/webp',
+      }[ext] || 'application/octet-stream';
+
+      // Return the image with proper headers
+      return new NextResponse(fileBuffer, {
+        headers: {
+          'Content-Type': contentType,
+          'Cache-Control': 'public, max-age=31536000, immutable',
+        },
+      });
+    } catch (error) {
+      console.error('Error reading image file:', error);
+      return new NextResponse('Image not found', { status: 404 });
+    }
   } catch (error) {
-    console.error('Error serving image:', error);
-    return Promise.resolve(new NextResponse('Internal Server Error', { status: 500 }));
+    console.error('Error processing image request:', error);
+    return new NextResponse('Internal server error', { status: 500 });
   }
 } 

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import { useTheme } from 'next-themes';
+import { ImageIcon, AlertCircle } from 'lucide-react';
 
 interface LogoImageProps {
   src: string;
@@ -13,6 +14,7 @@ interface LogoImageProps {
   responsiveUrls?: Record<string, string>;
   width?: number;
   height?: number;
+  onError?: (error: Error) => void;
 }
 
 export default function LogoImage({
@@ -22,22 +24,49 @@ export default function LogoImage({
   priority = false,
   quality = 75,
   responsiveUrls,
-  width,
-  height,
+  width = 200,
+  height = 200,
+  onError,
 }: LogoImageProps) {
-  const [error, setError] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const { theme } = useTheme();
+
+  const handleError = (e: Error) => {
+    setError(e);
+    onError?.(e);
+    console.error('Image loading error:', e);
+  };
 
   // Error fallback
   if (error) {
     return (
       <div 
-        className={`flex items-center justify-center ${
+        className={`flex flex-col items-center justify-center gap-2 ${
           theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'
         } ${className}`}
         style={{ aspectRatio: width && height ? width / height : '1' }}
+        role="alert"
+        aria-label={`Error loading image: ${alt}`}
       >
-        <span className="text-gray-400">Image not available</span>
+        <AlertCircle className="w-6 h-6 text-gray-400" />
+        <span className="text-sm text-gray-400">Image not available</span>
+      </div>
+    );
+  }
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div 
+        className={`flex items-center justify-center animate-pulse ${
+          theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'
+        } ${className}`}
+        style={{ aspectRatio: width && height ? width / height : '1' }}
+        role="progressbar"
+        aria-label={`Loading image: ${alt}`}
+      >
+        <ImageIcon className="w-6 h-6 text-gray-400" />
       </div>
     );
   }
@@ -48,38 +77,25 @@ export default function LogoImage({
   // Generate srcSet if responsive URLs are available
   const generateSrcSet = () => {
     if (!responsiveUrls) return undefined;
-
-    const breakpoints = {
-      sm: 640,
-      md: 768,
-      lg: 1024,
-      xl: 1280,
-      '2xl': 1536,
-    };
-
     return Object.entries(responsiveUrls)
-      .map(([size, url]) => `${url} ${breakpoints[size as keyof typeof breakpoints]}w`)
+      .map(([size, url]) => `${url} ${size}w`)
       .join(', ');
   };
 
   return (
-    <div className={`relative ${className}`} style={{ aspectRatio: width && height ? width / height : '1' }}>
-      <Image
-        src={imageUrl || '/placeholder.png'}
-        alt={alt}
-        style={{ objectFit: 'contain' }}
-        onError={() => setError(true)}
-        sizes={
-          responsiveUrls
-            ? "(max-width: 640px) 100vw, (max-width: 768px) 80vw, (max-width: 1024px) 50vw, 33vw"
-            : undefined
-        }
-        {...(priority ? { priority: true } : {})}
-        quality={quality}
-        loading={priority ? 'eager' : 'lazy'}
-        {...(width && height ? { width, height } : {})}
-        {...(responsiveUrls ? { srcSet: generateSrcSet() } : {})}
-      />
-    </div>
+    <Image
+      src={imageUrl}
+      alt={alt}
+      width={width}
+      height={height}
+      className={className}
+      priority={priority}
+      quality={quality}
+      srcSet={generateSrcSet()}
+      onError={(e) => handleError(e as Error)}
+      onLoad={() => setIsLoading(false)}
+      onLoadingComplete={() => setIsLoading(false)}
+      loading={priority ? 'eager' : 'lazy'}
+    />
   );
 } 

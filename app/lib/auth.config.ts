@@ -59,8 +59,7 @@ export const authConfig: NextAuthOptions = {
             id: user._id.toString(),
             email: user.email,
             name: user.name,
-            role: user.role || DEFAULT_ROLE,
-            isAdmin: user.role === 'admin',
+            role: user.role,
           };
         } catch (error) {
           console.error('Authorization error:', error);
@@ -69,45 +68,32 @@ export const authConfig: NextAuthOptions = {
       }
     })
   ],
+  pages: {
+    signIn: '/auth/signin',
+  },
   session: {
     strategy: 'jwt',
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
-  pages: {
-    signIn: '/auth/signin',
-  },
   callbacks: {
-    async jwt({ token, user, account }) {
+    async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
-        token.role = user.role || DEFAULT_ROLE;
-        token.isAdmin = user.role === 'admin';
+        token.email = user.email;
+        token.name = user.name;
+        token.role = user.role;
       }
-
-      // For OAuth sign-in, set default role if not exists
-      if (account?.provider === 'google' || account?.provider === 'github') {
-        if (!token.role) {
-          token.role = DEFAULT_ROLE;
-          token.isAdmin = false;
-          
-          // Update user in database with default role
-          await dbConnect();
-          await User.findByIdAndUpdate(token.id, {
-            role: DEFAULT_ROLE
-          }, { upsert: true });
-        }
-      }
-
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.id as string;
-        session.user.role = token.role as Role;
-        session.user.isAdmin = token.isAdmin as boolean;
+        session.user.email = token.email as string;
+        session.user.name = token.name as string;
+        session.user.role = token.role as string;
       }
       return session;
     },
   },
-  debug: process.env.NODE_ENV === 'development',
+  secret: process.env.NEXTAUTH_SECRET,
 }; 

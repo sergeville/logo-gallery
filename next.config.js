@@ -1,66 +1,25 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'standalone',
   images: {
-    unoptimized: true,
-    domains: ['localhost', 'example.com'],
+    dangerouslyAllowSVG: true,
+    contentDispositionType: 'attachment',
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
     remotePatterns: [
       {
         protocol: 'https',
         hostname: '**',
       },
     ],
+    formats: ['image/avif', 'image/webp'],
+    minimumCacheTTL: 60,
   },
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
-  transpilePackages: ['sharp', 'bcrypt', 'bcryptjs'],
-  experimental: {
-    serverActions: {
-      bodySizeLimit: '2mb'
-    }
-  },
-  compiler: {
-    removeConsole: process.env.NODE_ENV === 'production',
-  },
-  poweredByHeader: false,
   reactStrictMode: true,
-  webpack: (config, { isServer }) => {
-    // Handle Node.js built-in modules
-    if (!isServer) {
-      config.resolve.fallback = {
-        ...config.resolve.fallback,
-        child_process: false,
-        fs: false,
-        net: false,
-        tls: false,
-        crypto: false,
-        stream: false,
-        path: false,
-        os: false,
-        events: false,
-      };
-    }
-
-    // Add rule for handling Node.js native modules
+  webpack(config) {
+    // SVG optimization configuration
     config.module.rules.push({
-      test: /node_modules\/(sharp|bcrypt|bcryptjs)\/.*\.js$/,
-      use: {
-        loader: 'babel-loader',
-        options: {
-          presets: ['@babel/preset-env'],
-          cacheDirectory: true,
-        },
-      },
+      test: /\.svg$/,
+      use: ['@svgr/webpack'],
     });
-
-    // Handle sharp WebAssembly
-    config.resolve.alias = {
-      ...config.resolve.alias,
-      '@img/sharp-wasm32': false,
-      '@img/sharp-libvips-dev': false,
-    };
-
     return config;
   },
 }

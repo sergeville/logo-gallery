@@ -1,10 +1,17 @@
 # Visual Test Tasks and Status
 
+## Status Legend
+- ✅ Completed - All tests passing
+- ❌ Failed - Tests have errors
+- 🚧 In Progress - Implementation ongoing
+- ⏳ Pending - Not started yet
+- 🔄 Needs Update - Baseline screenshots needed
+
 ## Component Tests Status
 
 ### Button Component
 - [x] Default State (`button/default.visual.spec.ts`)
-  - Status: Implemented
+  - Status: ✅ Implemented
   - Last Run: Pending baseline screenshot
   - Issues: None
 - [x] Hover State (`button/hover.visual.spec.ts`)
@@ -129,6 +136,26 @@ npm test -- e2e/visual-tests/
 # Update all snapshots
 npm test -- e2e/visual-tests/ --update-snapshots
 ```
+
+## Test Status Guidelines
+
+1. Before marking a test as completed (✅):
+   - All test cases must pass
+   - No visual regressions detected
+   - Baseline screenshots must be up to date
+   - No TypeScript/lint errors present
+
+2. When tests fail (❌):
+   - Do not commit baseline screenshots
+   - Document the failure in the Issues section
+   - Add error details and steps to reproduce
+   - Do not mark as completed until fixed
+
+3. Test Maintenance:
+   - Regular baseline screenshot updates
+   - Review and update test cases
+   - Monitor for flaky tests
+   - Keep documentation current
 
 ## Issues and Fixes
 

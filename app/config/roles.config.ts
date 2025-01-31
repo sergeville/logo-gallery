@@ -1,23 +1,20 @@
-export type Role = 'admin' | 'user';
+export type Role = 'admin' | 'moderator' | 'user' | 'guest';
 
 export const DEFAULT_ROLE: Role = 'user';
 
-export enum Permission {
-  MANAGE_USERS = 'MANAGE_USERS',
-  MANAGE_LOGOS = 'MANAGE_LOGOS',
-  MANAGE_VOTING = 'MANAGE_VOTING',
-  VIEW_ADMIN_PANEL = 'VIEW_ADMIN_PANEL',
-}
-
-export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
-  admin: [
-    Permission.MANAGE_USERS,
-    Permission.MANAGE_LOGOS,
-    Permission.MANAGE_VOTING,
-    Permission.VIEW_ADMIN_PANEL,
-  ],
-  user: [],
+export const ROLES = {
+  ADMIN: 'admin' as Role,
+  MODERATOR: 'moderator' as Role,
+  USER: 'user' as Role,
+  GUEST: 'guest' as Role,
 };
+
+export const ROLE_PERMISSIONS = {
+  [ROLES.ADMIN]: ['*'],
+  [ROLES.MODERATOR]: ['read', 'write', 'delete', 'moderate'],
+  [ROLES.USER]: ['read', 'write'],
+  [ROLES.GUEST]: ['read'],
+} as const;
 
 export function hasPermission(userRole: Role, permission: Permission): boolean {
   return ROLE_PERMISSIONS[userRole]?.includes(permission) || false;

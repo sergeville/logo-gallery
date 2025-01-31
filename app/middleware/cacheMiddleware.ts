@@ -1,117 +1,97 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { imageCacheService } from '@/app/lib/services/ImageCacheService';
+import { redisCacheService } from '@/app/lib/services/cache/RedisCacheService';
+import { createHash } from 'crypto';
 
 interface CacheConfig {
   ttl?: number;
-  maxSize?: number;
   paths?: string[];
   methods?: string[];
   headers?: {
     [key: string]: string;
   };
-}
-
-interface CacheEntry {
-  data: any;
-  timestamp: number;
+  varyByQuery?: boolean;
+  varyByHeaders?: string[];
 }
 
 const DEFAULT_CONFIG: CacheConfig = {
-  ttl: 60 * 60 * 1000, // 1 hour
-  maxSize: 100 * 1024 * 1024, // 100MB
-  paths: ['/api/images', '/api/logos'],
+  ttl: 3600, // 1 hour
+  paths: ['/api/images', '/api/logos', '/api/auth/session'],
   methods: ['GET'],
   headers: {
-    'Cache-Control': 'public, max-age=3600'
-  }
+    'Cache-Control': 'public, max-age=3600',
+    'X-Cache-Status': 'HIT'
+  },
+  varyByQuery: true,
+  varyByHeaders: ['accept', 'accept-encoding']
 };
 
-export function createCacheMiddleware(config: CacheConfig = {}) {
+export async function cacheMiddleware(
+  request: NextRequest,
+  response?: NextResponse,
+  config: CacheConfig = {}
+): Promise<NextResponse | undefined> {
   const finalConfig = { ...DEFAULT_CONFIG, ...config };
 
-  return async function cacheMiddleware(
-    request: NextRequest,
-    response?: NextResponse
-  ) {
-    // Only cache configured methods
-    if (!finalConfig.methods?.includes(request.method)) {
-      return response;
-    }
+  // Only cache configured methods
+  if (!finalConfig.methods?.includes(request.method)) {
+    return response;
+  }
 
-    // Only cache configured paths
-    const requestPath = new URL(request.url).pathname;
-    if (!finalConfig.paths?.some(path => requestPath.startsWith(path))) {
-      return response;
-    }
+  // Only cache configured paths
+  const requestPath = new URL(request.url).pathname;
+  if (!finalConfig.paths?.some(path => requestPath.startsWith(path))) {
+    return response;
+  }
 
-    // Generate cache key from request
-    const cacheKey = await generateCacheKey(request);
+  // Generate cache key
+  const key = await generateCacheKey(request, finalConfig);
 
-    try {
-      // Check if we have a cached response
-      const cachedResponse = await getCachedResponse(cacheKey);
-      if (cachedResponse) {
-        return cachedResponse;
-      }
+  // Try to get from cache
+  const cachedResponse = await redisCacheService.get(key);
+  if (cachedResponse) {
+    // Add cache status header
+    cachedResponse.headers.set('X-Cache-Status', 'HIT');
+    return cachedResponse;
+  }
 
-      // If no cached response and no response provided, return null
-      if (!response) {
-        return null;
-      }
+  // If no cached response and no new response, return
+  if (!response) {
+    return undefined;
+  }
 
-      // Cache the response
-      await cacheResponse(cacheKey, response);
+  // Add cache status header
+  response.headers.set('X-Cache-Status', 'MISS');
 
-      // Add cache headers
-      Object.entries(finalConfig.headers || {}).forEach(([key, value]) => {
-        response.headers.set(key, value);
-      });
+  // Add configured headers
+  Object.entries(finalConfig.headers || {}).forEach(([name, value]) => {
+    response.headers.set(name, value);
+  });
 
-      return response;
-    } catch (error) {
-      console.error('Cache middleware error:', error);
-      return response;
-    }
-  };
+  // Cache the response
+  await redisCacheService.set(key, response, finalConfig.ttl);
+
+  return response;
 }
 
-async function generateCacheKey(request: NextRequest): Promise<string> {
+async function generateCacheKey(request: NextRequest, config: CacheConfig): Promise<string> {
   const url = new URL(request.url);
-  return `${request.method}:${url.pathname}${url.search}`;
-}
+  const components = [
+    request.method,
+    url.pathname,
+    config.varyByQuery ? url.search : '',
+  ];
 
-async function getCachedResponse(key: string): Promise<NextResponse | null> {
-  try {
-    const cached = await imageCacheService.getImage(key);
-    if (cached) {
-      const response = NextResponse.json(cached.buffer, {
-        headers: {
-          'Content-Type': cached.contentType,
-          'X-Cache': 'HIT'
-        }
-      });
-      return response;
-    }
-  } catch (error) {
-    console.error('Error getting cached response:', error);
+  // Add vary by headers
+  if (config.varyByHeaders?.length) {
+    const headerValues = config.varyByHeaders
+      .map(header => request.headers.get(header) || '')
+      .join('|');
+    components.push(headerValues);
   }
-  return null;
-}
 
-async function cacheResponse(key: string, response: NextResponse): Promise<void> {
-  try {
-    const clone = response.clone();
-    const buffer = await clone.arrayBuffer();
-    const contentType = clone.headers.get('Content-Type') || 'application/octet-stream';
-    
-    await imageCacheService.cacheImage(key, {
-      buffer: Buffer.from(buffer),
-      contentType
-    });
-  } catch (error) {
-    console.error('Error caching response:', error);
-  }
-}
-
-export const cacheMiddleware = createCacheMiddleware(); 
+  // Create hash of components
+  return createHash('sha256')
+    .update(components.join('|'))
+    .digest('hex');
+} 

@@ -44,12 +44,17 @@
     "typescript": "5.3.3"
   },
   "devDependencies": {
+    "@playwright/test": "^1.50.0",
     "@svgr/webpack": "^8.1.0",
+    "@typescript-eslint/eslint-plugin": "^8.22.0",
+    "@typescript-eslint/parser": "^8.22.0",
     "eslint": "8.57.0",
     "eslint-config-next": "14.1.0",
     "husky": "^9.1.7",
     "lint-staged": "^15.4.3",
     "prettier": "^3.2.5",
-    "prettier-plugin-tailwindcss": "^0.5.11"
+    "prettier-plugin-tailwindcss": "^0.5.11",
+    "stylelint": "^16.14.1",
+    "stylelint-config-standard": "^37.0.0"
   }
 }

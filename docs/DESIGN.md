@@ -591,3 +591,200 @@ Filter options:
 - Date range
 - Vote count range
 - Categories/tags
+
+## Design System Documentation
+
+This document outlines the design system used in the Logo Gallery project, including visual examples and implementation details.
+
+## Layout & Components
+
+### Homepage Layout
+![Homepage Layout](screenshots/homepage-layout.png)
+
+The homepage features a clean, modern design with:
+- Hero section with clear call-to-action
+- Featured logos grid
+- Responsive navigation
+
+### Navigation
+![Header Navigation](screenshots/navigation-header.png)
+![Mobile Navigation](screenshots/navigation-mobile.png)
+
+Navigation components include:
+- Responsive header with logo
+- User authentication controls
+- Mobile-friendly menu
+- Dark mode toggle
+
+### Logo Gallery
+![Gallery Grid](screenshots/gallery-grid.png)
+![Logo Card Detail](screenshots/logo-card-detail.png)
+
+The gallery implements:
+- Responsive grid layout
+- Individual logo cards
+- Hover effects and animations
+- Loading states
+
+### Upload Interface
+![Upload Form](screenshots/upload-form.png)
+![Upload Dropzone](screenshots/upload-dropzone.png)
+
+The upload interface features:
+- Drag and drop functionality
+- Progress indicators
+- Error handling
+- Preview capabilities
+
+### Authentication
+![Sign In Page](screenshots/auth-signin.png)
+
+Authentication screens include:
+- Clean form layout
+- Error states
+- Loading indicators
+- OAuth provider options
+
+## Responsive Design
+
+### Viewport Variations
+![Mobile Layout](screenshots/responsive-mobile.png)
+![Tablet Layout](screenshots/responsive-tablet.png)
+![Desktop Layout](screenshots/responsive-desktop.png)
+
+The application is fully responsive across:
+- Mobile devices (375px+)
+- Tablets (768px+)
+- Desktop (1280px+)
+- Large screens (1920px+)
+
+## Theme Support
+
+### Light & Dark Modes
+![Light Theme](screenshots/theme-light.png)
+![Dark Theme](screenshots/theme-dark.png)
+
+Both themes maintain:
+- Consistent branding
+- Proper contrast ratios
+- Readable typography
+- Accessible components
+
+## Interactive Elements
+
+### Buttons
+![Default Button](screenshots/button-default.png)
+![Hover Button](screenshots/button-hover.png)
+
+Button states include:
+- Default
+- Hover
+- Focus
+- Active
+- Disabled
+
+### Form Inputs
+![Default Input](screenshots/input-default.png)
+![Focus Input](screenshots/input-focus.png)
+
+Input fields feature:
+- Clear default state
+- Focus indicators
+- Error states
+- Validation feedback
+
+## Loading & Error States
+
+### Loading Indicators
+![Loading Skeleton](screenshots/loading-skeleton.png)
+
+Loading states include:
+- Skeleton loaders
+- Smooth transitions
+- Progress indicators
+
+### Error Handling
+![Error State](screenshots/error-state.png)
+
+Error states provide:
+- Clear error messages
+- Recovery options
+- User guidance
+
+## Implementation Details
+
+### CSS Architecture
+- Tailwind CSS for utility classes
+- Custom components when needed
+- Consistent spacing scale
+- Responsive breakpoints
+
+### Color System
+```css
+:root {
+  --primary: #2563eb;
+  --secondary: #4f46e5;
+  --accent: #8b5cf6;
+  --background: #ffffff;
+  --foreground: #020617;
+  --muted: #64748b;
+  --border: #e2e8f0;
+}
+
+.dark {
+  --background: #020617;
+  --foreground: #ffffff;
+  --border: #1e293b;
+}
+```
+
+### Typography
+- Font Family: Inter
+- Scale:
+  - xs: 0.75rem
+  - sm: 0.875rem
+  - base: 1rem
+  - lg: 1.125rem
+  - xl: 1.25rem
+  - 2xl: 1.5rem
+
+### Spacing
+- 4px grid system
+- Common values:
+  - 0.25rem (4px)
+  - 0.5rem (8px)
+  - 1rem (16px)
+  - 1.5rem (24px)
+  - 2rem (32px)
+
+### Animations
+- Duration: 150ms - 300ms
+- Timing: ease-in-out
+- Used for:
+  - Hover effects
+  - Transitions
+  - Loading states
+  - Modal dialogs
+
+## Accessibility
+
+- WCAG 2.1 AA compliant
+- Proper heading hierarchy
+- Keyboard navigation
+- Screen reader support
+- Sufficient color contrast
+- Focus management
+
+## Best Practices
+
+1. Maintain consistency
+2. Follow accessibility guidelines
+3. Test across devices
+4. Document changes
+5. Update visual regression tests
+
+## Resources
+
+- [Tailwind CSS Documentation](https://tailwindcss.com/docs)
+- [WCAG Guidelines](https://www.w3.org/WAI/WCAG21/quickref/)
+- [Color Contrast Checker](https://webaim.org/resources/contrastchecker/)

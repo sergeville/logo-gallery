@@ -94,7 +94,6 @@ export default function LogoImage({
       srcSet={generateSrcSet()}
       onError={(e) => handleError(e as Error)}
       onLoad={() => setIsLoading(false)}
-      onLoadingComplete={() => setIsLoading(false)}
       loading={priority ? 'eager' : 'lazy'}
     />
   );

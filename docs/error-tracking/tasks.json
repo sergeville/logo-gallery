@@ -1,0 +1,122 @@
+{
+  "metadata": {
+    "lastUpdated": "2024-01-31",
+    "totalErrors": 50,
+    "browsers": ["chromium", "firefox", "webkit", "Mobile Chrome", "Mobile Safari"],
+    "testSuite": "design-documentation.visual.spec.ts"
+  },
+  "summary": {
+    "totalTasks": 40,
+    "byPriority": {
+      "critical": 8,
+      "high": 12,
+      "medium": 16,
+      "low": 4
+    },
+    "byBrowser": {
+      "chromium": 10,
+      "firefox": 10,
+      "webkit": 10,
+      "mobileSafari": 10,
+      "mobileChrome": 10
+    }
+  },
+  "tasks": [
+    {
+      "id": "HOMEPAGE-001",
+      "title": "Homepage Layout Rendering Failure",
+      "error": {
+        "type": "TimeoutError",
+        "message": "locator.screenshot: Test timeout of 60000ms exceeded.",
+        "location": "design-documentation.visual.spec.ts:20:40",
+        "evidence": {
+          "screenshot": "test-results/visual-tests-design-docume-ef467-Screenshots-Homepage-Layout-chromium/test-failed-1.png",
+          "errorLog": "waiting for locator('section.hero')"
+        }
+      },
+      "priority": "critical",
+      "impact": "Users cannot view homepage content",
+      "affectedTests": ["Homepage Layout"],
+      "browsers": ["chromium", "firefox", "webkit", "Mobile Chrome", "Mobile Safari"],
+      "resolutionSteps": [
+        "Investigate hero section mounting timing",
+        "Add loading state component",
+        "Implement error boundary",
+        "Add retry mechanism for failed loads"
+      ],
+      "status": "open"
+    },
+    {
+      "id": "NAV-001",
+      "title": "Navigation Components Not Found",
+      "error": {
+        "type": "TimeoutError",
+        "message": "locator.click: Test timeout of 60000ms exceeded.",
+        "location": "design-documentation.visual.spec.ts:39:60",
+        "evidence": {
+          "screenshot": "test-results/visual-tests-design-docume-ab244-shots-Navigation-Components-chromium/test-failed-1.png",
+          "errorLog": "waiting for locator('button[aria-label=\"Toggle menu\"]')"
+        }
+      },
+      "priority": "critical",
+      "impact": "Users cannot navigate through the application",
+      "affectedTests": ["Navigation Components"],
+      "browsers": ["chromium", "firefox", "webkit", "Mobile Chrome", "Mobile Safari"],
+      "resolutionSteps": [
+        "Debug navigation component mounting",
+        "Ensure menu button is properly rendered",
+        "Add loading state for navigation",
+        "Implement navigation fallback"
+      ],
+      "status": "open"
+    },
+    {
+      "id": "UPLOAD-001",
+      "title": "Upload Interface Not Rendering",
+      "error": {
+        "type": "TimeoutError",
+        "message": "locator.screenshot: Test timeout of 60000ms exceeded.",
+        "location": "design-documentation.visual.spec.ts:65:32",
+        "evidence": {
+          "screenshot": "test-results/visual-tests-design-docume-21f7d-creenshots-Upload-Interface-chromium/test-failed-1.png",
+          "errorLog": "waiting for locator('form')"
+        }
+      },
+      "priority": "high",
+      "impact": "Users cannot upload logos",
+      "affectedTests": ["Upload Interface"],
+      "browsers": ["chromium", "firefox", "webkit", "Mobile Chrome", "Mobile Safari"],
+      "resolutionSteps": [
+        "Debug form component mounting",
+        "Add loading state for upload form",
+        "Implement form error handling",
+        "Add upload component fallback"
+      ],
+      "status": "open"
+    },
+    {
+      "id": "LOGO-001",
+      "title": "Logo Grid Not Displaying",
+      "error": {
+        "type": "TimeoutError",
+        "message": "locator.screenshot: Test timeout of 60000ms exceeded.",
+        "location": "design-documentation.visual.spec.ts:50:38",
+        "evidence": {
+          "screenshot": "test-results/visual-tests-design-docume-dadb8-reenshots-Logo-Details-Page-chromium/test-failed-1.png",
+          "errorLog": "waiting for locator('.logo-grid')"
+        }
+      },
+      "priority": "high",
+      "impact": "Users cannot view logo gallery",
+      "affectedTests": ["Logo Details Page"],
+      "browsers": ["chromium", "firefox", "webkit", "Mobile Chrome", "Mobile Safari"],
+      "resolutionSteps": [
+        "Debug logo grid component mounting",
+        "Implement progressive loading",
+        "Add skeleton loading state",
+        "Optimize image loading"
+      ],
+      "status": "open"
+    }
+  ]
+} 

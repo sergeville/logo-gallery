@@ -7,9 +7,10 @@ import { useRouter } from 'next/navigation';
 
 interface DeleteLogoButtonProps {
   logoId: string;
+  onError?: (error: Error) => void;
 }
 
-export default function DeleteLogoButton({ logoId }: DeleteLogoButtonProps) {
+export default function DeleteLogoButton({ logoId, onError }: DeleteLogoButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -43,7 +44,9 @@ export default function DeleteLogoButton({ logoId }: DeleteLogoButtonProps) {
       closeModal();
     } catch (error) {
       console.error('Error deleting logo:', error);
-      setError(error instanceof Error ? error.message : 'Failed to delete logo');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to delete logo';
+      setError(errorMessage);
+      onError?.(new Error(errorMessage));
     } finally {
       setIsDeleting(false);
     }
@@ -56,12 +59,18 @@ export default function DeleteLogoButton({ logoId }: DeleteLogoButtonProps) {
         onClick={openModal}
         className="p-2 text-gray-500 hover:text-red-600 transition-colors duration-200"
         aria-label="Delete logo"
+        data-testid="delete-logo-button"
       >
         <TrashIcon className="h-5 w-5" />
       </button>
 
       <Transition appear show={isOpen} as={Fragment}>
-        <Dialog as="div" className="relative z-50" onClose={closeModal}>
+        <Dialog 
+          as="div" 
+          className="relative z-50" 
+          onClose={closeModal}
+          data-testid="delete-logo-modal"
+        >
           <Transition.Child
             as={Fragment}
             enter="ease-out duration-300"
@@ -103,7 +112,7 @@ export default function DeleteLogoButton({ logoId }: DeleteLogoButtonProps) {
                       Are you sure you want to delete this logo? This action cannot be undone.
                     </p>
                     {error && (
-                      <p className="mt-2 text-sm text-red-600 dark:text-red-400">
+                      <p className="mt-2 text-sm text-red-600 dark:text-red-400" role="alert">
                         {error}
                       </p>
                     )}
@@ -114,6 +123,7 @@ export default function DeleteLogoButton({ logoId }: DeleteLogoButtonProps) {
                       type="button"
                       className="inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500"
                       onClick={closeModal}
+                      data-testid="cancel-delete-button"
                     >
                       Cancel
                     </button>
@@ -122,6 +132,7 @@ export default function DeleteLogoButton({ logoId }: DeleteLogoButtonProps) {
                       disabled={isDeleting}
                       onClick={handleDelete}
                       className="inline-flex justify-center rounded-md border border-transparent bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                      data-testid="confirm-delete-button"
                     >
                       {isDeleting ? 'Deleting...' : 'Delete'}
                     </button>

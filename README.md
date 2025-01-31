@@ -9,6 +9,11 @@ A modern, responsive logo gallery built with Next.js, TypeScript, and Tailwind C
 - 📱 Mobile-friendly design
 - ✨ Smooth animations with Framer Motion
 - 🎯 Accessible UI components
+- 🔐 Authentication with NextAuth.js
+- 📤 Logo upload functionality
+- 🖼️ SVG support and optimization
+- 🧪 Visual regression testing
+- 🚀 Performance optimizations
 
 ## Getting Started
 
@@ -16,6 +21,7 @@ A modern, responsive logo gallery built with Next.js, TypeScript, and Tailwind C
 
 - Node.js 18.x or later
 - npm or yarn
+- MongoDB (for user data and logo storage)
 
 ### Installation
 
@@ -28,92 +34,90 @@ cd logo-gallery
 2. Install dependencies:
 ```bash
 npm install
-# or
-yarn install
 ```
 
-3. Create a `public/logos` directory and add your logo images.
+3. Set up environment variables:
+   - Copy `.env.example` to `.env.local`
+   - Fill in required environment variables (MongoDB URI, NextAuth secret, etc.)
 
 4. Start the development server:
 ```bash
 npm run dev
-# or
-yarn dev
 ```
 
 5. Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-## Usage
-
-### Adding Logos
-
-1. Place your logo images in the `public/logos` directory
-2. Update the logo data in `app/page.tsx` with your logo information:
-
-```typescript
-const logos = [
-  {
-    id: '1',
-    name: 'Logo Name',
-    url: '/logos/your-logo.svg',
-    category: 'Category',
-    description: 'Logo description',
-  },
-  // Add more logos...
-];
-```
-
-### Customization
-
-- Modify the theme in `tailwind.config.js`
-- Update global styles in `app/globals.css`
-- Customize components in the `app/components` directory
-
 ## Features
 
-### Logo Image Component
+### Authentication
+- User registration and login
+- OAuth providers support
+- Protected routes and API endpoints
+- Session management
 
-The `LogoImage` component handles:
-- Responsive image loading
-- Error states
-- Loading states
-- Image optimization
-- Dark mode compatibility
+### Logo Management
+- Upload logos with metadata
+- Edit logo information
+- Delete logos
+- Automatic image optimization
+- SVG support with SVGR
 
-### Logo Gallery Component
+### Gallery Features
+- Responsive grid layout
+- Search and filtering
+- Sort by various criteria
+- Infinite scroll
+- Dark mode support
 
-The `LogoGallery` component provides:
-- Grid/List view toggle
-- Search functionality
-- Sort options
-- Smooth animations
-- Responsive layout
+### Visual Testing
+- Visual regression testing with Playwright
+- Snapshot comparison
+- Cross-browser testing
+- Mobile responsive testing
 
 ## Documentation
 
-### Design System
-Our comprehensive design system documentation is available in [docs/DESIGN.md](docs/DESIGN.md). It covers:
-- 🎨 UI/UX Guidelines
-- 📐 Layout & Grid System
-- 🎯 Navigation Structure
-- 🌓 Dark Mode Implementation
-- 📱 Responsive Design
-- 🚀 Performance Optimizations
-- 🔌 API Documentation
+### Project Structure
+- `app/` - Next.js app directory with route handlers and pages
+- `components/` - Reusable React components
+- `lib/` - Utility functions and configuration
+- `public/` - Static assets and uploaded logos
+- `docs/` - Project documentation
+- `e2e/` - End-to-end and visual tests
 
-### Development Standards
-Our development standards and conventions are documented in [docs/design/STANDARDS.md](docs/design/STANDARDS.md). Key areas include:
-- 📦 Import Path Standards
-- 🏗 Project Structure
-- 💾 Database Connections
-- 🔐 Authentication
-- 🧪 Testing Guidelines
-- 📝 Code Style
-- 🔄 Git Practices
+### Key Documentation Files
+- [Design System](docs/DESIGN.md)
+- [Contributing Guide](CONTRIBUTING.md)
+- [Visual Testing Guide](docs/VISUAL_TESTING.md)
+- [Error Tracking](ERROR_TRACKING.md)
+- [Development Standards](docs/development/STANDARDS.md)
+
+## Development
+
+### Running Tests
+```bash
+# Run visual tests
+npm run test:visual
+
+# Update visual snapshots
+npm run test:visual:update
+```
+
+### Code Quality
+- ESLint for code linting
+- Prettier for code formatting
+- Husky for pre-commit hooks
+- TypeScript for type safety
+
+### Performance Optimization
+- Image optimization with Next.js Image
+- SVG optimization with SVGR
+- Code splitting and lazy loading
+- Caching strategies
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Please read our [Contributing Guide](CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.
 
 ## License
 

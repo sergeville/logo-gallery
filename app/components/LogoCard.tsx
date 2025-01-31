@@ -27,6 +27,7 @@ interface LogoCardProps {
   showDelete?: boolean
   showStats?: boolean
   isOwner?: boolean
+  onError?: (error: Error) => void
 }
 
 export default function LogoCard({ 
@@ -34,6 +35,7 @@ export default function LogoCard({
   showDelete = false,
   showStats = false,
   isOwner = false,
+  onError
 }: LogoCardProps) {
   const { data: session } = useSession()
   const userIsOwner = isOwner || session?.user?.id === logo.userId
@@ -60,6 +62,7 @@ export default function LogoCard({
       return formatDistanceToNow(date, { addSuffix: true })
     } catch (error) {
       console.error('Error formatting date:', error)
+      onError?.(new Error('Failed to format date'))
       return 'Unknown date'
     }
   }
@@ -74,6 +77,12 @@ export default function LogoCard({
       unitIndex++
     }
     return `${size.toFixed(1)} ${units[unitIndex]}`
+  }
+
+  const handleImageError = () => {
+    setImageError(true)
+    setIsLoading(false)
+    onError?.(new Error('Failed to load logo image'))
   }
 
   return (
@@ -99,16 +108,13 @@ export default function LogoCard({
 
         {/* Image */}
         <Image
-          src={imageError ? '/placeholder.png' : (logo.thumbnailUrl || logo.imageUrl)}
+          src={imageError ? '/placeholder-logo.png' : (logo.thumbnailUrl || logo.imageUrl)}
           alt={logo.title}
           fill
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           className="object-contain p-4"
           onLoad={() => setIsLoading(false)}
-          onError={() => {
-            setImageError(true)
-            setIsLoading(false)
-          }}
+          onError={handleImageError}
           priority={false}
         />
       </div>
@@ -157,7 +163,10 @@ export default function LogoCard({
             View Details
           </Link>
           {showDelete && userIsOwner && (
-            <DeleteLogoButton logoId={logo._id} />
+            <DeleteLogoButton 
+              logoId={logo._id} 
+              onError={(error) => onError?.(error)}
+            />
           )}
         </div>
       </div>

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, SortAsc, SortDesc, Grid, List } from 'lucide-react';
 import LogoCard from './LogoCard';
+import LoadingSpinner from './LoadingSpinner';
 
 interface Logo {
   _id: string
@@ -23,38 +24,56 @@ interface Logo {
 interface LogoGalleryProps {
   logos: Logo[];
   className?: string;
+  onError?: (error: Error) => void;
 }
 
 type SortDirection = 'asc' | 'desc';
 type ViewMode = 'grid' | 'list';
 
-export default function LogoGallery({ logos, className = '' }: LogoGalleryProps) {
+export default function LogoGallery({ logos, className = '', onError }: LogoGalleryProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
-  const [filteredLogos, setFilteredLogos] = useState<Logo[]>(logos);
+  const [filteredLogos, setFilteredLogos] = useState<Logo[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    let result = [...logos];
+    try {
+      setIsLoading(true);
+      let result = [...logos];
 
-    // Filter based on search query
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      result = result.filter(
-        logo =>
-          logo.title.toLowerCase().includes(query) ||
-          logo.description.toLowerCase().includes(query)
-      );
+      // Filter based on search query
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        result = result.filter(
+          logo =>
+            logo.title.toLowerCase().includes(query) ||
+            logo.description.toLowerCase().includes(query)
+        );
+      }
+
+      // Sort logos
+      result.sort((a, b) => {
+        const comparison = a.title.localeCompare(b.title);
+        return sortDirection === 'asc' ? comparison : -comparison;
+      });
+
+      setFilteredLogos(result);
+    } catch (error) {
+      console.error('Error processing logos:', error);
+      onError?.(error instanceof Error ? error : new Error('Failed to process logos'));
+    } finally {
+      setIsLoading(false);
     }
+  }, [logos, searchQuery, sortDirection, onError]);
 
-    // Sort logos
-    result.sort((a, b) => {
-      const comparison = a.title.localeCompare(b.title);
-      return sortDirection === 'asc' ? comparison : -comparison;
-    });
-
-    setFilteredLogos(result);
-  }, [logos, searchQuery, sortDirection]);
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-[400px]">
+        <LoadingSpinner />
+      </div>
+    );
+  }
 
   return (
     <div className={`space-y-6 ${className}`}>
@@ -119,6 +138,7 @@ export default function LogoGallery({ logos, className = '' }: LogoGalleryProps)
               <LogoCard
                 logo={logo}
                 showStats={viewMode === 'list'}
+                onError={(error) => onError?.(error)}
               />
             </motion.div>
           ))}
@@ -126,7 +146,7 @@ export default function LogoGallery({ logos, className = '' }: LogoGalleryProps)
       </AnimatePresence>
 
       {/* Empty state */}
-      {filteredLogos.length === 0 && (
+      {!isLoading && filteredLogos.length === 0 && (
         <div className="text-center py-12 bg-white/50 dark:bg-gray-800/50 rounded-lg border border-gray-100 dark:border-gray-700">
           <p className="text-gray-500 dark:text-gray-400">No logos found matching your search.</p>
         </div>

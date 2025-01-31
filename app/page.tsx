@@ -1,4 +1,10 @@
+'use client';
+
+import { Suspense } from 'react';
 import LogoGallery from './components/LogoGallery';
+import ErrorBoundary from './components/ErrorBoundary';
+import LoadingSpinner from './components/LoadingSpinner';
+import { useEffect, useState } from 'react';
 
 // Sample logo data with correct interface structure
 const sampleLogos = [
@@ -69,27 +75,111 @@ const sampleLogos = [
   }
 ];
 
-export default function Home() {
+function HeroSection() {
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900" data-testid="home-container">
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12" data-testid="main-content">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
-            Welcome to Logo Gallery
+    <section className="hero relative bg-gradient-to-r from-blue-600 to-indigo-700 text-white py-20" data-testid="hero-section">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center">
+          <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl md:text-6xl">
+            Logo Gallery
           </h1>
-          <p className="text-lg text-gray-600 dark:text-gray-300">
+          <p className="mt-6 max-w-2xl mx-auto text-xl">
             Discover and share beautiful logos from around the world
           </p>
+          <div className="mt-10 flex justify-center gap-4">
+            <a
+              href="/upload"
+              className="px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-500 hover:bg-blue-600 md:py-4 md:text-lg md:px-10"
+            >
+              Upload Logo
+            </a>
+            <a
+              href="/gallery"
+              className="px-8 py-3 border border-transparent text-base font-medium rounded-md text-blue-500 bg-white hover:bg-gray-50 md:py-4 md:text-lg md:px-10"
+            >
+              Browse Gallery
+            </a>
+          </div>
         </div>
+      </div>
+    </section>
+  );
+}
 
-        <div className="text-center mb-8">
-          <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">
-            Featured Logos
-          </h2>
-        </div>
+function FeaturedLogos() {
+  const [retryCount, setRetryCount] = useState(0);
+  const [error, setError] = useState<Error | null>(null);
 
-        <LogoGallery logos={sampleLogos} className="mt-8" />
-      </main>
+  // Reset error state when retrying
+  useEffect(() => {
+    if (retryCount > 0) {
+      setError(null);
+    }
+  }, [retryCount]);
+
+  if (error) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-red-600 dark:text-red-400 mb-4">Failed to load featured logos</p>
+        <button
+          onClick={() => setRetryCount(count => count + 1)}
+          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-8">
+      <div className="text-center">
+        <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">
+          Featured Logos
+        </h2>
+      </div>
+      <LogoGallery 
+        logos={sampleLogos} 
+        className="mt-8" 
+        onError={(e) => setError(e)}
+        key={`gallery-${retryCount}`} // Force remount on retry
+      />
     </div>
+  );
+}
+
+export default function Home() {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <LoadingSpinner size="lg" color="indigo-500" />
+      </div>
+    );
+  }
+
+  return (
+    <ErrorBoundary fallback={<div className="p-8 text-center text-red-600">Something went wrong. Please refresh the page.</div>}>
+      {/* Hero Section with its own error boundary and suspense */}
+      <ErrorBoundary fallback={<div className="bg-gradient-to-r from-blue-600 to-indigo-700 py-20" />}>
+        <Suspense fallback={<div className="animate-pulse bg-gradient-to-r from-blue-600 to-indigo-700 py-20" />}>
+          <HeroSection />
+        </Suspense>
+      </ErrorBoundary>
+
+      {/* Main content with its own error boundary and suspense */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12" data-testid="main-content">
+        <ErrorBoundary fallback={<div className="text-center py-12">Failed to load content. Please refresh.</div>}>
+          <Suspense fallback={<LoadingSpinner />}>
+            <FeaturedLogos />
+          </Suspense>
+        </ErrorBoundary>
+      </main>
+    </ErrorBoundary>
   );
 }

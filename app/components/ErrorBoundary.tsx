@@ -4,11 +4,12 @@ import { Component, ReactNode } from 'react';
 
 interface Props {
   children: ReactNode;
-  fallback: ReactNode;
+  fallback?: ReactNode;
 }
 
 interface State {
   hasError: boolean;
+  error?: Error;
 }
 
 export default class ErrorBoundary extends Component<Props, State> {
@@ -17,19 +18,21 @@ export default class ErrorBoundary extends Component<Props, State> {
     this.state = { hasError: false };
   }
 
-  static getDerivedStateFromError(_: Error): State {
-    return { hasError: true };
+  static getDerivedStateFromError(error: Error): State {
+    // Update state so the next render will show the fallback UI
+    return { hasError: true, error };
   }
 
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('Error caught by boundary:', error, errorInfo);
+  componentDidCatch(error: Error): void {
+    // Log the error to an error reporting service
+    console.error('Error caught by boundary:', error);
   }
 
-  render() {
+  render(): ReactNode {
     if (this.state.hasError) {
-      return this.props.fallback;
+      return this.props.fallback || <div>Something went wrong</div>;
     }
 
     return this.props.children;
   }
-} 
+}

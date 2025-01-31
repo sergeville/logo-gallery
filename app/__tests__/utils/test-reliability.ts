@@ -1,10 +1,11 @@
+import React from 'react';
 import { act, waitFor } from '@testing-library/react';
 import { TEST_TIMEOUTS } from '../constants';
 
 /**
  * Waits for all pending timers and animations to complete
  */
-export const waitForAnimations = async () => {
+export const waitForAnimations = async (): Promise<void> => {
   // Wait for any CSS transitions to complete
   await act(async () => {
     await new Promise(resolve => setTimeout(resolve, TEST_TIMEOUTS.ANIMATION));
@@ -15,7 +16,7 @@ export const waitForAnimations = async () => {
  * Waits for all pending network requests to complete
  * @param timeout - Optional timeout in milliseconds
  */
-export const waitForNetwork = async (timeout = TEST_TIMEOUTS.API_CALL) => {
+export const waitForNetwork = async (timeout = TEST_TIMEOUTS.API_CALL): Promise<void> => {
   await waitFor(
     () => {
       const pendingRequests = (global as any).pendingRequests || [];
@@ -31,14 +32,14 @@ export const waitForNetwork = async (timeout = TEST_TIMEOUTS.API_CALL) => {
  * Waits for images to load
  * @param container - DOM element containing images
  */
-export const waitForImages = async (container: HTMLElement) => {
+export const waitForImages = async (container: HTMLElement): Promise<void> => {
   const images = container.getElementsByTagName('img');
   if (images.length === 0) return;
 
   await Promise.all(
     Array.from(images).map(
       img =>
-        new Promise((resolve, reject) => {
+        new Promise<null>((resolve, reject) => {
           if (img.complete) {
             resolve(null);
           } else {
@@ -53,7 +54,7 @@ export const waitForImages = async (container: HTMLElement) => {
 /**
  * Cleans up after each test
  */
-export const cleanupTest = async () => {
+export const cleanupTest = async (): Promise<void> => {
   // Clear all timers
   jest.clearAllTimers();
   
@@ -61,8 +62,8 @@ export const cleanupTest = async () => {
   jest.clearAllMocks();
   
   // Reset fetch mocks if using jest-fetch-mock
-  if (typeof global.fetch.mockClear === 'function') {
-    global.fetch.mockClear();
+  if (typeof (global.fetch as any).mockClear === 'function') {
+    (global.fetch as any).mockClear();
   }
 
   // Clear any pending network requests
@@ -99,7 +100,7 @@ export const trackEventListener = (
   element: Element | Window | Document,
   eventName: string,
   handler: EventListenerOrEventListenerObject
-) => {
+): void => {
   element.addEventListener(eventName, handler);
   
   if (!(global as any).__TEST_EVENT_LISTENERS__) {
@@ -111,12 +112,16 @@ export const trackEventListener = (
   });
 };
 
+interface ErrorBoundaryTestUtils {
+  wrapWithErrorBoundary: (Component: React.ComponentType<any>, props?: Record<string, any>) => JSX.Element;
+}
+
 /**
  * Sets up error boundary testing
  * @param ErrorBoundary - Error boundary component
  * @returns Test utilities for error boundary
  */
-export const setupErrorBoundaryTest = (ErrorBoundary: React.ComponentType<any>) => {
+export const setupErrorBoundaryTest = (ErrorBoundary: React.ComponentType<any>): ErrorBoundaryTestUtils => {
   const consoleError = console.error;
   beforeAll(() => {
     // Suppress console.error for expected error boundary errors
@@ -133,12 +138,7 @@ export const setupErrorBoundaryTest = (ErrorBoundary: React.ComponentType<any>) 
   });
 
   return {
-    /**
-     * Wraps a component with error boundary for testing
-     * @param Component - Component to test
-     * @param props - Component props
-     */
-    wrapWithErrorBoundary: (Component: React.ComponentType<any>, props = {}) => (
+    wrapWithErrorBoundary: (Component: React.ComponentType<any>, props = {}): JSX.Element => (
       <ErrorBoundary>
         <Component {...props} />
       </ErrorBoundary>
@@ -146,19 +146,19 @@ export const setupErrorBoundaryTest = (ErrorBoundary: React.ComponentType<any>) 
   };
 };
 
+interface AsyncTestUtils {
+  withTimeout: <T>(operation: () => Promise<T>) => Promise<T>;
+}
+
 /**
  * Sets up timeout handling for async tests
  * @param timeout - Timeout in milliseconds
  */
-export const setupAsyncTest = (timeout = TEST_TIMEOUTS.API_CALL) => {
+export const setupAsyncTest = (timeout = TEST_TIMEOUTS.API_CALL): AsyncTestUtils => {
   // Increase Jest timeout for this test
   jest.setTimeout(timeout);
 
   return {
-    /**
-     * Wraps an async operation with timeout
-     * @param operation - Async operation to perform
-     */
     withTimeout: async <T>(operation: () => Promise<T>): Promise<T> => {
       const timeoutPromise = new Promise<T>((_, reject) => {
         setTimeout(() => reject(new Error('Operation timed out')), timeout);

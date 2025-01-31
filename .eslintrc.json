@@ -10,7 +10,8 @@
     "plugin:@typescript-eslint/recommended",
     "plugin:react-hooks/recommended",
     "prettier",
-    "next/core-web-vitals"
+    "next/core-web-vitals",
+    "plugin:prettier/recommended"
   ],
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
@@ -20,7 +21,7 @@
     "ecmaVersion": 12,
     "sourceType": "module"
   },
-  "plugins": ["react", "@typescript-eslint", "react-hooks"],
+  "plugins": ["react", "@typescript-eslint", "react-hooks", "prettier"],
   "rules": {
     "react/react-in-jsx-scope": "off",
     "react/prop-types": "off",
@@ -30,11 +31,12 @@
     "react-hooks/exhaustive-deps": "warn",
     "@next/next/no-html-link-for-pages": "error",
     "react/no-unescaped-entities": "off",
-    "@next/next/no-img-element": "off"
+    "@next/next/no-img-element": "off",
+    "prettier/prettier": "error"
   },
   "settings": {
     "react": {
       "version": "detect"
     }
   }
-} 
+}

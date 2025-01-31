@@ -1,3 +1,4 @@
+import React from 'react';
 import { performance } from 'perf_hooks';
 
 interface TestMetrics {
@@ -33,7 +34,7 @@ class TestPerformanceMonitor {
     };
   }
 
-  startTest(testName: string) {
+  startTest(testName: string): void {
     this.currentTest = {
       testName,
       duration: 0,
@@ -46,7 +47,7 @@ class TestPerformanceMonitor {
     this.startTime = performance.now();
   }
 
-  endTest() {
+  endTest(): void {
     if (!this.currentTest) return;
 
     this.currentTest.duration = performance.now() - this.startTime;
@@ -59,15 +60,15 @@ class TestPerformanceMonitor {
     this.currentTest = null;
   }
 
-  trackNetworkCall() {
+  trackNetworkCall(): void {
     this.networkCalls++;
   }
 
-  trackRender() {
+  trackRender(): void {
     this.renderCount++;
   }
 
-  private validateMetrics(metrics: TestMetrics) {
+  private validateMetrics(metrics: TestMetrics): void {
     const violations: string[] = [];
 
     if (this.thresholds.maxDuration && metrics.duration > this.thresholds.maxDuration) {
@@ -99,11 +100,22 @@ class TestPerformanceMonitor {
     }
   }
 
-  getMetrics() {
+  getMetrics(): TestMetrics[] {
     return this.metrics;
   }
 
-  generateReport() {
+  generateReport(): {
+    summary: {
+      totalTests: number;
+      totalDuration: number;
+      totalNetworkCalls: number;
+      totalRenderCount: number;
+      averageMemoryUsage: number;
+      slowestTest: string;
+      maxMemoryTest: string;
+    };
+    details: Array<TestMetrics & { memoryUsageMB: number }>;
+  } {
     const report = {
       summary: {
         totalTests: this.metrics.length,
@@ -146,7 +158,7 @@ class TestPerformanceMonitor {
     return report;
   }
 
-  reset() {
+  reset(): void {
     this.metrics = [];
     this.currentTest = null;
     this.networkCalls = 0;
@@ -161,17 +173,17 @@ export const performanceMonitor = new TestPerformanceMonitor();
 export const withPerformanceTracking = <P extends object>(
   WrappedComponent: React.ComponentType<P>,
   componentName: string
-) => {
+): React.ComponentClass<P> => {
   return class WithPerformanceTracking extends React.Component<P> {
-    componentDidMount() {
+    componentDidMount(): void {
       performanceMonitor.trackRender();
     }
 
-    componentDidUpdate() {
+    componentDidUpdate(): void {
       performanceMonitor.trackRender();
     }
 
-    render() {
+    render(): JSX.Element {
       return <WrappedComponent {...this.props} />;
     }
   };

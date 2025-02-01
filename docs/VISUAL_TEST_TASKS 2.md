@@ -1,6 +1,7 @@
 # Visual Test Tasks
 
 ## Completed Tasks
+
 - [x] Set up basic visual testing infrastructure with Playwright
 - [x] Implement responsive layout testing across multiple viewports
 - [x] Create utility functions for visual test preparation
@@ -13,6 +14,7 @@
 - [x] Implement caching behavior tests
 
 ## Current Tasks
+
 - [ ] Add visual regression testing for dark mode
 - [ ] Implement visual tests for user interactions (hover, click states)
 - [ ] Add animation testing coverage
@@ -20,6 +22,7 @@
 - [ ] Implement visual tests for notification components
 
 ## Future Tasks
+
 - [ ] Add performance monitoring to visual tests
 - [ ] Implement cross-browser visual testing
 - [ ] Create visual tests for internationalization (RTL layouts)
@@ -27,7 +30,9 @@
 - [ ] Implement visual tests for print layouts
 
 ## Testing Standards
+
 1. All new components must have visual tests for:
+
    - Initial render state
    - Loading state
    - Error state
@@ -36,6 +41,7 @@
    - Accessibility compliance
 
 2. Visual Test Requirements:
+
    - Must use data-testid attributes for element selection
    - Must handle all viewport sizes defined in VIEWPORT_SIZES
    - Must include accessibility checks
@@ -48,6 +54,7 @@
    - Resource-intensive tests should be marked appropriately
 
 ## Best Practices
+
 1. Use the preparePageForVisualTest utility for consistent test setup
 2. Implement proper waiting strategies for dynamic content
 3. Mock API responses for consistent test states
@@ -57,12 +64,14 @@
 7. Document test coverage gaps
 
 ## Known Issues
+
 - Animation completion detection needs improvement
 - Intermittent failures in responsive tests
 - Performance issues with large image galleries
 - Inconsistent behavior across different browsers
 
 ## Resources
+
 - Visual Test Utils: `e2e/visual-tests/utils/visual-test-utils.ts`
 - Percy Configuration: `playwright.percy.config.ts`
-- Test Examples: `e2e/visual-tests/*.visual.spec.ts` 
+- Test Examples: `e2e/visual-tests/*.visual.spec.ts`

@@ -1,183 +1,137 @@
-# Current Test Failures - Prioritized List
+# Current Test Failures
 
-## Priority Weights
-- P0: Blocker (Must be fixed first, blocks other tests)
-- P1: Critical (Major functionality, high impact)
-- P2: Important (Core features, medium impact)
-- P3: Normal (Standard features, low impact)
-- P4: Low (Nice to have, minimal impact)
+## Priority 1: Configuration and Setup Issues
 
-## Configuration Issues [P0] ✅
-> All critical configuration issues have been resolved
+- [x] Jest ESM Configuration
+- [x] Module Resolution
+- [ ] URL and NextResponse Mocking
+- [ ] Canvas/Image Mocking
 
-1. [✅] Jest ESM Configuration
-   - Status: FIXED
-   - Solution: Added proper ESM handling in jest.config.js and jest.resolver.js
-   - Documentation: See docs/testing/JEST_CONFIG_GUIDE.md
+## Priority 2: Database and Model Issues
 
-2. [✅] Module Resolution
-   - Status: FIXED
-   - Solution: Added API route path mappings to moduleNameMapper in jest.config.js
-   - Documentation: Updated in jest.config.js comments
+- [ ] Logo Model Static Methods
+- [ ] Database Connection Mocking
+- [ ] Mock Session Handling
 
-## Database/Model Issues [P1] ✅
-> All critical database and model issues have been resolved
+## Priority 3: Component Test Issues
 
-1. [✅] Logo Model Static Methods
-   - Status: FIXED
-   - Solution: Created proper model mocks in app/lib/models/__mocks__
-   - Documentation: See mocks and test files for examples
+- [ ] LogoCard Component Tests
+  - [ ] Image Loading Tests
+  - [ ] Delete Button Visibility Tests
+  - [ ] Statistics Display Tests
+  - [ ] Theme Support Tests
+- [ ] AuthModal Component Tests
+  - [ ] useAuth Hook Mocking
+  - [ ] Form Submission Tests
+  - [ ] Error Handling Tests
 
-2. [✅] Database Connection Mocking
-   - Status: FIXED
-   - Solution: Created standardized database connection mock
-   - Documentation: See app/lib/__mocks__/db.ts
+## Priority 4: API Route Tests
 
-## Component Testing [P2] 🟡
-> Progress made on LogoCard component tests, some improvements needed
+- [ ] User API Tests
+  - [ ] Authentication Checks
+  - [ ] Database Operations
+  - [ ] Error Handling
+- [ ] Logo API Tests
+  - [ ] Upload Functionality
+  - [ ] Vote System
+  - [ ] Deadline Handling
 
-1. [✅] LogoCard Basic Tests
-   - Status: FIXED
-   - Tests implemented:
-     - Basic rendering
-     - Logo information display
-     - Image handling with thumbnails
-     - Delete button visibility
-     - Statistics display
-   - Coverage: 85% statements, 80% branches
-   - Documentation: See app/components/__tests__/LogoCard.test.tsx
+## Priority 5: Middleware Tests
 
-2. [ ] LogoCard Advanced Tests
-   - Current Status: In Progress (60% complete)
-   - Remaining Tasks:
-     - Dark mode rendering (Priority)
-     - Loading states with skeleton UI
-     - Error states and error boundaries
-     - Accessibility testing (ARIA labels, keyboard navigation)
-     - Interactive features (hover states, click handlers)
-     - Edge cases with missing/malformed data
-   - Current Coverage: 65% statements, 45% branches
+- [ ] Cache Middleware
+  - [ ] Response Cloning
+  - [ ] Cache Hit/Miss Scenarios
+  - [ ] Error Handling
+- [ ] Performance Middleware
+  - [ ] Metric Recording
+  - [ ] Error Handling
 
-3. [ ] Other Component Tests
-   - LogoGrid component tests (30% complete)
-   - LogoUploader component tests (Not started)
-   - LogoEditor component tests (Not started)
-   - LogoStats component tests (Not started)
+## Priority 6: Hook Tests
 
-## API Route Tests [P2] 🟡
-> Some API routes tested, others need implementation
+- [ ] useImageOptimization
+  - [ ] Canvas Operations
+  - [ ] Error States
+  - [ ] Progress Tracking
+- [ ] useImagePreload
+  - [ ] Loading States
+  - [ ] Error Handling
+- [ ] useImageValidation
+  - [ ] File Type Validation
+  - [ ] Dimension Checks
 
-1. [✅] Password Reset API
-   - Status: FIXED
-   - Tests implemented:
-     - Input validation
-     - Token validation
-     - Password update
-     - Error handling
-   - Coverage: 95% statements, 90% branches
-   - Documentation: See app/api/auth/password/__tests__/reset.test.ts
+## Next Steps (In Order)
 
-2. [ ] Logo API (40% complete)
-   - Upload endpoint tests (In progress)
-     - File validation
-     - Size limits
-     - Format checking
-   - Delete endpoint tests (Not started)
-   - Update endpoint tests (Not started)
-   - Vote endpoint tests (Not started)
+1. Fix URL and NextResponse mocking in middleware tests:
 
-3. [ ] User API (20% complete)
-   - Profile endpoint tests (In progress)
-   - Settings endpoint tests (Not started)
-   - Preferences endpoint tests (Not started)
+   ```typescript
+   // Add to jest.setup.js
+   global.URL = class {
+     pathname: string;
+     constructor(url: string) {
+       this.pathname = new URL(url, 'http://localhost:3000').pathname;
+     }
+   };
+   ```
 
-## Visual Regression Tests [P3] 🔴
-> Multiple failures in visual regression tests need attention
+2. Improve Canvas/Image mocking:
 
-1. [ ] Layout Tests
-   - Grid layout tests failing (Timeout: 60s exceeded)
-   - Timeout issues in visual tests
-     - Current timeout: 60s
-     - Recommended increase: 120s
-   - Browser compatibility issues
-     - Chrome: 3 failures
-     - Safari: 2 failures
-   - Dark mode visual differences
+   ```typescript
+   // Update jest.setup.js
+   class MockCanvasContext {
+     drawImage = jest.fn();
+     canvas: any;
+     constructor(canvas: any) {
+       this.canvas = canvas;
+     }
+   }
+   ```
 
-2. [ ] Component Visual Tests
-   - LogoCard visual tests (2 failures)
-   - LogoGrid visual tests (3 failures)
-   - Form component visual tests (1 failure)
+3. Fix Logo Model static methods:
 
-## Integration Tests [P3] 🟡
-> Some integration tests implemented, others pending
+   ```typescript
+   // Create __mocks__/logo.ts
+   const mockLogoModel = {
+     findByUserId: jest.fn().mockResolvedValue([]),
+     schema: {
+       statics: {
+         findByUserId: jest.fn().mockResolvedValue([]),
+       },
+     },
+   };
+   ```
 
-1. [ ] Authentication Flow (30% complete)
-   - Sign in process (In progress)
-   - Sign up process (Not started)
-   - Password reset flow (In progress)
-   - OAuth integration (Not started)
+4. Fix database connection mocking:
+   ```typescript
+   // Create __mocks__/db.ts
+   export const connectToDatabase = jest.fn().mockResolvedValue({
+     db: {
+       collection: jest.fn().mockReturnThis(),
+       find: jest.fn().mockReturnThis(),
+       // ... other methods
+     },
+   });
+   ```
 
-2. [ ] Logo Management Flow (15% complete)
-   - Upload to display flow (In progress)
-   - Edit to update flow (Not started)
-   - Delete confirmation flow (Not started)
+## Progress Tracking
 
-## Performance Tests [P4] ⚪
-> Not started yet, lower priority
+- Total Tests: 104
+- Passing: 14
+- Failing: 90
+- Coverage: TBD
 
-1. [ ] Image Optimization
-   - Compression performance
-   - Loading performance
-   - Caching effectiveness
-   - Target metrics:
-     - Compression ratio: > 50%
-     - Load time: < 200ms
-     - Cache hit rate: > 90%
+## Recently Fixed
 
-2. [ ] API Performance
-   - Response times (target: < 100ms)
-   - Concurrent requests (target: 100 req/s)
-   - Rate limiting (target: 1000 req/hour)
+- [x] Jest ESM Configuration
+- [x] Module Resolution
+- [x] Basic Test Setup
 
-## Progress Summary
-- Total Issues: 15
-- Fixed: 6 (40%)
-- In Progress: 4 (27%)
-- Not Started: 5 (33%)
-- Overall Test Coverage: 75% statements, 65% branches
-- Overall Progress: Good progress on critical issues, moving to component and API testing
+## Currently Working On
 
-## Next Actions (Prioritized)
-1. Complete LogoCard advanced tests
-   - Implement dark mode tests first
-   - Add loading state tests
-   - Complete accessibility testing
-
-2. Fix Visual Regression Tests
-   - Increase timeout to 120s
-   - Update snapshot baselines
-   - Fix browser-specific issues
-
-3. Implement remaining Logo API tests
-   - Complete upload endpoint tests
-   - Start delete endpoint tests
-   - Add error case coverage
-
-4. Add integration tests for core flows
-   - Complete auth flow tests
-   - Start logo management flow tests
-
-5. Begin performance testing setup
-   - Set up performance testing environment
-   - Define performance baselines
-   - Create performance test scripts
+- [ ] URL and NextResponse Mocking
+- [ ] Canvas/Image Mocking
 
 ## Notes
-- Focus on completing component tests before moving to integration tests
-- Visual regression tests need timeout adjustments (60s → 120s)
-- Consider parallel test execution for performance tests
-- Document all fixed issues for future reference
-- Regular test coverage reports needed (weekly)
-- Consider adding automated performance regression testing
-- Update test documentation after each major fix 
+
+- Focus on fixing infrastructure issues first (mocking, configuration)
+- Then move to model/database layer
+- Finally address component and integration tests

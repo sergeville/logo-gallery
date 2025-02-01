@@ -4,6 +4,23 @@ import * as matchers from '@testing-library/jest-dom/matchers';
 import { TextEncoder, TextDecoder } from 'util';
 import React from 'react';
 
+// Define types for global objects
+declare global {
+  interface Window {
+    TextEncoder: typeof TextEncoder;
+    TextDecoder: typeof TextDecoder;
+    localStorage: Storage;
+    sessionStorage: Storage;
+    matchMedia: (query: string) => MediaQueryList;
+    ResizeObserver: typeof ResizeObserver;
+    IntersectionObserver: typeof IntersectionObserver;
+    React: typeof React;
+    jest: typeof jest;
+    fetch: typeof fetch;
+    Headers: typeof Headers;
+  }
+}
+
 interface IteratorObject<T, TReturn = unknown, TNext = undefined> {
   next(...args: [] | [TNext]): IteratorResult<T, TReturn>;
   [Symbol.iterator](): IteratorObject<T, TReturn, TNext>;
@@ -29,8 +46,10 @@ interface HeadersIterator<T> extends IteratorObject<T> {
 expect.extend(matchers);
 
 // 2. Set up basic globals
-global.TextEncoder = TextEncoder;
-global.TextDecoder = TextDecoder;
+Object.assign(window, {
+  TextEncoder,
+  TextDecoder
+});
 
 // 3. Set up Response and Request mocks
 class MockResponse implements Response {
@@ -42,11 +61,11 @@ class MockResponse implements Response {
   readonly type: ResponseType;
   readonly url: string;
   readonly body: ReadableStream<Uint8Array> | null;
-  #bodyUsed: boolean;
+  private bodyUsed = false;
   private bodyContent: BodyInit | null;
 
   get bodyUsed(): boolean {
-    return this.#bodyUsed;
+    return this.bodyUsed;
   }
 
   constructor(body?: BodyInit | null, init?: ResponseInit) {
@@ -59,12 +78,11 @@ class MockResponse implements Response {
     this.url = '';
     this.bodyContent = body || null;
     this.body = null;
-    this.#bodyUsed = false;
   }
 
   private markAsUsed(): void {
-    if (this.#bodyUsed) throw new Error('Body already read');
-    this.#bodyUsed = true;
+    if (this.bodyUsed) throw new Error('Body already read');
+    this.bodyUsed = true;
   }
 
   private arrayBufferFromString(str: string): ArrayBuffer {
@@ -118,7 +136,7 @@ class MockResponse implements Response {
   }
 
   clone(): Response {
-    if (this.#bodyUsed) throw new Error('Body already read');
+    if (this.bodyUsed) throw new Error('Body already read');
     return new MockResponse(this.bodyContent, {
       status: this.status,
       statusText: this.statusText,
@@ -252,152 +270,79 @@ const mockRequest: MockRequestFunction = (input, init) => {
   return {
     headers,
     method: init?.method || 'GET',
-    url: typeof input === 'string' ? input : input instanceof URL ? input.href : input.url,
-    clone: () => mockRequest(input, init),
-    arrayBuffer: async () => new ArrayBuffer(0),
-    blob: async () => new Blob(),
-    formData: async () => new FormData(),
-    json: async () => ({}),
-    text: async () => '',
-  } as Request;
+    url: input instanceof URL ? input.toString() : input.toString(),
+    body: init?.body || null,
+    cache: init?.cache || 'default',
+    credentials: init?.credentials || 'same-origin',
+    integrity: init?.integrity || '',
+    keepalive: init?.keepalive || false,
+    mode: init?.mode || 'cors',
+    redirect: init?.redirect || 'follow',
+    referrer: init?.referrer || 'about:client',
+    referrerPolicy: init?.referrerPolicy || '',
+    signal: init?.signal || null,
+  } as unknown as Request;
 };
 
-// Set up global mocks
-global.Headers = MockHeaders as any;
-global.Response = MockResponse as any;
-global.Request = mockRequest as any;
+// 4. Set up global fetch mock
+Object.assign(window, {
+  fetch: vi.fn().mockImplementation((_input: RequestInfo | URL, _init?: RequestInit) => {
+    return Promise.resolve(new MockResponse(null, { status: 200 }));
+  })
+});
 
-// Mock Next.js modules
-jest.mock('next/navigation', () => ({
-  useRouter: () => ({
-    push: vi.fn(),
-    replace: vi.fn(),
-    refresh: vi.fn(),
-    back: vi.fn(),
-    forward: vi.fn(),
-    prefetch: vi.fn(),
-  }),
-  useSearchParams: () => ({
-    get: vi.fn(),
-    getAll: vi.fn(),
-    has: vi.fn(),
-    forEach: vi.fn(),
-    entries: vi.fn(),
-    keys: vi.fn(),
-    values: vi.fn(),
-    toString: vi.fn(),
-  }),
-  usePathname: () => '/',
-}));
+// 5. Set up global Headers mock
+Object.assign(window, {
+  Headers: MockHeaders
+});
 
-// Mock next/server
-jest.mock('next/server', () => ({
-  NextResponse: {
-    json: vi.fn().mockImplementation((body: any, init?: ResponseInit) => new MockResponse(body, init)),
-    redirect: vi.fn(),
-  },
-  NextRequest: mockRequest,
-}));
+// 6. Set up React mock
+Object.assign(window, {
+  React
+});
 
-// Mock next-auth
-jest.mock('next-auth/react', () => ({
-  useSession: vi.fn(() => ({
-    data: null,
-    status: 'unauthenticated',
-  })),
-  signIn: vi.fn(),
-  signOut: vi.fn(),
-  getSession: vi.fn(() => Promise.resolve(null)),
-}));
+// 7. Set up Jest mock functions
+Object.assign(window, {
+  jest
+});
 
-// Mock next/image
-jest.mock('next/image', () => ({
-  __esModule: true,
-  default: function Image({ src, alt = '', width = 200, height = 200, ...props }: any) {
-    // Ensure required properties are present
-    const imgProps = {
-      src,
-      alt,
-      width: typeof width === 'string' ? parseInt(width, 10) : width,
-      height: typeof height === 'string' ? parseInt(height, 10) : height,
-      loading: props.loading || 'lazy',
-      decoding: props.decoding || 'async',
-      style: {
-        maxWidth: '100%',
-        height: 'auto',
-        ...props.style
-      },
-      ...props
-    };
-    // eslint-disable-next-line @next/next/no-img-element
-    return React.createElement('img', imgProps);
+// 8. Set up localStorage mock
+class LocalStorageMock implements Storage {
+  private store: Record<string, string> = {};
+
+  clear(): void {
+    this.store = {};
   }
-}));
 
-// Mock localStorage
-const localStorageMock = {
-  getItem: vi.fn(),
-  setItem: vi.fn(),
-  removeItem: vi.fn(),
-  clear: vi.fn(),
-  length: 0,
-  key: vi.fn(),
-};
+  getItem(key: string): string | null {
+    return this.store[key] || null;
+  }
 
-Object.defineProperty(window, 'localStorage', { value: localStorageMock });
+  setItem(key: string, value: string): void {
+    this.store[key] = String(value);
+  }
 
-// Mock canvas and related APIs
-class MockCanvasContext {
-  drawImage = vi.fn();
-  canvas: any;
+  removeItem(key: string): void {
+    delete this.store[key];
+  }
 
-  constructor(canvas: any) {
-    this.canvas = canvas;
+  key(index: number): string | null {
+    return Object.keys(this.store)[index] || null;
+  }
+
+  get length(): number {
+    return Object.keys(this.store).length;
   }
 }
 
-class MockCanvas {
-  width: number = 0;
-  height: number = 0;
-  style: any = {};
-  getContext = vi.fn().mockReturnValue(new MockCanvasContext(this));
-  toDataURL = vi.fn().mockReturnValue('data:image/png;base64,mock');
-  toBlob = vi.fn().mockImplementation(callback => callback(new Blob()));
-}
-
-global.HTMLCanvasElement = MockCanvas as any;
-
-// Mock fetch
-global.fetch = vi.fn(() =>
-  Promise.resolve(new MockResponse())
-) as unknown as typeof fetch;
-
-// Add cleanup
-afterEach(() => {
-  vi.clearAllMocks();
-  vi.resetAllMocks();
-  window.localStorage.clear();
+Object.assign(window, {
+  localStorage: new LocalStorageMock(),
+  sessionStorage: new LocalStorageMock()
 });
 
-beforeAll(() => {
-  vi.useFakeTimers();
-});
-
-afterAll(() => {
-  vi.useRealTimers();
-  vi.restoreAllMocks();
-});
-
-// Suppress console warnings and errors in tests
-beforeAll(() => {
-  vi.spyOn(console, 'warn').mockImplementation(() => {});
-  vi.spyOn(console, 'error').mockImplementation(() => {});
-});
-
-// Mock window.matchMedia
-Object.defineProperty(window, 'matchMedia', {
-  writable: true,
-  value: vi.fn().mockImplementation(query => ({
+// 9. Set up matchMedia mock
+Object.assign(window, {
+  matchMedia: vi.fn().mockImplementation(query => ({
     matches: false,
     media: query,
     onchange: null,
@@ -406,478 +351,31 @@ Object.defineProperty(window, 'matchMedia', {
     addEventListener: vi.fn(),
     removeEventListener: vi.fn(),
     dispatchEvent: vi.fn(),
-  })),
+  }))
 });
 
-// Set test environment variables
-process.env.MONGODB_URI = 'mongodb://localhost:27017/test';
-process.env.NEXTAUTH_SECRET = 'test-secret';
-process.env.NEXTAUTH_URL = 'http://localhost:3000';
-
-// Mock window.URL
-class MockURL {
-  pathname: string;
-  searchParams: URLSearchParams;
-  href: string;
-
-  constructor(url: string, base?: string) {
-    this.pathname = url.split('?')[0];
-    this.searchParams = new URLSearchParams(url.split('?')[1] || '');
-    this.href = url;
-  }
-}
-
-global.URL = MockURL as any;
-
-// Mock Image with proper dimensions
-class MockImage {
-  width: number = 800;
-  height: number = 600;
-  src: string = '';
-  onload: (() => void) | null = null;
-  onerror: ((error: Error) => void) | null = null;
-
-  constructor() {
-    setTimeout(() => {
-      if (this.src && this.onload) {
-        this.onload();
-      }
-    }, 10);
-  }
-
-  decode() {
-    return Promise.resolve();
-  }
-}
-
-Object.defineProperty(global, 'Image', {
-  value: MockImage,
+// 10. Set up ResizeObserver mock
+Object.assign(window, {
+  ResizeObserver: vi.fn().mockImplementation(() => ({
+    observe: vi.fn(),
+    unobserve: vi.fn(),
+    disconnect: vi.fn(),
+  }))
 });
 
-// Mock window.URL
-Object.defineProperty(window, 'URL', {
-  value: {
-    createObjectURL: vi.fn(() => 'mock-url'),
-    revokeObjectURL: vi.fn(),
-  },
+// 11. Set up IntersectionObserver mock
+Object.assign(window, {
+  IntersectionObserver: vi.fn().mockImplementation(() => ({
+    observe: vi.fn(),
+    unobserve: vi.fn(),
+    disconnect: vi.fn(),
+  }))
 });
 
-// Mock IntersectionObserver
-class MockIntersectionObserver {
-  constructor(callback: Function) {
-    this.callback = callback;
+// 12. Set up URL.createObjectURL mock
+Object.assign(window, {
+  URL: {
+    createObjectURL: vi.fn(),
+    revokeObjectURL: vi.fn()
   }
-  callback: Function;
-  observe = vi.fn();
-  unobserve = vi.fn();
-  disconnect = vi.fn();
-}
-
-Object.defineProperty(window, 'IntersectionObserver', {
-  value: MockIntersectionObserver,
 });
-
-// Mock ResizeObserver
-class MockResizeObserver {
-  constructor(callback: Function) {
-    this.callback = callback;
-  }
-  callback: Function;
-  observe = vi.fn();
-  unobserve = vi.fn();
-  disconnect = vi.fn();
-}
-
-Object.defineProperty(window, 'ResizeObserver', {
-  value: MockResizeObserver,
-});
-
-// Mock useAuth using Jest's built-in mock functionality
-jest.mock('@/hooks/useAuth', () => ({
-  useAuth: () => ({
-    user: {
-      id: '123',
-      email: 'test@example.com',
-      name: 'Test User'
-    },
-    loading: false
-  })
-}));
-
-// Mock useImageValidation hook
-jest.mock('@/hooks/useImageValidation', () => ({
-  useImageValidation: () => {
-    const [isValidating, setIsValidating] = React.useState(false);
-    const [error, setError] = React.useState<Error | null>(null);
-
-    const validateImage = async (file: File) => {
-      setIsValidating(true);
-      setError(null);
-
-      try {
-        if (!file || !file.type.startsWith('image/')) {
-          const error = new Error('Invalid file type. Please upload an image.');
-          setError(error);
-          return false;
-        }
-
-        if (file.size > 1024 * 1024) {
-          const error = new Error('File size exceeds the maximum limit of 1MB.');
-          setError(error);
-          return false;
-        }
-
-        const allowedExtensions = ['.png', '.gif'];
-        const fileName = file.name.toLowerCase();
-        if (!allowedExtensions.some(ext => fileName.endsWith(ext))) {
-          const error = new Error('Invalid file extension. Allowed extensions: .png, .gif');
-          setError(error);
-          return false;
-        }
-
-        // Validate dimensions
-        const img = new Image();
-        await new Promise<void>((resolve, reject) => {
-          img.onload = () => resolve();
-          img.onerror = () => reject(new Error('Failed to load image'));
-          img.src = URL.createObjectURL(file);
-        });
-
-        if (img.width < 100 || img.height < 100) {
-          const error = new Error('Image dimensions must be at least 100x100 pixels.');
-          setError(error);
-          return false;
-        }
-
-        return true;
-      } catch (err) {
-        const error = err instanceof Error ? err : new Error('Failed to validate image.');
-        setError(error);
-        return false;
-      } finally {
-        setIsValidating(false);
-      }
-    };
-
-    return {
-      validateImage,
-      isValidating,
-      error
-    };
-  }
-}));
-
-// Mock useImageOptimization hook
-jest.mock('@/hooks/useImageOptimization', () => ({
-  useImageOptimization: () => {
-    const [isOptimizing, setIsOptimizing] = React.useState(false);
-    const [error, setError] = React.useState<Error | null>(null);
-
-    const optimizeImage = async (file: File) => {
-      setIsOptimizing(true);
-      setError(null);
-
-      try {
-        if (!file || !file.type.startsWith('image/')) {
-          throw new Error('Invalid image file');
-        }
-
-        // Create a smaller version of the image
-        const img = new Image();
-        await new Promise<void>((resolve, reject) => {
-          img.onload = () => resolve();
-          img.onerror = () => reject(new Error('Failed to load image'));
-          img.src = URL.createObjectURL(file);
-        });
-
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        if (!ctx) {
-          throw new Error('Failed to get canvas context');
-        }
-        
-        canvas.width = img.width;
-        canvas.height = img.height;
-        ctx.drawImage(img, 0, 0, img.width, img.height);
-
-        const optimizedBlob = await new Promise<Blob>((resolve) => {
-          canvas.toBlob((blob) => resolve(blob || new Blob()), 'image/jpeg', 0.8);
-        });
-
-        return new File([optimizedBlob], file.name.replace(/\.[^.]+$/, '.jpg'), {
-          type: 'image/jpeg'
-        });
-      } catch (err) {
-        const error = err instanceof Error ? err : new Error('Failed to optimize image');
-        setError(error);
-        throw error;
-      } finally {
-        setIsOptimizing(false);
-      }
-    };
-
-    const getCompressionRatio = () => '50%';
-
-    return {
-      optimizeImage,
-      isOptimizing,
-      error,
-      getCompressionRatio
-    };
-  }
-}));
-
-// Mock useImagePreload hook
-jest.mock('@/hooks/useImagePreload', () => ({
-  useImagePreload: () => {
-    const [isLoading, setIsLoading] = React.useState(false);
-    const [progress, setProgress] = React.useState(0);
-    const [loadedUrls, setLoadedUrls] = React.useState([]);
-    const [error, setError] = React.useState(null);
-    const isCancelled = React.useRef(false);
-
-    const preloadImages = async (urls) => {
-      if (!urls || urls.length === 0) {
-        return [];
-      }
-
-      setIsLoading(true);
-      setProgress(0);
-      setError(null);
-      isCancelled.current = false;
-
-      try {
-        const loaded = [];
-        const total = urls.length;
-
-        for (let i = 0; i < total && !isCancelled.current; i++) {
-          const url = urls[i];
-          await new Promise((resolve, reject) => {
-            const img = new Image();
-            img.onload = () => {
-              loaded.push(url);
-              setLoadedUrls(loaded);
-              setProgress(Math.round(((i + 1) / total) * 100));
-              resolve(undefined);
-            };
-            img.onerror = reject;
-            img.src = url;
-          });
-        }
-
-        if (isCancelled.current) {
-          throw new Error('Preloading cancelled');
-        }
-
-        return urls;
-      } catch (err) {
-        setError('Failed to preload images');
-        throw err;
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    const cancel = () => {
-      isCancelled.current = true;
-    };
-
-    return {
-      preloadImages,
-      isLoading,
-      progress,
-      loadedUrls,
-      error,
-      cancel
-    };
-  }
-}));
-
-// Mock useAuth hook
-jest.mock('@/app/hooks/useAuth', () => ({
-  useAuth: vi.fn(() => ({
-    user: null,
-    loading: false,
-    error: null,
-    signIn: vi.fn(),
-    signOut: vi.fn(),
-    signUp: vi.fn(),
-  })),
-}));
-
-// Mock dbConnect
-jest.mock('@/app/lib/db-config', () => ({
-  dbConnect: vi.fn().mockResolvedValue(true),
-}));
-
-// Mock TestDbHelper
-jest.mock('@/scripts/test-data/utils/test-db-helper', () => {
-  const mockCollection = {
-    find: vi.fn().mockReturnThis(),
-    findOne: vi.fn().mockResolvedValue(null),
-    insertOne: vi.fn().mockResolvedValue({ insertedId: 'mock-id' }),
-    updateOne: vi.fn().mockResolvedValue({ modifiedCount: 1 }),
-    deleteOne: vi.fn().mockResolvedValue({ deletedCount: 1 }),
-    aggregate: vi.fn().mockReturnThis(),
-    toArray: vi.fn().mockResolvedValue([]),
-    listCollections: vi.fn().mockResolvedValue([]),
-  };
-
-  return {
-    TestDbHelper: vi.fn().mockImplementation(() => ({
-      connect: vi.fn().mockResolvedValue(true),
-      disconnect: vi.fn().mockResolvedValue(true),
-      db: {
-        collection: vi.fn().mockReturnValue(mockCollection),
-        listCollections: vi.fn().mockResolvedValue([]),
-      },
-    })),
-  };
-});
-
-// Mock fetch
-global.fetch = vi.fn();
-
-// Mock Response
-class MockResponse {
-  private bodyContent: unknown;
-  private responseInit: ResponseInit;
-  private consumed: boolean;
-
-  constructor(body?: unknown, init: ResponseInit = {}) {
-    this.bodyContent = body;
-    this.responseInit = init;
-    this.consumed = false;
-  }
-
-  get ok(): boolean {
-    return this.responseInit.status ? this.responseInit.status >= 200 && this.responseInit.status < 300 : true;
-  }
-
-  get status(): number {
-    return this.responseInit.status || 200;
-  }
-
-  get statusText(): string {
-    return this.responseInit.statusText || 'OK';
-  }
-
-  get headers(): Headers {
-    return new Headers(this.responseInit.headers);
-  }
-
-  async json(): Promise<unknown> {
-    if (this.consumed) {
-      throw new Error('Body has already been consumed');
-    }
-    this.consumed = true;
-    return Promise.resolve(this.bodyContent);
-  }
-
-  async text(): Promise<string> {
-    if (this.consumed) {
-      throw new Error('Body has already been consumed');
-    }
-    this.consumed = true;
-    return Promise.resolve(typeof this.bodyContent === 'string' ? this.bodyContent : JSON.stringify(this.bodyContent));
-  }
-}
-
-// Mock window.URL
-class MockURL {
-  private url: string;
-
-  constructor(url: string) {
-    this.url = url;
-  }
-
-  get href(): string {
-    return this.url;
-  }
-
-  static createObjectURL(): string {
-    return 'mock-object-url';
-  }
-
-  static revokeObjectURL(): void {
-    // No-op
-  }
-}
-
-// Mock window
-Object.defineProperty(global, 'window', {
-  value: {
-    URL: MockURL,
-    location: {
-      href: 'http://localhost:3000',
-      origin: 'http://localhost:3000',
-    },
-  },
-  writable: true,
-});
-
-// Mock Image loading
-const mockImageLoading = () => {
-  const loaded: string[] = [];
-  const failed: string[] = [];
-
-  class MockImage {
-    public src = '';
-    public onload: (() => void) | null = null;
-    public onerror: ((error: Error) => void) | null = null;
-
-    set src(url: string) {
-      if (url.includes('error')) {
-        failed.push(url);
-        if (this.onerror) {
-          this.onerror(new Error('Failed to load image'));
-        }
-      } else {
-        loaded.push(url);
-        if (this.onload) {
-          this.onload();
-        }
-      }
-    }
-  }
-
-  global.Image = MockImage as unknown as typeof Image;
-};
-
-// Mock React hooks
-const mockReactHooks = () => {
-  type SetStateAction<T> = T | ((prevState: T) => T);
-  type Dispatch<T> = (value: SetStateAction<T>) => void;
-  type EffectCallback = () => void | (() => void);
-
-  const useState = vi.fn().mockImplementation(<T>(initial: T): [T, Dispatch<T>] => [initial, vi.fn()]);
-  const useEffect = vi.fn().mockImplementation((fn: EffectCallback) => fn());
-  const useCallback = vi.fn().mockImplementation(<T extends (...args: unknown[]) => unknown>(fn: T): T => fn);
-  const useMemo = vi.fn().mockImplementation(<T>(fn: () => T): T => fn());
-  const useRef = vi.fn().mockImplementation(<T>(initial: T) => ({ current: initial }));
-
-  return {
-    useState,
-    useEffect,
-    useCallback,
-    useMemo,
-    useRef,
-  };
-};
-
-// Setup mocks
-mockImageLoading();
-const reactHooks = mockReactHooks();
-
-// Export mocks
-export {
-  MockResponse,
-  MockHeaders,
-  mockRequest,
-  type HeadersIterator,
-  type MockRequestInit,
-  type MockRequestFunction,
-  mockImageLoading,
-  mockReactHooks,
-  reactHooks,
-};

@@ -1,18 +1,23 @@
 import { readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import { execSync } from 'child_process';
+import { Page } from '@playwright/test';
 
-interface TestResult {
-  title: string;
-  status: 'passed' | 'failed' | 'pending';
-  errors?: string[];
-}
+export type TestResult = {
+  name: string;
+  status: 'passed' | 'failed' | 'skipped';
+  duration: number;
+  error?: Error;
+};
 
-interface TestStatusUpdate {
-  file: string;
-  newStatus: '✅' | '❌' | '🚧' | '⏳' | '🔄';
-  errors?: string[];
-}
+export type TestStatusUpdate = {
+  total: number;
+  completed: number;
+  passed: number;
+  failed: number;
+  skipped: number;
+  currentTest?: string;
+};
 
 const TASKS_FILE = join(__dirname, '..', 'VISUAL_TEST_TASKS.md');
 
@@ -28,25 +33,26 @@ function runTests(testPath: string): TestResult[] {
     
     lines.forEach(line => {
       if (line.includes('PASS')) {
-        if (currentTest.title) {
+        if (currentTest.name) {
           results.push({
-            title: currentTest.title,
-            status: 'passed'
+            name: currentTest.name,
+            status: 'passed',
+            duration: currentTest.duration || 0
           });
         }
         currentTest = {};
       } else if (line.includes('FAIL')) {
-        if (currentTest.title) {
+        if (currentTest.name) {
           results.push({
-            title: currentTest.title,
+            name: currentTest.name,
             status: 'failed',
-            errors: currentTest.errors
+            duration: currentTest.duration || 0,
+            error: currentTest.error
           });
         }
         currentTest = {};
       } else if (line.includes('Error:')) {
-        if (!currentTest.errors) currentTest.errors = [];
-        currentTest.errors.push(line);
+        if (!currentTest.error) currentTest.error = new Error(line);
       }
     });
 
@@ -61,19 +67,19 @@ function updateTasksFile(updates: TestStatusUpdate[]): void {
   let content = readFileSync(TASKS_FILE, 'utf-8');
   
   updates.forEach(update => {
-    const filePattern = new RegExp(`(${update.file.replace(/\//g, '\\/')}.*?\\n.*?Status: )([^\\n]*)`, 's');
+    const filePattern = new RegExp(`(${update.currentTest?.replace(/\//g, '\\/')}.*?\\n.*?Status: )([^\\n]*)`, 's');
     const statusLine = content.match(filePattern);
     
     if (statusLine) {
       content = content.replace(
         filePattern,
-        `$1${update.newStatus}${update.errors ? ' (See errors below)' : ''}`
+        `$1${update.status === 'passed' ? '✅' : update.status === 'failed' ? '❌' : '⏳'}${update.errors ? ' (See errors below)' : ''}`
       );
       
       // Add errors to the Issues section if any
       if (update.errors?.length) {
         const issuesSection = '### Known Issues';
-        const issueEntry = `- [ ] ${update.file}:\n${update.errors.map(err => `  - ${err}`).join('\n')}`;
+        const issueEntry = `- [ ] ${update.currentTest}:\n${update.errors.map(err => `  - ${err}`).join('\n')}`;
         
         if (content.includes(issuesSection)) {
           content = content.replace(
@@ -86,6 +92,64 @@ function updateTasksFile(updates: TestStatusUpdate[]): void {
   });
   
   writeFileSync(TASKS_FILE, content);
+}
+
+export async function verifyTestStatus(page: Page, expectedStatus: TestStatusUpdate): Promise<void> {
+  await page.waitForFunction(
+    (status) => {
+      const statusElement = document.querySelector('.test-status');
+      if (!statusElement) return false;
+
+      const currentStatus = {
+        total: parseInt(statusElement.getAttribute('data-total') || '0', 10),
+        completed: parseInt(statusElement.getAttribute('data-completed') || '0', 10),
+        passed: parseInt(statusElement.getAttribute('data-passed') || '0', 10),
+        failed: parseInt(statusElement.getAttribute('data-failed') || '0', 10),
+        skipped: parseInt(statusElement.getAttribute('data-skipped') || '0', 10),
+        currentTest: statusElement.getAttribute('data-current-test')
+      };
+
+      return (
+        currentStatus.total === status.total &&
+        currentStatus.completed === status.completed &&
+        currentStatus.passed === status.passed &&
+        currentStatus.failed === status.failed &&
+        currentStatus.skipped === status.skipped &&
+        (!status.currentTest || currentStatus.currentTest === status.currentTest)
+      );
+    },
+    expectedStatus,
+    { timeout: 10000 }
+  );
+}
+
+export async function waitForTestCompletion(page: Page): Promise<void> {
+  await page.waitForFunction(
+    () => {
+      const statusElement = document.querySelector('.test-status');
+      if (!statusElement) return false;
+
+      const total = parseInt(statusElement.getAttribute('data-total') || '0', 10);
+      const completed = parseInt(statusElement.getAttribute('data-completed') || '0', 10);
+
+      return total > 0 && completed === total;
+    },
+    { timeout: 30000 }
+  );
+}
+
+export async function getTestResults(page: Page): Promise<TestResult[]> {
+  return page.evaluate(() => {
+    const resultElements = document.querySelectorAll('.test-result');
+    return Array.from(resultElements).map((element) => ({
+      name: element.getAttribute('data-test-name') || '',
+      status: element.getAttribute('data-status') as 'passed' | 'failed' | 'skipped',
+      duration: parseFloat(element.getAttribute('data-duration') || '0'),
+      error: element.hasAttribute('data-error')
+        ? new Error(element.getAttribute('data-error') || '')
+        : undefined
+    }));
+  });
 }
 
 function verifyTestStatus(): void {
@@ -104,14 +168,16 @@ function verifyTestStatus(): void {
     
     results.forEach(result => {
       const update: TestStatusUpdate = {
-        file: `${dir}/${result.title}.visual.spec.ts`,
-        newStatus: result.status === 'passed' ? '✅' :
-                  result.status === 'failed' ? '❌' :
-                  result.status === 'pending' ? '⏳' : '🚧'
+        total: 1,
+        completed: 1,
+        passed: result.status === 'passed' ? 1 : 0,
+        failed: result.status === 'failed' ? 1 : 0,
+        skipped: result.status === 'skipped' ? 1 : 0,
+        currentTest: `${dir}/${result.name}.visual.spec.ts`
       };
       
-      if (result.errors?.length) {
-        update.errors = result.errors;
+      if (result.error) {
+        update.errors = [result.error.message];
       }
       
       updates.push(update);

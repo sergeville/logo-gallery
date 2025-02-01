@@ -6,8 +6,15 @@ import {
   VIEWPORT_SIZES,
   compareScreenshots,
   waitForElement,
-  ensurePageReady
+  ensurePageReady,
+  VisualTestOptions
 } from '@/e2e/visual-tests/utils/visual-test-utils';
+
+interface Viewport {
+  width: number;
+  height: number;
+  name?: string;
+}
 
 test.describe('Visual Regression Tests - Layout', () => {
   test.beforeEach(async ({ page }) => {
@@ -137,67 +144,53 @@ test.describe('Visual Regression Tests - Layout', () => {
   test('should test responsive grid layouts', async ({ page }) => {
     await preparePageForVisualTest(page);
     
-    await testResponsiveLayouts(page, 'grid-layout', async (viewport) => {
-      await page.setViewportSize(viewport);
-      await page.route('**/api/config', (route) => {
-        route.fulfill({
-          status: 200,
-          body: JSON.stringify({
-            data: {
-              gallery: {
-                columns: viewport.width >= 1024 ? 4 : viewport.width >= 768 ? 3 : 2,
-                spacing: 16,
-                maxWidth: 1200,
-                imageHeight: 200
-              }
-            }
-          })
+    const options: VisualTestOptions = {
+      waitForSelectors: ['.grid-container'],
+      customStyles: `
+        .grid-container {
+          min-height: 500px;
+        }
+      `,
+      async setup() {
+        await page.evaluate(() => {
+          const container = document.querySelector('.grid-container');
+          if (container) {
+            container.scrollTop = 0;
+          }
         });
-      });
-      await page.route('**/api/images', (route) => {
-        route.fulfill({
-          status: 200,
-          body: JSON.stringify({
-            data: Array(6).fill(null).map((_, i) => ({
-              id: String(i + 1),
-              name: `Logo ${i + 1}`,
-              url: `https://example.com/logo${i + 1}.png`
-            }))
-          })
-        });
-      });
-      await page.goto('/gallery');
-      await ensurePageReady(page);
-      await waitForElement(page, '[data-testid="gallery-grid"]');
-      await compareScreenshots(page, `grid-layout-${viewport.width}x${viewport.height}`);
-    });
+      }
+    };
+
+    await testResponsiveLayouts(page, 'grid-layout', options);
   });
 
   test('should test header and navigation layout', async ({ page }) => {
     await preparePageForVisualTest(page);
     
-    await testResponsiveLayouts(page, 'header-layout', async (viewport) => {
-      await page.setViewportSize(viewport);
-      await page.goto('/gallery');
-      await ensurePageReady(page);
-      await waitForElement(page, '[data-testid="main-header"]');
-      await compareScreenshots(page, `header-layout-${viewport.width}x${viewport.height}`);
-    });
+    const options: VisualTestOptions = {
+      waitForSelectors: ['header'],
+      customStyles: `
+        header {
+          position: relative !important;
+        }
+      `
+    };
+
+    await testResponsiveLayouts(page, 'header-layout', options);
   });
 
   test('should test footer layout', async ({ page }) => {
     await preparePageForVisualTest(page);
     
-    await testResponsiveLayouts(page, 'footer-layout', async (viewport) => {
-      await page.setViewportSize(viewport);
-      await page.goto('/gallery');
-      await ensurePageReady(page);
-      await waitForElement(page, '[data-testid="main-footer"]');
-      await page.evaluate(() => {
-        window.scrollTo(0, document.body.scrollHeight);
-      });
-      await page.waitForTimeout(1000); // Wait for scroll to complete
-      await compareScreenshots(page, `footer-layout-${viewport.width}x${viewport.height}`);
-    });
+    const options: VisualTestOptions = {
+      waitForSelectors: ['footer'],
+      customStyles: `
+        footer {
+          position: relative !important;
+        }
+      `
+    };
+
+    await testResponsiveLayouts(page, 'footer-layout', options);
   });
 }); 

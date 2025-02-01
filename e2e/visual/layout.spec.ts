@@ -1,10 +1,12 @@
 import { test, expect } from '@playwright/test'
 import {
+  VIEWPORT_SIZES,
   preparePageForVisualTest,
   testResponsiveLayouts,
   testComponentStates,
   compareScreenshots,
-} from './utils/visual-test-utils'
+  VisualTestOptions
+} from '../visual-tests/utils/visual-test-utils'
 import { LOCALHOST_URL } from '@/config/constants'
 
 test.describe('Visual Regression Tests', () => {
@@ -104,4 +106,57 @@ test.describe('Visual Regression Tests', () => {
     await page.waitForSelector('form', { state: 'visible', timeout: 30000 })
     await expect(page.locator('form')).toHaveScreenshot('upload-form.png')
   })
-}) 
+})
+
+test.describe('Layout Tests', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/');
+  });
+
+  test('grid layout should be responsive', async ({ page }) => {
+    const options: VisualTestOptions = {
+      waitForSelectors: ['.grid-container'],
+      customStyles: `
+        .grid-container {
+          min-height: 500px;
+        }
+      `,
+      async setup() {
+        await page.evaluate(() => {
+          const container = document.querySelector('.grid-container');
+          if (container) {
+            container.scrollTop = 0;
+          }
+        });
+      }
+    };
+
+    await testResponsiveLayouts(page, 'grid-layout', options);
+  });
+
+  test('header layout should be responsive', async ({ page }) => {
+    const options: VisualTestOptions = {
+      waitForSelectors: ['header'],
+      customStyles: `
+        header {
+          position: relative !important;
+        }
+      `
+    };
+
+    await testResponsiveLayouts(page, 'header-layout', options);
+  });
+
+  test('footer layout should be responsive', async ({ page }) => {
+    const options: VisualTestOptions = {
+      waitForSelectors: ['footer'],
+      customStyles: `
+        footer {
+          position: relative !important;
+        }
+      `
+    };
+
+    await testResponsiveLayouts(page, 'footer-layout', options);
+  });
+}); 

@@ -246,112 +246,272 @@ Last updated: [Current Date]
 
 # Project Standards
 
-## Visual Testing Standards
+## Testing Standards
 
-### Test Organization
-1. File Naming
-   - Visual test files must end with `.visual.spec.ts`
-   - Percy-specific tests must end with `.percy.spec.ts`
-   - Utility files should be in `utils/` directory
+### 1. Visual Testing
 
-2. Test Structure
-   - Use descriptive `test.describe` blocks
-   - Group related test cases
-   - Follow the Arrange-Act-Assert pattern
-   - Use meaningful test names
+#### File Organization
+```typescript
+e2e/visual-tests/
+├── components/          # Component-specific tests
+│   ├── button/
+│   ├── input/
+│   └── theme/
+├── middleware/         # Middleware tests
+├── utils/             # Test utilities
+└── *.visual.spec.ts   # Feature tests
+```
 
-### Component Testing Requirements
-1. State Coverage
+#### Naming Conventions
+- Test files: `*.visual.spec.ts`
+- Percy tests: `*.percy.spec.ts`
+- Utility files: `*-utils.ts`
+- Screenshot names: `{component}-{state}-{viewport}.png`
+
+#### Component Test Structure
+```typescript
+test.describe('Component Name', () => {
+  test.beforeEach(async ({ page }) => {
+    await preparePageForVisualTest(page);
+  });
+
+  test('should render correctly in all states', async ({ page }) => {
+    const states = [
+      {
+        name: 'default',
+        setup: async () => { /* setup code */ }
+      },
+      {
+        name: 'loading',
+        setup: async () => { /* setup code */ }
+      }
+    ];
+
+    await testComponentStates(page, selector, states);
+    await expect(page).toHaveScreenshot('component-states.png');
+  });
+});
+```
+
+#### Required Test Cases
+1. Visual States
    - Initial render
    - Loading state
    - Error state
    - Empty state
    - Interactive states (hover, focus, active)
-   - Responsive layouts
 
-2. Viewport Testing
+2. Responsive Testing
    - Mobile (375x667)
    - Tablet (768x1024)
    - Desktop (1280x800)
-   - Test orientation changes where relevant
 
-3. Accessibility Testing
-   - Run axe-core checks
-   - Test keyboard navigation
-   - Verify ARIA attributes
-   - Check color contrast
+3. Theme Testing
+   - Light mode
+   - Dark mode
+   - Custom themes (if applicable)
 
-### Test Implementation
-1. Selectors
-   - Use `data-testid` attributes
-   - Follow naming convention: `component-state-element`
-   - Avoid brittle selectors (classes, IDs)
+4. Accessibility Testing
+   - Color contrast
+   - Focus indicators
+   - ARIA attributes
+   - Screen reader compatibility
 
-2. Screenshots
-   - Meaningful names: `{component}-{state}-{viewport}.png`
-   - Mask dynamic content
-   - Remove unnecessary elements
-   - Handle animations properly
+### 2. Code Quality
 
-3. Performance
-   - Optimize test setup
-   - Reuse page objects
-   - Minimize redundant checks
-   - Use appropriate timeouts
+#### TypeScript Standards
+1. Types and Interfaces
+   ```typescript
+   interface TestState {
+     name: string;
+     setup: () => Promise<void>;
+     cleanup?: () => Promise<void>;
+   }
 
-### Best Practices
-1. Test Isolation
-   - Reset state between tests
-   - Mock external dependencies
-   - Clean up after tests
-   - Use independent test data
+   type ViewportSize = {
+     width: number;
+     height: number;
+   };
+   ```
 
-2. Error Handling
-   - Meaningful error messages
-   - Proper async/await usage
-   - Retry flaky operations
-   - Log relevant information
+2. Function Signatures
+   ```typescript
+   async function preparePageForVisualTest(
+     page: Page,
+     options?: VisualTestOptions
+   ): Promise<void>;
 
-3. Maintenance
-   - Regular baseline updates
-   - Document known issues
-   - Track flaky tests
-   - Review test coverage
+   async function testComponentStates(
+     page: Page,
+     selector: string,
+     states: TestState[]
+   ): Promise<void>;
+   ```
 
-## Visual Test Utilities
+#### ESLint Rules
+```json
+{
+  "rules": {
+    "playwright/expect-expect": "error",
+    "playwright/no-conditional-in-test": "warn",
+    "playwright/no-force-option": "error",
+    "@typescript-eslint/explicit-function-return-type": "error"
+  }
+}
+```
 
-### Required Functions
+### 3. Test Utilities
+
+#### Required Utilities
 1. Page Preparation
    ```typescript
-   preparePageForVisualTest(page: Page, options?: VisualTestOptions)
+   await preparePageForVisualTest(page, {
+     waitForSelectors: ['[data-testid="component"]'],
+     customStyles: '* { animation: none !important; }',
+     maskSelectors: ['.dynamic-content'],
+     removeSelectors: ['.ads'],
+     waitForTimeout: 1000
+   });
    ```
 
 2. Component Testing
    ```typescript
-   testComponentStates(page: Page, selector: string, states: TestState[])
+   await testComponentStates(page, '[data-testid="component"]', [
+     { name: 'default', setup: async () => {} },
+     { name: 'loading', setup: async () => {} }
+   ]);
    ```
 
 3. Responsive Testing
    ```typescript
-   testResponsiveLayouts(page: Page, viewports: ViewportSize[])
+   await testResponsiveLayouts(page, [
+     VIEWPORT_SIZES.mobile,
+     VIEWPORT_SIZES.tablet,
+     VIEWPORT_SIZES.desktop
+   ]);
    ```
 
-### Configuration
-1. Percy Setup
+### 4. Best Practices
+
+#### Test Organization
+1. Group Related Tests
    ```typescript
-   // playwright.percy.config.ts
-   export default {
-     testDir: './e2e/visual-tests',
-     testMatch: ['**/*.percy.spec.ts'],
-     // ... configuration options
-   }
+   test.describe('Feature Group', () => {
+     test.describe('Subfeature', () => {
+       test('specific behavior', async () => {});
+     });
+   });
    ```
 
-2. Viewport Sizes
+2. Use Meaningful Names
    ```typescript
-   export const VIEWPORT_SIZES = {
-     mobile: { width: 375, height: 667 },
-     tablet: { width: 768, height: 1024 },
-     desktop: { width: 1280, height: 800 }
-   }
-   ``` 
+   // Good
+   test('should display error message when API fails');
+   
+   // Bad
+   test('test error');
+   ```
+
+#### Test Isolation
+1. Reset State
+   ```typescript
+   test.beforeEach(async ({ page }) => {
+     await page.goto('/');
+     await clearTestData();
+   });
+   ```
+
+2. Mock External Dependencies
+   ```typescript
+   await page.route('**/api/data', route => {
+     route.fulfill({
+       status: 200,
+       body: JSON.stringify(mockData)
+     });
+   });
+   ```
+
+#### Error Handling
+1. Meaningful Assertions
+   ```typescript
+   await expect(page.locator('error-message')).toBeVisible();
+   await expect(page.locator('error-message')).toHaveText('Invalid input');
+   ```
+
+2. Proper Timeouts
+   ```typescript
+   await page.waitForSelector('[data-testid="content"]', {
+     state: 'visible',
+     timeout: 5000
+   });
+   ```
+
+### 5. Documentation
+
+#### Required Documentation
+1. Test Description
+   ```typescript
+   /**
+    * Tests the logo gallery component in various states:
+    * - Empty state
+    * - Loading state
+    * - Error state
+    * - Populated state with different grid layouts
+    */
+   test.describe('Logo Gallery', () => {});
+   ```
+
+2. Complex Setup
+   ```typescript
+   /**
+    * Prepares the test environment with:
+    * - Mocked API responses
+    * - Authentication state
+    * - Required test data
+    */
+   async function setupTestEnvironment(): Promise<void> {}
+   ```
+
+#### Maintenance
+1. Regular Updates
+   - Review and update baselines monthly
+   - Document known issues
+   - Track flaky tests
+   - Update test data
+
+2. Performance
+   - Optimize test setup
+   - Minimize redundant checks
+   - Use appropriate timeouts
+   - Group related tests
+
+### 6. CI/CD Integration
+
+#### Pipeline Configuration
+```yaml
+visual-tests:
+  script:
+    - npm run test:visual
+  artifacts:
+    paths:
+      - test-results/
+    expire_in: 1 week
+```
+
+#### Required Checks
+1. Visual Regression
+   - Compare against baselines
+   - Check responsive layouts
+   - Verify theme variations
+
+2. Accessibility
+   - Run axe-core checks
+   - Verify ARIA attributes
+   - Check color contrast
+
+3. Performance
+   - Test load times
+   - Check image optimization
+   - Verify caching behavior
+
+Last updated: [Current Date] 

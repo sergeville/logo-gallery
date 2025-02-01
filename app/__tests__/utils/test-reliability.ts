@@ -1,12 +1,12 @@
 import React from 'react';
 import { act, waitFor } from '@testing-library/react';
 import { TEST_TIMEOUTS } from '../constants';
+import { render, RenderResult } from '@testing-library/react';
 
 /**
  * Waits for all pending timers and animations to complete
  */
 export const waitForAnimations = async (): Promise<void> => {
-  // Wait for any CSS transitions to complete
   await act(async () => {
     await new Promise(resolve => setTimeout(resolve, TEST_TIMEOUTS.ANIMATION));
   });
@@ -55,34 +55,23 @@ export const waitForImages = async (container: HTMLElement): Promise<void> => {
  * Cleans up after each test
  */
 export const cleanupTest = async (): Promise<void> => {
-  // Clear all timers
   jest.clearAllTimers();
-  
-  // Clear all mocks
   jest.clearAllMocks();
-  
-  // Reset fetch mocks if using jest-fetch-mock
+
   if (typeof (global.fetch as any).mockClear === 'function') {
     (global.fetch as any).mockClear();
   }
 
-  // Clear any pending network requests
   (global as any).pendingRequests = [];
-
-  // Clear local storage
   window.localStorage.clear();
-  
-  // Clear session storage
   window.sessionStorage.clear();
 
-  // Clear cookies
   document.cookie.split(';').forEach(cookie => {
     document.cookie = cookie
       .replace(/^ +/, '')
       .replace(/=.*/, `=;expires=${new Date(0).toUTCString()};path=/`);
   });
 
-  // Remove any added event listeners
   const cleanup = (global as any).__TEST_EVENT_LISTENERS__;
   if (cleanup) {
     cleanup.forEach((fn: () => void) => fn());
@@ -102,49 +91,77 @@ export const trackEventListener = (
   handler: EventListenerOrEventListenerObject
 ): void => {
   element.addEventListener(eventName, handler);
-  
+
   if (!(global as any).__TEST_EVENT_LISTENERS__) {
     (global as any).__TEST_EVENT_LISTENERS__ = [];
   }
-  
+
   (global as any).__TEST_EVENT_LISTENERS__.push(() => {
     element.removeEventListener(eventName, handler);
   });
 };
 
-interface ErrorBoundaryTestUtils {
-  wrapWithErrorBoundary: (Component: React.ComponentType<any>, props?: Record<string, any>) => JSX.Element;
+interface ErrorBoundaryProps {
+  children: React.ReactNode;
 }
 
-/**
- * Sets up error boundary testing
- * @param ErrorBoundary - Error boundary component
- * @returns Test utilities for error boundary
- */
-export const setupErrorBoundaryTest = (ErrorBoundary: React.ComponentType<any>): ErrorBoundaryTestUtils => {
-  const consoleError = console.error;
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error: Error | null;
+}
+
+class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    return { hasError: true, error };
+  }
+
+  render(): React.ReactNode {
+    if (this.state.hasError) {
+      return (
+        <div data-testid="error-boundary">
+          <h1>Something went wrong.</h1>
+          <pre>{this.state.error?.message}</pre>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
+interface ReliabilityTestUtils {
+  wrapWithErrorBoundary: (Component: React.ComponentType<unknown>, props?: Record<string, unknown>) => React.ReactElement;
+}
+
+export function setupReliabilityTest(): ReliabilityTestUtils {
+  const originalConsoleError = console.error;
+  const errorLog: string[] = [];
+
   beforeAll(() => {
-    // Suppress console.error for expected error boundary errors
-    console.error = (...args: any[]) => {
-      if (/React will try to recreate this component tree/.test(args[0])) {
-        return;
-      }
-      consoleError(...args);
+    console.error = (...args: unknown[]) => {
+      errorLog.push(args.join(' '));
     };
   });
 
-  afterAll(() => {
-    console.error = consoleError;
+  afterEach(() => {
+    errorLog.length = 0;
   });
 
-  return {
-    wrapWithErrorBoundary: (Component: React.ComponentType<any>, props = {}): JSX.Element => (
-      <ErrorBoundary>
-        <Component {...props} />
-      </ErrorBoundary>
-    ),
-  };
-};
+  afterAll(() => {
+    console.error = originalConsoleError;
+  });
+
+  function wrapWithErrorBoundary(Component: React.ComponentType<unknown>, props: Record<string, unknown> = {}): React.ReactElement {
+    return React.createElement(ErrorBoundary, null, React.createElement(Component, props));
+  }
+
+  return { wrapWithErrorBoundary };
+}
 
 interface AsyncTestUtils {
   withTimeout: <T>(operation: () => Promise<T>) => Promise<T>;
@@ -154,8 +171,7 @@ interface AsyncTestUtils {
  * Sets up timeout handling for async tests
  * @param timeout - Timeout in milliseconds
  */
-export const setupAsyncTest = (timeout = TEST_TIMEOUTS.API_CALL): AsyncTestUtils => {
-  // Increase Jest timeout for this test
+export function setupAsyncTest(timeout = TEST_TIMEOUTS.API_CALL): AsyncTestUtils {
   jest.setTimeout(timeout);
 
   return {
@@ -167,4 +183,4 @@ export const setupAsyncTest = (timeout = TEST_TIMEOUTS.API_CALL): AsyncTestUtils
       return Promise.race([operation(), timeoutPromise]);
     },
   };
-}; 
+}

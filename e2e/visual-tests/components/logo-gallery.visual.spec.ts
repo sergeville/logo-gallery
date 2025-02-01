@@ -1,7 +1,8 @@
 import { test } from '@playwright/test';
 import {
   preparePageForVisualTest,
-  testComponentStates
+  testComponentStates,
+  type TestState
 } from '@/e2e/visual-tests/utils/visual-test-utils';
 
 test.describe('Logo Gallery Component Visual Tests', () => {
@@ -10,10 +11,10 @@ test.describe('Logo Gallery Component Visual Tests', () => {
   });
 
   test('logo gallery states', async ({ page }) => {
-    await testComponentStates(page, 'logo-gallery', [
+    const states: TestState[] = [
       {
         name: 'empty',
-        setup: async () => {
+        action: async (element) => {
           await page.route('**/api/images', (route) => {
             route.fulfill({
               status: 200,
@@ -21,11 +22,12 @@ test.describe('Logo Gallery Component Visual Tests', () => {
             });
           });
           await page.goto('/gallery');
+          await element.waitFor();
         }
       },
       {
         name: 'with-logos',
-        setup: async () => {
+        action: async (element) => {
           await page.route('**/api/images', (route) => {
             route.fulfill({
               status: 200,
@@ -38,17 +40,21 @@ test.describe('Logo Gallery Component Visual Tests', () => {
             });
           });
           await page.goto('/gallery');
+          await element.waitFor();
         }
       },
       {
         name: 'error',
-        setup: async () => {
+        action: async (element) => {
           await page.route('**/api/images', (route) => {
             route.fulfill({ status: 500 });
           });
           await page.goto('/gallery');
+          await element.waitFor();
         }
       }
-    ]);
+    ];
+
+    await testComponentStates(page, 'logo-gallery', states);
   });
 }); 

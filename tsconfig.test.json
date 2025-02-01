@@ -1,0 +1,46 @@
+{
+  "compilerOptions": {
+    "target": "es2018",
+    "module": "commonjs",
+    "lib": ["es2018", "dom"],
+    "jsx": "react",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "noEmit": true,
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "incremental": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./*"],
+      "@/components/*": ["components/*"],
+      "@/lib/*": ["lib/*"],
+      "@/models/*": ["models/*"],
+      "@/types/*": ["types/*"],
+      "@/utils/*": ["utils/*"],
+      "@/scripts/*": ["scripts/*"],
+      "@/app/*": ["app/*"],
+      "@/e2e/*": ["e2e/*"],
+      "@/tests/*": ["tests/*"]
+    },
+    "types": ["node", "jest", "react", "react-dom", "@testing-library/jest-dom"],
+    "allowJs": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
+  },
+  "include": [
+    "scripts/**/*",
+    "tests/**/*",
+    "app/**/*",
+    "e2e/**/*",
+    "src/**/*",
+    "jest.config.js",
+    "jest.setup.ts",
+    "playwright.config.ts",
+    "playwright.percy.config.ts"
+  ],
+  "exclude": ["node_modules", ".next", "dist"]
+}

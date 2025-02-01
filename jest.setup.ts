@@ -4,10 +4,7 @@ import * as matchers from '@testing-library/jest-dom/matchers';
 import { TextEncoder, TextDecoder } from 'util';
 import React from 'react';
 
-// Import the actual Headers type from lib.dom
-type DOMHeadersIterator<T> = Headers[typeof Symbol.iterator] extends () => infer R ? R : never;
-
-interface IteratorObject<T, TReturn = any, TNext = undefined> {
+interface IteratorObject<T, TReturn = unknown, TNext = undefined> {
   next(...args: [] | [TNext]): IteratorResult<T, TReturn>;
   [Symbol.iterator](): IteratorObject<T, TReturn, TNext>;
 }
@@ -32,8 +29,8 @@ interface HeadersIterator<T> extends IteratorObject<T> {
 expect.extend(matchers);
 
 // 2. Set up basic globals
-global.TextEncoder = TextEncoder as any;
-global.TextDecoder = TextDecoder as any;
+global.TextEncoder = TextEncoder;
+global.TextDecoder = TextDecoder;
 
 // 3. Set up Response and Request mocks
 class MockResponse implements Response {
@@ -105,11 +102,11 @@ class MockResponse implements Response {
     return formData;
   }
 
-  async json(): Promise<any> {
+  async json<T>(): Promise<T> {
     this.markAsUsed();
-    if (!this.bodyContent) return null;
+    if (!this.bodyContent) return null as unknown as T;
     if (typeof this.bodyContent === 'string') return JSON.parse(this.bodyContent);
-    return this.bodyContent;
+    return this.bodyContent as T;
   }
 
   async text(): Promise<string> {
@@ -238,7 +235,9 @@ interface MockRequestInit extends RequestInit {
   signal?: AbortSignal;
 }
 
-const mockRequest = function(input: string | URL | Request, init?: MockRequestInit): Request {
+type MockRequestFunction = (input: string | URL | Request, init?: MockRequestInit) => Request;
+
+const mockRequest: MockRequestFunction = (input, init) => {
   const headers = new MockHeaders();
   if (init?.headers) {
     if (init.headers instanceof Headers) {
@@ -250,44 +249,17 @@ const mockRequest = function(input: string | URL | Request, init?: MockRequestIn
     }
   }
 
-  const request = {
-    url: typeof input === 'string' ? input : input.toString(),
-    method: init?.method || 'GET',
+  return {
     headers,
-    body: init?.body,
-    cache: init?.cache || 'default',
-    credentials: init?.credentials || 'same-origin',
-    destination: 'document' as RequestDestination,
-    integrity: '',
-    keepalive: false,
-    mode: init?.mode || 'cors',
-    redirect: init?.redirect || 'follow',
-    referrer: '',
-    referrerPolicy: init?.referrerPolicy || '',
-    signal: init?.signal,
-    clone: function(): Request {
-      return mockRequest(this.url, {
-        method: this.method,
-        headers: Array.from(this.headers.entries()),
-        body: this.body,
-        mode: this.mode as RequestMode,
-        credentials: this.credentials as RequestCredentials,
-        cache: this.cache as RequestCache,
-        redirect: this.redirect as RequestRedirect,
-        referrerPolicy: this.referrerPolicy as ReferrerPolicy,
-        integrity: this.integrity,
-        keepalive: this.keepalive,
-        signal: this.signal
-      });
-    },
-    arrayBuffer: () => Promise.resolve(new ArrayBuffer(0)),
-    blob: () => Promise.resolve(new Blob()),
-    formData: () => Promise.resolve(new FormData()),
-    json: () => Promise.resolve({}),
-    text: () => Promise.resolve(''),
-    bodyUsed: false
-  };
-  return request as unknown as Request;
+    method: init?.method || 'GET',
+    url: typeof input === 'string' ? input : input instanceof URL ? input.href : input.url,
+    clone: () => mockRequest(input, init),
+    arrayBuffer: async () => new ArrayBuffer(0),
+    blob: async () => new Blob(),
+    formData: async () => new FormData(),
+    json: async () => ({}),
+    text: async () => '',
+  } as Request;
 };
 
 // Set up global mocks
@@ -763,11 +735,149 @@ jest.mock('@/scripts/test-data/utils/test-db-helper', () => {
   };
 });
 
-// Add missing fetch mock
-global.fetch = vi.fn(() =>
-  Promise.resolve({
-    ok: true,
-    json: () => Promise.resolve({}),
-    status: 200,
-  })
-) as vi.Mock; 
+// Mock fetch
+global.fetch = vi.fn();
+
+// Mock Response
+class MockResponse {
+  private bodyContent: unknown;
+  private responseInit: ResponseInit;
+  private consumed: boolean;
+
+  constructor(body?: unknown, init: ResponseInit = {}) {
+    this.bodyContent = body;
+    this.responseInit = init;
+    this.consumed = false;
+  }
+
+  get ok(): boolean {
+    return this.responseInit.status ? this.responseInit.status >= 200 && this.responseInit.status < 300 : true;
+  }
+
+  get status(): number {
+    return this.responseInit.status || 200;
+  }
+
+  get statusText(): string {
+    return this.responseInit.statusText || 'OK';
+  }
+
+  get headers(): Headers {
+    return new Headers(this.responseInit.headers);
+  }
+
+  async json(): Promise<unknown> {
+    if (this.consumed) {
+      throw new Error('Body has already been consumed');
+    }
+    this.consumed = true;
+    return Promise.resolve(this.bodyContent);
+  }
+
+  async text(): Promise<string> {
+    if (this.consumed) {
+      throw new Error('Body has already been consumed');
+    }
+    this.consumed = true;
+    return Promise.resolve(typeof this.bodyContent === 'string' ? this.bodyContent : JSON.stringify(this.bodyContent));
+  }
+}
+
+// Mock window.URL
+class MockURL {
+  private url: string;
+
+  constructor(url: string) {
+    this.url = url;
+  }
+
+  get href(): string {
+    return this.url;
+  }
+
+  static createObjectURL(): string {
+    return 'mock-object-url';
+  }
+
+  static revokeObjectURL(): void {
+    // No-op
+  }
+}
+
+// Mock window
+Object.defineProperty(global, 'window', {
+  value: {
+    URL: MockURL,
+    location: {
+      href: 'http://localhost:3000',
+      origin: 'http://localhost:3000',
+    },
+  },
+  writable: true,
+});
+
+// Mock Image loading
+const mockImageLoading = () => {
+  const loaded: string[] = [];
+  const failed: string[] = [];
+
+  class MockImage {
+    public src = '';
+    public onload: (() => void) | null = null;
+    public onerror: ((error: Error) => void) | null = null;
+
+    set src(url: string) {
+      if (url.includes('error')) {
+        failed.push(url);
+        if (this.onerror) {
+          this.onerror(new Error('Failed to load image'));
+        }
+      } else {
+        loaded.push(url);
+        if (this.onload) {
+          this.onload();
+        }
+      }
+    }
+  }
+
+  global.Image = MockImage as unknown as typeof Image;
+};
+
+// Mock React hooks
+const mockReactHooks = () => {
+  type SetStateAction<T> = T | ((prevState: T) => T);
+  type Dispatch<T> = (value: SetStateAction<T>) => void;
+  type EffectCallback = () => void | (() => void);
+
+  const useState = vi.fn().mockImplementation(<T>(initial: T): [T, Dispatch<T>] => [initial, vi.fn()]);
+  const useEffect = vi.fn().mockImplementation((fn: EffectCallback) => fn());
+  const useCallback = vi.fn().mockImplementation(<T extends (...args: unknown[]) => unknown>(fn: T): T => fn);
+  const useMemo = vi.fn().mockImplementation(<T>(fn: () => T): T => fn());
+  const useRef = vi.fn().mockImplementation(<T>(initial: T) => ({ current: initial }));
+
+  return {
+    useState,
+    useEffect,
+    useCallback,
+    useMemo,
+    useRef,
+  };
+};
+
+// Setup mocks
+mockImageLoading();
+const reactHooks = mockReactHooks();
+
+// Export mocks
+export {
+  MockResponse,
+  MockHeaders,
+  mockRequest,
+  type HeadersIterator,
+  type MockRequestInit,
+  type MockRequestFunction,
+  mockImageLoading,
+  mockReactHooks,
+  reactHooks,
+};

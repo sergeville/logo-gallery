@@ -30,7 +30,7 @@ class TestPerformanceMonitor {
       maxNetworkCalls: 10,
       maxRenderCount: 20,
       maxMemoryUsage: 50 * 1024 * 1024, // 50MB
-      ...thresholds
+      ...thresholds,
     };
   }
 
@@ -40,7 +40,7 @@ class TestPerformanceMonitor {
       duration: 0,
       networkCalls: 0,
       renderCount: 0,
-      memoryUsage: 0
+      memoryUsage: 0,
     };
     this.networkCalls = 0;
     this.renderCount = 0;
@@ -124,12 +124,12 @@ class TestPerformanceMonitor {
         totalRenderCount: 0,
         averageMemoryUsage: 0,
         slowestTest: '',
-        maxMemoryTest: ''
+        maxMemoryTest: '',
       },
       details: this.metrics.map(metric => ({
         ...metric,
-        memoryUsageMB: Math.round(metric.memoryUsage / 1024 / 1024)
-      }))
+        memoryUsageMB: Math.round(metric.memoryUsage / 1024 / 1024),
+      })),
     };
 
     let maxDuration = 0;
@@ -171,27 +171,26 @@ export const performanceMonitor = new TestPerformanceMonitor();
 
 // React component wrapper for tracking renders
 export const withPerformanceTracking = <P extends object>(
-  WrappedComponent: React.ComponentType<P>,
-  componentName: string
-): React.ComponentClass<P> => {
-  return class WithPerformanceTracking extends React.Component<P> {
+  WrappedComponent: React.ComponentType<P>
+): React.ComponentType<P> => {
+  return class PerformanceWrapper extends React.Component<P> {
     componentDidMount(): void {
-      performanceMonitor.trackRender();
+      performanceMonitor.trackMount();
     }
 
     componentDidUpdate(): void {
       performanceMonitor.trackRender();
     }
 
-    render(): JSX.Element {
-      return <WrappedComponent {...this.props} />;
+    render(): React.ReactElement {
+      return React.createElement(WrappedComponent, this.props);
     }
   };
 };
 
 // Jest hooks for automatic performance monitoring
 export const setupPerformanceMonitoring = () => {
-  beforeEach(function() {
+  beforeEach(function () {
     // Use test name from jest
     performanceMonitor.startTest(this.currentTest?.title || 'Unknown test');
   });
@@ -213,4 +212,4 @@ export const setupPerformanceMonitoring = () => {
 // Network request tracking
 export const trackNetworkRequest = () => {
   performanceMonitor.trackNetworkCall();
-}; 
+};

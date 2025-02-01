@@ -1,4 +1,5 @@
 import { Page } from '@playwright/test';
+import { login } from './auth-utils';
 
 export async function setupVisualTest(page: Page) {
   // Set consistent viewport size
@@ -13,11 +14,11 @@ export async function setupVisualTest(page: Page) {
         transition-duration: 0s !important;
         transition-delay: 0s !important;
       }
-    `
+    `,
   });
 
   // Mock session if needed
-  await page.route('**/api/auth/session', async (route) => {
+  await page.route('**/api/auth/session', async route => {
     await route.fulfill({
       status: 200,
       body: JSON.stringify({
@@ -25,15 +26,15 @@ export async function setupVisualTest(page: Page) {
           id: 'test-user-id',
           name: 'Test User',
           email: 'test@example.com',
-          image: 'https://example.com/avatar.png'
+          image: 'https://example.com/avatar.png',
         },
-        expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
-      })
+        expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+      }),
     });
   });
 
   // Mock API responses if needed
-  await page.route('**/api/logos', async (route) => {
+  await page.route('**/api/logos', async route => {
     await route.fulfill({
       status: 200,
       body: JSON.stringify({
@@ -45,10 +46,10 @@ export async function setupVisualTest(page: Page) {
             imageUrl: '/test-logo-1.png',
             thumbnailUrl: '/test-logo-1-thumb.png',
             userId: 'test-user-id',
-            createdAt: new Date().toISOString()
-          }
-        ]
-      })
+            createdAt: new Date().toISOString(),
+          },
+        ],
+      }),
     });
   });
 
@@ -57,7 +58,7 @@ export async function setupVisualTest(page: Page) {
 }
 
 export async function mockAuthenticatedSession(page: Page) {
-  await page.route('**/api/auth/session', async (route) => {
+  await page.route('**/api/auth/session', async route => {
     await route.fulfill({
       status: 200,
       body: JSON.stringify({
@@ -65,28 +66,48 @@ export async function mockAuthenticatedSession(page: Page) {
           id: 'test-user-id',
           name: 'Test User',
           email: 'test@example.com',
-          image: 'https://example.com/avatar.png'
+          image: 'https://example.com/avatar.png',
         },
-        expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
-      })
+        expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+      }),
     });
   });
 }
 
 export async function mockUnauthenticatedSession(page: Page) {
-  await page.route('**/api/auth/session', async (route) => {
+  await page.route('**/api/auth/session', async route => {
     await route.fulfill({
       status: 200,
-      body: JSON.stringify({ user: null, expires: null })
+      body: JSON.stringify({ user: null, expires: null }),
     });
   });
 }
 
 export async function mockApiError(page: Page, statusCode = 500) {
-  await page.route('**/api/**', async (route) => {
+  await page.route('**/api/**', async route => {
     await route.fulfill({
       status: statusCode,
-      body: JSON.stringify({ error: 'Internal Server Error' })
+      body: JSON.stringify({ error: 'Internal Server Error' }),
     });
   });
-} 
+}
+
+export async function setupTestEnvironment(): Promise<void> {
+  // ... existing code ...
+}
+
+export async function cleanupTestEnvironment(): Promise<void> {
+  // ... existing code ...
+}
+
+export async function setupAuthenticatedTest(page: Page): Promise<void> {
+  await login(page);
+}
+
+export async function setupTestData(): Promise<void> {
+  // ... existing code ...
+}
+
+export async function cleanupTestData(): Promise<void> {
+  // ... existing code ...
+}

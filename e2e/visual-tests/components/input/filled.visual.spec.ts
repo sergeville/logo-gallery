@@ -14,4 +14,4 @@ test.describe('Input Filled State', () => {
     await page.waitForTimeout(100);
     await expect(page.locator(inputSelector)).toHaveScreenshot('input-filled.png');
   });
-}); 
+});

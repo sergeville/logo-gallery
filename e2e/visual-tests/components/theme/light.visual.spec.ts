@@ -13,4 +13,4 @@ test.describe('Light Theme', () => {
       fullPage: true,
     });
   });
-}); 
+});

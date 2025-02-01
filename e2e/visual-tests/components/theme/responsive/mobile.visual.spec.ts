@@ -1,6 +1,9 @@
 import { test, expect } from '@playwright/test';
 import { LOCALHOST_URL } from '@/config/constants';
-import { preparePageForVisualTest, VIEWPORT_SIZES } from '@/e2e/visual-tests/utils/visual-test-utils';
+import {
+  preparePageForVisualTest,
+  VIEWPORT_SIZES,
+} from '@/e2e/visual-tests/utils/visual-test-utils';
 
 test.describe('Mobile Responsive Layout', () => {
   test.beforeEach(async ({ page }) => {
@@ -16,4 +19,4 @@ test.describe('Mobile Responsive Layout', () => {
       maxDiffPixelRatio: 0.1,
     });
   });
-}); 
+});

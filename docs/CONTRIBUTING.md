@@ -320,3 +320,110 @@ Example decision matrix:
 ## Getting Help
 
 - Check existing documentation in `/docs`
+
+## Visual Testing Guidelines
+
+### Getting Started
+1. Setup
+   ```bash
+   npm install
+   npm install -D @playwright/test @percy/playwright
+   npx playwright install
+   ```
+
+2. Running Tests
+   ```bash
+   # Run all visual tests
+   npm run test:visual
+   
+   # Run specific test file
+   npm run test:visual path/to/test
+   
+   # Update Percy snapshots
+   npm run test:visual:update
+   ```
+
+### Writing Visual Tests
+1. File Structure
+   ```typescript
+   import { test, expect } from '@playwright/test';
+   import { preparePageForVisualTest, TestState } from './utils/visual-test-utils';
+
+   test.describe('Component Name', () => {
+     test.beforeEach(async ({ page }) => {
+       await page.goto('/');
+     });
+
+     test('test description', async ({ page }) => {
+       // Test implementation
+     });
+   });
+   ```
+
+2. Test States
+   ```typescript
+   const states: TestState[] = [
+     {
+       name: 'default',
+       async setup() {
+         // Setup code
+       }
+     },
+     {
+       name: 'loading',
+       async setup() {
+         // Mock loading state
+       }
+     }
+   ];
+   ```
+
+3. Screenshot Capture
+   ```typescript
+   await preparePageForVisualTest(page);
+   await expect(page).toHaveScreenshot('screenshot-name.png');
+   ```
+
+### Best Practices
+1. Component Tests
+   - Test all possible states
+   - Include responsive variations
+   - Test accessibility
+   - Handle animations
+
+2. Test Organization
+   - Group related tests
+   - Use meaningful names
+   - Follow naming conventions
+   - Document edge cases
+
+3. Maintenance
+   - Update baselines regularly
+   - Review visual changes
+   - Track failures
+   - Document issues
+
+## Visual Test Checklist
+- [ ] Component renders correctly
+- [ ] All states are covered
+- [ ] Responsive layouts work
+- [ ] Animations are handled
+- [ ] Accessibility is tested
+- [ ] Error states are verified
+- [ ] Loading states work
+- [ ] Empty states are handled
+- [ ] Interactive states work
+- [ ] Documentation is updated
+
+### Common Issues
+1. Flaky Tests
+   - Use proper waiting strategies
+   - Handle animations correctly
+   - Mock network requests
+   - Implement retries
+
+2. Maintenance
+   - Regular baseline updates
+   - CI/CD integration
+   - Performance optimization
+   - Documentation updates

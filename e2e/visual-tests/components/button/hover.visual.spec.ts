@@ -1,6 +1,9 @@
 import { test, expect } from '@playwright/test';
 import { LOCALHOST_URL } from '@/config/constants';
-import { preparePageForVisualTest, COMPONENT_STATES } from '@/e2e/visual-tests/utils/visual-test-utils';
+import {
+  preparePageForVisualTest,
+  COMPONENT_STATES,
+} from '@/e2e/visual-tests/utils/visual-test-utils';
 
 test.describe('Button Hover State', () => {
   test.beforeEach(async ({ page }) => {
@@ -13,4 +16,4 @@ test.describe('Button Hover State', () => {
     await COMPONENT_STATES.hover(page, buttonSelector);
     await expect(page.locator(buttonSelector)).toHaveScreenshot('button-hover.png');
   });
-}); 
+});

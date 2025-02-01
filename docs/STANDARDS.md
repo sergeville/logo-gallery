@@ -243,3 +243,115 @@ These standards should be reviewed and updated when:
 - Modifying deployment processes
 
 Last updated: [Current Date] 
+
+# Project Standards
+
+## Visual Testing Standards
+
+### Test Organization
+1. File Naming
+   - Visual test files must end with `.visual.spec.ts`
+   - Percy-specific tests must end with `.percy.spec.ts`
+   - Utility files should be in `utils/` directory
+
+2. Test Structure
+   - Use descriptive `test.describe` blocks
+   - Group related test cases
+   - Follow the Arrange-Act-Assert pattern
+   - Use meaningful test names
+
+### Component Testing Requirements
+1. State Coverage
+   - Initial render
+   - Loading state
+   - Error state
+   - Empty state
+   - Interactive states (hover, focus, active)
+   - Responsive layouts
+
+2. Viewport Testing
+   - Mobile (375x667)
+   - Tablet (768x1024)
+   - Desktop (1280x800)
+   - Test orientation changes where relevant
+
+3. Accessibility Testing
+   - Run axe-core checks
+   - Test keyboard navigation
+   - Verify ARIA attributes
+   - Check color contrast
+
+### Test Implementation
+1. Selectors
+   - Use `data-testid` attributes
+   - Follow naming convention: `component-state-element`
+   - Avoid brittle selectors (classes, IDs)
+
+2. Screenshots
+   - Meaningful names: `{component}-{state}-{viewport}.png`
+   - Mask dynamic content
+   - Remove unnecessary elements
+   - Handle animations properly
+
+3. Performance
+   - Optimize test setup
+   - Reuse page objects
+   - Minimize redundant checks
+   - Use appropriate timeouts
+
+### Best Practices
+1. Test Isolation
+   - Reset state between tests
+   - Mock external dependencies
+   - Clean up after tests
+   - Use independent test data
+
+2. Error Handling
+   - Meaningful error messages
+   - Proper async/await usage
+   - Retry flaky operations
+   - Log relevant information
+
+3. Maintenance
+   - Regular baseline updates
+   - Document known issues
+   - Track flaky tests
+   - Review test coverage
+
+## Visual Test Utilities
+
+### Required Functions
+1. Page Preparation
+   ```typescript
+   preparePageForVisualTest(page: Page, options?: VisualTestOptions)
+   ```
+
+2. Component Testing
+   ```typescript
+   testComponentStates(page: Page, selector: string, states: TestState[])
+   ```
+
+3. Responsive Testing
+   ```typescript
+   testResponsiveLayouts(page: Page, viewports: ViewportSize[])
+   ```
+
+### Configuration
+1. Percy Setup
+   ```typescript
+   // playwright.percy.config.ts
+   export default {
+     testDir: './e2e/visual-tests',
+     testMatch: ['**/*.percy.spec.ts'],
+     // ... configuration options
+   }
+   ```
+
+2. Viewport Sizes
+   ```typescript
+   export const VIEWPORT_SIZES = {
+     mobile: { width: 375, height: 667 },
+     tablet: { width: 768, height: 1024 },
+     desktop: { width: 1280, height: 800 }
+   }
+   ``` 

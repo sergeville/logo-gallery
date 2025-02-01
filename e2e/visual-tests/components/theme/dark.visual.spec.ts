@@ -17,4 +17,4 @@ test.describe('Dark Theme', () => {
       fullPage: true,
     });
   });
-}); 
+});

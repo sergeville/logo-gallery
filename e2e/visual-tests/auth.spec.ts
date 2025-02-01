@@ -23,7 +23,7 @@ test.describe('Authentication UI Tests', () => {
 
     // Take screenshot for visual comparison
     await page.screenshot({
-      path: path.join(screenshotsDir, 'auth-signin-initial.png')
+      path: path.join(screenshotsDir, 'auth-signin-initial.png'),
     });
   });
 
@@ -33,13 +33,13 @@ test.describe('Authentication UI Tests', () => {
 
     // Click sign in without filling form to trigger loading state
     await page.getByRole('button', { name: 'Sign in', exact: true }).click();
-    
+
     // Verify loading spinner appears
     await expect(page.getByRole('status')).toBeVisible();
-    
+
     // Take screenshot of loading state
     await page.screenshot({
-      path: path.join(screenshotsDir, 'auth-signin-loading.png')
+      path: path.join(screenshotsDir, 'auth-signin-loading.png'),
     });
   });
 
@@ -57,7 +57,7 @@ test.describe('Authentication UI Tests', () => {
 
     // Take screenshot of error state
     await page.screenshot({
-      path: path.join(screenshotsDir, 'auth-signin-error.png')
+      path: path.join(screenshotsDir, 'auth-signin-error.png'),
     });
 
     // Verify any error message is visible (since the exact message might vary)
@@ -70,8 +70,12 @@ test.describe('Authentication UI Tests', () => {
     await page.waitForLoadState('networkidle');
 
     // Verify social login buttons are visible
-    await expect(page.getByRole('button', { name: 'Sign in with Google', exact: true })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Sign in with GitHub', exact: true })).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: 'Sign in with Google', exact: true })
+    ).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: 'Sign in with GitHub', exact: true })
+    ).toBeVisible();
 
     // Click Google login and verify loading state
     await page.getByRole('button', { name: 'Sign in with Google', exact: true }).click();
@@ -79,7 +83,7 @@ test.describe('Authentication UI Tests', () => {
 
     // Take screenshot of social login state
     await page.screenshot({
-      path: path.join(screenshotsDir, 'auth-signin-social.png')
+      path: path.join(screenshotsDir, 'auth-signin-social.png'),
     });
   });
 
@@ -97,7 +101,7 @@ test.describe('Authentication UI Tests', () => {
 
     // Take screenshot in dark mode
     await page.screenshot({
-      path: path.join(screenshotsDir, 'auth-signin-dark.png')
+      path: path.join(screenshotsDir, 'auth-signin-dark.png'),
     });
   });
-}); 
+});

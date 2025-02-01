@@ -4,7 +4,7 @@ import { Page } from '@playwright/test';
 export const VIEWPORT_SIZES = {
   mobile: { width: 375, height: 667 },
   tablet: { width: 768, height: 1024 },
-  desktop: { width: 1280, height: 720 }
+  desktop: { width: 1280, height: 720 },
 };
 
 // Common breakpoints for responsive testing
@@ -21,7 +21,7 @@ export async function testResponsiveLayout(
     await page.goto(url);
     await page.waitForLoadState('networkidle');
     await page.screenshot({
-      path: `test-results/responsive/${url.replace(/\//g, '-')}-${width}.png`
+      path: `test-results/responsive/${url.replace(/\//g, '-')}-${width}.png`,
     });
   }
 }
@@ -30,12 +30,12 @@ export async function testResponsiveLayout(
 export async function testDarkMode(page: Page): Promise<void> {
   // Test light mode first
   await page.screenshot({ path: 'test-results/theme/light-mode.png' });
-  
+
   // Switch to dark mode
   await page.evaluate(() => {
     document.documentElement.classList.add('dark');
   });
-  
+
   // Wait for dark mode transition
   await page.waitForTimeout(300);
   await page.screenshot({ path: 'test-results/theme/dark-mode.png' });
@@ -45,13 +45,13 @@ export async function testDarkMode(page: Page): Promise<void> {
 export async function testLoadingStates(page: Page): Promise<void> {
   // Initial loading state
   await page.screenshot({ path: 'test-results/loading/initial.png' });
-  
+
   // Simulate slow network
   await page.route('**/*', async route => {
     await new Promise(resolve => setTimeout(resolve, 1000));
     await route.continue();
   });
-  
+
   // Loading state with network delay
   await page.screenshot({ path: 'test-results/loading/network-delay.png' });
 }
@@ -61,11 +61,11 @@ export async function testErrorStates(page: Page): Promise<void> {
   // Network error
   await page.route('**/*', route => route.abort('failed'));
   await page.screenshot({ path: 'test-results/error/network-error.png' });
-  
+
   // Not found error
   await page.route('**/*', route => route.fulfill({ status: 404 }));
   await page.screenshot({ path: 'test-results/error/not-found.png' });
-  
+
   // Server error
   await page.route('**/*', route => route.fulfill({ status: 500 }));
   await page.screenshot({ path: 'test-results/error/server-error.png' });
@@ -77,8 +77,10 @@ export async function testAccessibility(page: Page): Promise<void> {
     const { default: axe } = await import('axe-core');
     return axe.run();
   });
-  
+
   if (violations.violations.length > 0) {
-    throw new Error(`Accessibility violations found: ${JSON.stringify(violations.violations, null, 2)}`);
+    throw new Error(
+      `Accessibility violations found: ${JSON.stringify(violations.violations, null, 2)}`
+    );
   }
-} 
+}

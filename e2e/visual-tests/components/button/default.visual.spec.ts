@@ -15,4 +15,4 @@ test.describe('Button Default State', () => {
     await page.waitForSelector(buttonSelector, { state: 'visible', timeout: 10000 });
     await expect(page.locator(buttonSelector)).toHaveScreenshot('button-default.png');
   });
-}); 
+});

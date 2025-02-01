@@ -1,17 +1,190 @@
+import { readFileSync } from 'fs';
 import { glob } from 'glob';
 import * as fs from 'fs';
 import * as path from 'path';
 import { parse as parseTypeScript } from '@typescript-eslint/typescript-estree';
 
-interface ValidationResult {
-  passed: boolean;
+export interface ValidationResult {
+  valid: boolean;
   errors: string[];
   warnings: string[];
 }
 
-interface ValidationRule {
-  name: string;
-  validate: (filePath: string) => Promise<ValidationResult>;
+export function validateProject(): ValidationResult {
+  const result: ValidationResult = {
+    valid: true,
+    errors: [],
+    warnings: []
+  };
+
+  // Get all test files
+  const files = glob.sync('e2e/visual-tests/**/*.ts');
+
+  files.forEach(file => {
+    const content = readFileSync(file, 'utf-8');
+    
+    // Run all validations
+    const fileOrgResult = validateFileOrganization(file);
+    const namingResult = validateNamingConventions(file);
+    const structureResult = validateComponentTestStructure(content);
+    const testCasesResult = validateRequiredTestCases(content);
+    const tsResult = validateTypeScriptStandards(content);
+    const docResult = validateDocumentation(content);
+
+    // Combine results
+    result.errors.push(...fileOrgResult.errors);
+    result.errors.push(...namingResult.errors);
+    result.errors.push(...structureResult.errors);
+    result.errors.push(...testCasesResult.errors);
+    result.errors.push(...tsResult.errors);
+    result.errors.push(...docResult.errors);
+
+    result.warnings.push(...fileOrgResult.warnings);
+    result.warnings.push(...namingResult.warnings);
+    result.warnings.push(...structureResult.warnings);
+    result.warnings.push(...testCasesResult.warnings);
+    result.warnings.push(...tsResult.warnings);
+    result.warnings.push(...docResult.warnings);
+  });
+
+  result.valid = result.errors.length === 0;
+  return result;
+}
+
+export function validateFileOrganization(file: string): ValidationResult {
+  const requiredDirs = [
+    'e2e/visual-tests/components/',
+    'e2e/visual-tests/middleware/',
+    'e2e/visual-tests/utils/'
+  ];
+
+  const result: ValidationResult = {
+    valid: true,
+    errors: [],
+    warnings: []
+  };
+
+  const fileDir = file.split('/').slice(0, -1).join('/');
+  if (!requiredDirs.some(dir => fileDir.startsWith(dir))) {
+    result.valid = false;
+    result.errors.push(`File ${file} is not in a required directory`);
+  }
+
+  return result;
+}
+
+export function validateNamingConventions(file: string): ValidationResult {
+  const validPatterns = [
+    /\.visual\.spec\.ts$/,
+    /\.percy\.spec\.ts$/,
+    /-utils\.ts$/
+  ];
+
+  const result: ValidationResult = {
+    valid: true,
+    errors: [],
+    warnings: []
+  };
+
+  if (!validPatterns.some(pattern => pattern.test(file))) {
+    result.valid = false;
+    result.errors.push(`File ${file} does not follow naming conventions`);
+  }
+
+  return result;
+}
+
+export function validateComponentTestStructure(content: string): ValidationResult {
+  const result: ValidationResult = {
+    valid: true,
+    errors: [],
+    warnings: []
+  };
+
+  if (!content.includes('test.describe(')) {
+    result.warnings.push('Missing test.describe block');
+  }
+
+  if (!content.includes('preparePageForVisualTest')) {
+    result.warnings.push('Missing preparePageForVisualTest setup');
+  }
+
+  if (!content.includes('testComponentStates')) {
+    result.warnings.push('Consider using testComponentStates for state management');
+  }
+
+  return result;
+}
+
+export function validateRequiredTestCases(content: string): ValidationResult {
+  const requiredTests = [
+    'loading state',
+    'error state',
+    'empty state',
+    'responsive',
+    'accessibility'
+  ];
+
+  const result: ValidationResult = {
+    valid: true,
+    errors: [],
+    warnings: []
+  };
+
+  requiredTests.forEach(testCase => {
+    if (!content.toLowerCase().includes(testCase.toLowerCase())) {
+      result.warnings.push(`Missing ${testCase} test`);
+    }
+  });
+
+  return result;
+}
+
+export function validateTypeScriptStandards(content: string): ValidationResult {
+  const result: ValidationResult = {
+    valid: true,
+    errors: [],
+    warnings: []
+  };
+
+  if (content.includes(': any')) {
+    result.errors.push('Unexpected any type usage');
+  }
+
+  const functionDeclarations = content.match(/async\s+\w+\s*\([^)]*\)\s*{/g) || [];
+  functionDeclarations.forEach(func => {
+    if (!func.includes(': Promise<')) {
+      result.errors.push('Missing explicit return type on async function');
+    }
+  });
+
+  return result;
+}
+
+export function validateDocumentation(content: string): ValidationResult {
+  const result: ValidationResult = {
+    valid: true,
+    errors: [],
+    warnings: []
+  };
+
+  if (!content.includes('/**')) {
+    result.warnings.push('Missing JSDoc comments');
+  }
+
+  const complexSetupIndicators = [
+    'beforeEach',
+    'beforeAll',
+    'setup',
+    'prepare',
+    'initialize'
+  ];
+
+  if (complexSetupIndicators.some(indicator => content.includes(indicator)) && !content.includes('/**')) {
+    result.warnings.push('Missing documentation for complex setup');
+  }
+
+  return result;
 }
 
 // Utility function to read file content
@@ -34,7 +207,12 @@ const rules: ValidationRule[] = [
   {
     name: 'File Organization',
     validate: async (filePath: string) => {
-      const result: ValidationResult = { passed: true, errors: [], warnings: [] };
+      const result: ValidationResult = { 
+        name: 'File Organization',
+        passed: true, 
+        errors: [], 
+        warnings: [] 
+      };
       
       // Check visual test file structure
       const visualTestFiles = await glob('e2e/visual-tests/**/*.ts');
@@ -58,7 +236,12 @@ const rules: ValidationRule[] = [
   {
     name: 'Naming Conventions',
     validate: async (filePath: string) => {
-      const result: ValidationResult = { passed: true, errors: [], warnings: [] };
+      const result: ValidationResult = { 
+        name: 'Naming Conventions',
+        passed: true, 
+        errors: [], 
+        warnings: [] 
+      };
       
       if (filePath.includes('visual-tests')) {
         const fileName = path.basename(filePath);
@@ -75,7 +258,12 @@ const rules: ValidationRule[] = [
   {
     name: 'Component Test Structure',
     validate: async (filePath: string) => {
-      const result: ValidationResult = { passed: true, errors: [], warnings: [] };
+      const result: ValidationResult = { 
+        name: 'Component Test Structure',
+        passed: true, 
+        errors: [], 
+        warnings: [] 
+      };
       
       if (filePath.match(/\.(visual|percy)\.spec\.ts$/)) {
         const content = await readFile(filePath);
@@ -103,7 +291,12 @@ const rules: ValidationRule[] = [
   {
     name: 'Required Test Cases',
     validate: async (filePath: string) => {
-      const result: ValidationResult = { passed: true, errors: [], warnings: [] };
+      const result: ValidationResult = { 
+        name: 'Required Test Cases',
+        passed: true, 
+        errors: [], 
+        warnings: [] 
+      };
       
       if (filePath.match(/\.(visual|percy)\.spec\.ts$/)) {
         const content = await readFile(filePath);
@@ -133,7 +326,12 @@ const rules: ValidationRule[] = [
   {
     name: 'TypeScript Standards',
     validate: async (filePath: string) => {
-      const result: ValidationResult = { passed: true, errors: [], warnings: [] };
+      const result: ValidationResult = { 
+        name: 'TypeScript Standards',
+        passed: true, 
+        errors: [], 
+        warnings: [] 
+      };
       
       if (filePath.endsWith('.ts')) {
         const content = await readFile(filePath);
@@ -156,7 +354,12 @@ const rules: ValidationRule[] = [
   {
     name: 'Documentation',
     validate: async (filePath: string) => {
-      const result: ValidationResult = { passed: true, errors: [], warnings: [] };
+      const result: ValidationResult = { 
+        name: 'Documentation',
+        passed: true, 
+        errors: [], 
+        warnings: [] 
+      };
       
       if (filePath.match(/\.(visual|percy)\.spec\.ts$/)) {
         const content = await readFile(filePath);
@@ -184,18 +387,16 @@ async function validateFile(filePath: string): Promise<ValidationResult[]> {
     try {
       const result = await rule.validate(filePath);
       if (!result.passed || result.errors.length > 0 || result.warnings.length > 0) {
-        results.push({
-          ...result,
-          name: rule.name
-        } as ValidationResult);
+        results.push(result);
       }
-    } catch (error) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       results.push({
+        name: rule.name,
         passed: false,
-        errors: [`Error validating ${rule.name}: ${error.message}`],
-        warnings: [],
-        name: rule.name
-      } as ValidationResult);
+        errors: [`Error validating ${rule.name}: ${errorMessage}`],
+        warnings: []
+      });
     }
   }
 

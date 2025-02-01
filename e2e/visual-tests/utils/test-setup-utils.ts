@@ -1,7 +1,8 @@
 import { Page } from '@playwright/test';
 import { login } from './auth-utils';
+import { TestState } from './visual-test-utils';
 
-export async function setupVisualTest(page: Page) {
+export async function setupVisualTest(page: Page): Promise<void> {
   // Set consistent viewport size
   await page.setViewportSize({ width: 1280, height: 720 });
 
@@ -57,7 +58,7 @@ export async function setupVisualTest(page: Page) {
   await page.emulateMedia({ colorScheme: 'light' });
 }
 
-export async function mockAuthenticatedSession(page: Page) {
+export async function mockAuthenticatedSession(page: Page): Promise<void> {
   await page.route('**/api/auth/session', async route => {
     await route.fulfill({
       status: 200,
@@ -74,7 +75,7 @@ export async function mockAuthenticatedSession(page: Page) {
   });
 }
 
-export async function mockUnauthenticatedSession(page: Page) {
+export async function mockUnauthenticatedSession(page: Page): Promise<void> {
   await page.route('**/api/auth/session', async route => {
     await route.fulfill({
       status: 200,
@@ -83,7 +84,7 @@ export async function mockUnauthenticatedSession(page: Page) {
   });
 }
 
-export async function mockApiError(page: Page, statusCode = 500) {
+export async function mockApiError(page: Page, statusCode = 500): Promise<void> {
   await page.route('**/api/**', async route => {
     await route.fulfill({
       status: statusCode,
@@ -92,8 +93,10 @@ export async function mockApiError(page: Page, statusCode = 500) {
   });
 }
 
-export async function setupTestEnvironment(): Promise<void> {
-  // ... existing code ...
+// Setup test environment
+export async function setupTestEnvironment(page: Page): Promise<void> {
+  await page.setViewportSize({ width: 1280, height: 720 });
+  await page.goto('/');
 }
 
 export async function cleanupTestEnvironment(): Promise<void> {
@@ -110,4 +113,23 @@ export async function setupTestData(): Promise<void> {
 
 export async function cleanupTestData(): Promise<void> {
   // ... existing code ...
+}
+
+// Setup test state
+export async function setupTestState(page: Page, state: TestState): Promise<void> {
+  if (state.setup) {
+    await state.setup();
+  }
+}
+
+// Prepare test page
+export async function prepareTestPage(page: Page): Promise<void> {
+  await page.waitForLoadState('networkidle');
+  await page.waitForLoadState('domcontentloaded');
+}
+
+// Reset test state
+export async function resetTestState(page: Page): Promise<void> {
+  await page.reload();
+  await page.waitForLoadState('networkidle');
 }

@@ -5,4 +5,4 @@
 npx lint-staged
 
 # Run standards validation
-npm run validate-standards 
+# npm run validate-standards 

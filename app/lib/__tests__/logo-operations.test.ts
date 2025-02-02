@@ -24,7 +24,7 @@ describe('[P0] Logo Core Operations', () => {
       password: 'Password123!',
       username: 'testuser'
     });
-    testUserId = user.user._id;
+    testUserId = user.user!._id;
   });
 
   afterAll(async () => {
@@ -58,10 +58,10 @@ describe('[P0] Logo Core Operations', () => {
 
       expect(result.status).toBe(201);
       expect(result.logo).toBeDefined();
-      expect(result.logo.title).toBe('Test Logo');
-      expect(result.logo.userId).toBe(testUserId);
-      expect(result.logo.fileUrl).toBeDefined();
-      expect(result.logo.tags).toEqual(['test', 'logo']);
+      expect(result.logo!.title).toBe('Test Logo');
+      expect(result.logo!.userId).toBe(testUserId);
+      expect(result.logo!.fileUrl).toBeDefined();
+      expect(result.logo!.tags).toEqual(['test', 'logo']);
     });
 
     it('should reject oversized files', async () => {
@@ -130,7 +130,7 @@ describe('[P0] Logo Core Operations', () => {
 
       expect(logo).toBeDefined();
       expect(logo!.title).toBe('Test Logo');
-      expect(logo!.userId).toEqual(testUserId);
+      expect(logo!.userId).toBe(testUserId);
       expect(logo!.fileUrl).toBeDefined();
       expect(logo!.tags).toEqual(['test']);
     });

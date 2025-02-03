@@ -3,6 +3,7 @@
 ## Configuration Standards
 
 1. **Environment Variables**
+
 ```bash
 # Required
 MONGODB_URI=mongodb://localhost:27017/LogoGalleryDB
@@ -13,15 +14,17 @@ MONGODB_CONNECT_TIMEOUT=30000
 ```
 
 2. **Database Names**
+
 ```typescript
 const DB_NAMES = {
   development: 'LogoGalleryDevelopmentDB',
   test: 'LogoGalleryTestDB',
-  production: 'LogoGalleryDB'
+  production: 'LogoGalleryDB',
 } as const;
 ```
 
 3. **Connection Options**
+
 ```typescript
 const DB_OPTIONS = {
   development: {
@@ -37,14 +40,15 @@ const DB_OPTIONS = {
     w: 'majority',
     ssl: true,
     authSource: 'admin',
-    maxPoolSize: 50
-  }
+    maxPoolSize: 50,
+  },
 } as const;
 ```
 
 ## Connection Management
 
 1. **Global Connection Caching**
+
 ```typescript
 declare global {
   var mongoClientPromise: {
@@ -55,6 +59,7 @@ declare global {
 ```
 
 2. **Connection Functions**
+
 ```typescript
 // Connect
 async function connectToDatabase() {
@@ -79,6 +84,7 @@ async function disconnectFromDatabase() {
 ## Error Handling
 
 1. **Connection Errors**
+
 ```typescript
 try {
   await connectToDatabase();
@@ -89,6 +95,7 @@ try {
 ```
 
 2. **Operation Errors**
+
 ```typescript
 try {
   const result = await collection.findOne({ _id: id });
@@ -105,6 +112,7 @@ try {
 ## Query Standards
 
 1. **ID Handling**
+
 ```typescript
 import { ObjectId } from 'mongodb';
 
@@ -116,6 +124,7 @@ const doc = await collection.findOne({ _id: id });
 ```
 
 2. **Pagination**
+
 ```typescript
 const ITEMS_PER_PAGE = 20;
 
@@ -127,6 +136,7 @@ const items = await collection
 ```
 
 3. **Projections**
+
 ```typescript
 // Only fetch needed fields
 const user = await collection.findOne(
@@ -138,6 +148,7 @@ const user = await collection.findOne(
 ## Schema Validation
 
 1. **Collection Validation**
+
 ```typescript
 await db.createCollection('logos', {
   validator: {
@@ -148,16 +159,17 @@ await db.createCollection('logos', {
         title: {
           bsonType: 'string',
           minLength: 3,
-          maxLength: 60
+          maxLength: 60,
         },
         // ...
-      }
-    }
-  }
+      },
+    },
+  },
 });
 ```
 
 2. **Index Creation**
+
 ```typescript
 // Text indexes
 await collection.createIndex({ title: 'text', description: 'text' });
@@ -172,39 +184,111 @@ await collection.createIndex({ email: 1 }, { unique: true });
 ## Testing Standards
 
 1. **Test Database Setup**
+
 ```typescript
-const testDbHelper = new TestDbHelper();
+// Use mongodb-memory-server for isolated tests
+import { MongoMemoryServer } from 'mongodb-memory-server';
+
+let mongoServer: MongoMemoryServer;
 
 beforeAll(async () => {
-  await testDbHelper.connect();
+  mongoServer = await MongoMemoryServer.create({
+    instance: { startupTimeoutMS: 30000 },
+  });
+  process.env.MONGODB_URI = mongoServer.getUri();
 });
 
 afterAll(async () => {
-  await testDbHelper.disconnect();
+  await mongoServer?.stop();
 });
 
-afterEach(async () => {
-  await testDbHelper.clearCollections();
+beforeEach(async () => {
+  const { db } = await connectToDatabase();
+  await db.dropDatabase();
 });
 ```
 
-2. **Mocking Database**
+2. **Test Data Management**
+
 ```typescript
-jest.mock('@/app/lib/db-config', () => ({
-  connectToDatabase: jest.fn().mockResolvedValue({
-    db: {
-      collection: jest.fn().mockReturnValue({
-        findOne: jest.fn().mockResolvedValue(null),
-        // ...
-      })
-    }
-  })
-}));
+// Seed test data
+async function seedTestData() {
+  const { db } = await connectToDatabase();
+  await db.collection('users').insertMany([
+    // Test data...
+  ]);
+}
+
+// Clean test data
+async function cleanTestData() {
+  const { db } = await connectToDatabase();
+  await Promise.all([db.collection('users').deleteMany({}), db.collection('logos').deleteMany({})]);
+}
+```
+
+3. **Test Error Handling**
+
+```typescript
+describe('Database Error Handling', () => {
+  it('should handle connection errors', async () => {
+    // Simulate connection error
+    process.env.MONGODB_URI = 'invalid_uri';
+
+    await expect(connectToDatabase()).rejects.toThrow('MongoConnectionError');
+  });
+
+  it('should handle operation errors', async () => {
+    const { db } = await connectToDatabase();
+
+    // Simulate invalid operation
+    await expect(db.collection('invalid').findOne({})).rejects.toThrow();
+  });
+});
+```
+
+4. **Test Performance Standards**
+
+```typescript
+describe('Database Performance', () => {
+  it('should complete operations within timeout', async () => {
+    const start = Date.now();
+
+    await db.collection('logos').find().toArray();
+
+    const duration = Date.now() - start;
+    expect(duration).toBeLessThan(1000);
+  });
+});
+```
+
+5. **Test Monitoring**
+
+- Track test execution time
+- Monitor memory usage
+- Log slow queries
+- Record connection pool status
+
+6. **Test Documentation**
+
+```markdown
+## Test Database Status
+
+- Connection Pool Size: [Number]
+- Active Connections: [Number]
+- Available Connections: [Number]
+- Pending Operations: [Number]
+
+## Performance Metrics
+
+- Average Query Time: [ms]
+- Peak Memory Usage: [MB]
+- Slow Queries: [Number]
 ```
 
 ## Security Standards
 
 1. **Input Validation**
+
 ```typescript
 // Validate ObjectId
 function isValidObjectId(id: string): boolean {
@@ -214,13 +298,12 @@ function isValidObjectId(id: string): boolean {
 // Sanitize query
 function sanitizeQuery(query: any): any {
   // Remove any $ operators from user input
-  return JSON.parse(
-    JSON.stringify(query).replace(/\$/, '')
-  );
+  return JSON.parse(JSON.stringify(query).replace(/\$/, ''));
 }
 ```
 
 2. **Authentication**
+
 ```typescript
 // Require authentication for sensitive operations
 async function requireAuth(req: NextApiRequest) {
@@ -235,17 +318,20 @@ async function requireAuth(req: NextApiRequest) {
 ## Performance Standards
 
 1. **Connection Pooling**
+
 - Use the global cached connection
 - Configure appropriate pool size for environment
 - Monitor connection pool metrics
 
 2. **Query Optimization**
+
 - Use appropriate indexes
 - Limit returned fields with projections
 - Implement pagination
 - Use aggregation for complex queries
 
 3. **Caching**
+
 - Cache frequently accessed data
 - Implement proper cache invalidation
 - Use appropriate cache TTL
@@ -253,17 +339,19 @@ async function requireAuth(req: NextApiRequest) {
 ## Monitoring Standards
 
 1. **Connection Monitoring**
+
 ```typescript
 const client = await MongoClient.connect(uri, {
-  monitorCommands: true
+  monitorCommands: true,
 });
 
-client.on('commandStarted', (event) => {
+client.on('commandStarted', event => {
   console.log('Command started:', event);
 });
 ```
 
 2. **Performance Monitoring**
+
 ```typescript
 const startTime = Date.now();
 const result = await collection.findOne(query);
@@ -273,7 +361,7 @@ if (duration > 100) {
   console.warn('Slow query detected:', {
     operation: 'findOne',
     duration,
-    query
+    query,
   });
 }
-``` 
+```

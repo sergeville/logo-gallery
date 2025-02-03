@@ -51,11 +51,13 @@ SMTP_PASSWORD=your-smtp-password
 ## Getting Started
 
 1. Install dependencies:
+
 ```bash
 pnpm install
 ```
 
 2. Set up MongoDB:
+
 ```bash
 # macOS (using Homebrew)
 brew tap mongodb/brew
@@ -70,11 +72,13 @@ mongosh
 ```
 
 3. Create your `.env` file:
+
 ```bash
 cp .env.example .env
 ```
 
 4. Start the development server:
+
 ```bash
 pnpm dev
 ```
@@ -88,17 +92,20 @@ Visit http://localhost:3000 to see your app.
 The app uses MongoDB for data storage with the following collections:
 
 #### Users Collection
+
 - User authentication data
 - Profile information
 - Relationships with logos and votes
 
 #### Logos Collection
+
 - Logo metadata and storage paths
 - User ownership information
 - Tags and categories
 - Vote tracking
 
 #### Votes Collection
+
 - User voting records
 - Timestamp information
 - Logo references
@@ -106,6 +113,7 @@ The app uses MongoDB for data storage with the following collections:
 ### Real-time Features
 
 The app uses WebSocket-based real-time system for:
+
 - Live vote updates
 - User presence
 - Real-time notifications
@@ -114,6 +122,7 @@ The app uses WebSocket-based real-time system for:
 ### Authentication System
 
 Secure authentication powered by NextAuth.js with support for:
+
 - Multiple providers (GitHub, Google)
 - Email/Password
 - Magic links
@@ -123,6 +132,7 @@ Secure authentication powered by NextAuth.js with support for:
 ### Logo Management
 
 Advanced logo handling features:
+
 - Automatic image optimization
 - Multiple format support
 - Responsive images
@@ -133,6 +143,7 @@ Advanced logo handling features:
 ### Voting System
 
 Robust voting implementation with:
+
 - Real-time vote tracking
 - Anti-fraud measures
 - Vote analytics
@@ -171,6 +182,7 @@ pnpm format
 For information about webpack cache management and troubleshooting, see [Webpack Cache Management](docs/webpack-cache-management.md).
 
 Available cache-related commands:
+
 ```bash
 # Clean all caches
 pnpm clean-cache
@@ -199,11 +211,100 @@ logo-gallery/
 ## Testing
 
 The project includes:
+
 - Unit tests with Jest
 - Integration tests
 - E2E tests with Playwright
 - Visual regression tests
 - Performance testing
+
+## Test Management
+
+### Test Organization
+
+The project uses a hierarchical test structure:
+
+- Unit tests for individual components and functions
+- Integration tests for API endpoints and database operations
+- Visual regression tests for UI components
+- End-to-end tests for complete user flows
+
+### Subtest System
+
+Tests are organized using a subtest structure for better management:
+
+```typescript
+describe('Feature Category', () => {
+  describe('Specific Feature', () => {
+    describe('Test Scenario', () => {
+      it('should handle specific case', () => {
+        // Test implementation
+      });
+    });
+  });
+});
+```
+
+### Test Documentation
+
+- Test implementation details: [docs/test-implementation/](docs/test-implementation/)
+- Current test failures tracking: [docs/CURRENT_TEST_FAILURES.md](docs/CURRENT_TEST_FAILURES.md)
+- Issue tracking system: [docs/ISSUE_TRACKING.md](docs/ISSUE_TRACKING.md)
+
+## Image Handling System
+
+### Image Processing
+
+- Automatic PNG optimization and validation
+- Image similarity detection using perceptual hashing
+- Metadata extraction and validation
+- CRC32 checksum verification
+
+### Image Storage
+
+- Efficient image compression using zlib
+- Secure file storage with proper permissions
+- Automatic cleanup of unused images
+- CDN integration for faster delivery
+
+### Image Validation
+
+- File format verification
+- Size and dimension constraints
+- Duplicate detection
+- Similar image detection with configurable thresholds
+
+## Error Tracking and Monitoring
+
+### Error Management
+
+- Comprehensive error logging system
+- Prioritized error tracking
+- Visual test failure documentation
+- Automated error reporting
+
+### Quality Assurance
+
+- Continuous integration testing
+- Visual regression testing with Percy
+- Performance monitoring
+- Security vulnerability scanning
+
+### Development Tools
+
+```bash
+# Run visual regression tests
+npm run test:visual
+
+# Update visual test snapshots
+npm run test:visual:update
+
+# Debug tests with UI
+npm run test:visual:ui
+
+# Run unit tests
+npm run test:unit
+```
 
 ## Contributing
 
@@ -218,6 +319,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
 ## Performance
 
 The app is optimized for performance:
+
 - Server-side rendering
 - Static page generation
 - Image optimization
@@ -229,6 +331,7 @@ The app is optimized for performance:
 ## Security
 
 Security measures include:
+
 - CSRF protection
 - XSS prevention
 - Rate limiting
@@ -244,6 +347,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Support
 
 For support:
+
 1. Check the [documentation](docs/README.md)
 2. Search [existing issues](https://github.com/yourusername/logo-gallery/issues)
 3. Create a new issue

@@ -1,4 +1,7 @@
+#!/usr/bin/env node
+
 import { glob } from 'glob';
+import { execSync } from 'child_process';
 
 export interface ValidationResult {
   valid: boolean;
@@ -11,6 +14,51 @@ export interface ValidationResult {
 export interface ValidationRule {
   name: string;
   validate: (filePath: string) => Promise<ValidationResult>;
+}
+
+// Quick validation functions
+function validateImportPaths(): boolean {
+  try {
+    execSync('npm run fix-imports', { stdio: 'inherit' });
+    console.log('✅ Import paths follow standards');
+    return true;
+  } catch {
+    console.error('❌ Import path validation failed');
+    return false;
+  }
+}
+
+function validateTypeScript(): boolean {
+  try {
+    execSync('npm run type-check', { stdio: 'inherit' });
+    console.log('✅ TypeScript validation passed');
+    return true;
+  } catch {
+    console.error('❌ TypeScript validation failed');
+    return false;
+  }
+}
+
+function validateESLint(): boolean {
+  try {
+    execSync('npm run lint', { stdio: 'inherit' });
+    console.log('✅ ESLint validation passed');
+    return true;
+  } catch {
+    console.error('❌ ESLint validation failed');
+    return false;
+  }
+}
+
+function validatePrettier(): boolean {
+  try {
+    execSync('npm run format', { stdio: 'inherit' });
+    console.log('✅ Prettier formatting passed');
+    return true;
+  } catch {
+    console.error('❌ Prettier formatting failed');
+    return false;
+  }
 }
 
 // Validation rules based on our standards
@@ -61,7 +109,41 @@ const rules: ValidationRule[] = [
 ];
 
 // Main validation function
-export async function validateProject(): Promise<ValidationResult> {
+async function validateStandards(): Promise<void> {
+  console.log('🔍 Validating against project standards...\n');
+
+  // Run quick validations first
+  const quickResults = [
+    validateImportPaths(),
+    validateTypeScript(),
+    validateESLint(),
+    validatePrettier(),
+  ];
+
+  const quickSuccess = quickResults.every(Boolean);
+
+  // Run detailed validations
+  const detailedResult = await validateProject();
+
+  if (quickSuccess && detailedResult.valid) {
+    console.log('\n✨ All standards validation passed!');
+    process.exit(0);
+  } else {
+    console.error('\n❌ Standards validation failed. Please fix the issues above.');
+    if (detailedResult.errors.length > 0) {
+      console.error('\nDetailed validation errors:');
+      detailedResult.errors.forEach(error => console.error(`- ${error}`));
+    }
+    if (detailedResult.warnings.length > 0) {
+      console.warn('\nWarnings:');
+      detailedResult.warnings.forEach(warning => console.warn(`- ${warning}`));
+    }
+    process.exit(1);
+  }
+}
+
+// Project validation function
+async function validateProject(): Promise<ValidationResult> {
   const result: ValidationResult = {
     valid: true,
     name: 'Project Validation',
@@ -96,23 +178,12 @@ export async function validateProject(): Promise<ValidationResult> {
 
 // Run validation if this script is executed directly
 if (require.main === module) {
-  validateProject()
-    .then(result => {
-      if (!result.valid) {
-        console.error('Validation failed:');
-        result.errors.forEach(error => console.error(`- ${error}`));
-        result.warnings.forEach(warning => console.warn(`- ${warning}`));
-        process.exit(1);
-      } else {
-        console.log('Validation passed!');
-        if (result.warnings.length > 0) {
-          console.warn('\nWarnings:');
-          result.warnings.forEach(warning => console.warn(`- ${warning}`));
-        }
-      }
-    })
-    .catch(error => {
-      console.error('Validation script failed:', error);
-      process.exit(1);
-    });
+  validateStandards().catch((error: unknown) => {
+    if (error instanceof Error) {
+      console.error('Error running validation:', error.message);
+    } else {
+      console.error('Error running validation:', error);
+    }
+    process.exit(1);
+  });
 }

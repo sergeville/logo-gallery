@@ -141,9 +141,7 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
 
   render(): JSX.Element {
     if (this.state.hasError) {
-      return React.createElement(
-        'div',
-        { 'data-testid': 'error-boundary' },
+      return React.createElement('div', { 'data-testid': 'error-boundary' },
         React.createElement('h1', null, 'Something went wrong.'),
         React.createElement('pre', null, this.state.error?.message)
       );
@@ -182,7 +180,11 @@ export function setupReliabilityTest(): ReliabilityTestUtils {
     Component: React.ComponentType<unknown>,
     props: Record<string, unknown> = {}
   ): React.ReactElement {
-    return React.createElement(ErrorBoundary, null, React.createElement(Component, props));
+    return React.createElement(
+      ErrorBoundary,
+      null,
+      React.createElement(Component, props)
+    );
   }
 
   return { wrapWithErrorBoundary };

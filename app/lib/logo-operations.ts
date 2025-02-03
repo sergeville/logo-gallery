@@ -3,101 +3,113 @@ import { connectToDatabase } from './db-config';
 
 interface UploadedFile {
   name: string;
-  size: number;
   type: string;
+  size: number;
   buffer: Buffer;
+  stream?: () => void;
+  arrayBuffer?: () => Promise<Buffer>;
+  text?: () => Promise<string>;
 }
 
-interface LogoUploadInput {
+interface UploadLogoInput {
   file: UploadedFile;
-  userId: string;
   title: string;
+  description?: string;
   tags: string[];
+  userId: string;
 }
 
-export interface LogoUploadResult {
+interface LogoResult {
   status: number;
-  logo?: {
-    _id: string;
-    title: string;
-    userId: string;
-    fileUrl: string;
-    tags: string[];
-    createdAt: Date;
-  };
+  logo?: any;
   error?: string;
 }
 
 interface Logo {
   _id: string;
   title: string;
-  userId: string;
-  fileUrl: string;
+  description: string;
   tags: string[];
-  createdAt: Date;
+  createdAt: string;
+  userId: string;
+  url: string;
 }
 
-const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ALLOWED_FILE_TYPES = ['image/png', 'image/jpeg', 'image/svg+xml'];
 
-export async function uploadLogo(input: LogoUploadInput): Promise<LogoUploadResult> {
-  // Validate file size
+export async function uploadLogo(input: UploadLogoInput): Promise<LogoResult> {
+  const { db } = await connectToDatabase();
+
+  if (!db) {
+    return {
+      status: 500,
+      error: 'Database connection failed'
+    };
+  }
+
+  // Validate file
+  if (!input.file) {
+    return {
+      status: 400,
+      error: 'No file provided'
+    };
+  }
+
   if (input.file.size > MAX_FILE_SIZE) {
     return {
       status: 400,
-      error: 'File size exceeds the 2MB limit'
+      error: 'File size exceeds limit'
     };
   }
 
-  // Validate file type
   if (!ALLOWED_FILE_TYPES.includes(input.file.type)) {
     return {
       status: 400,
-      error: 'Invalid file type. Only PNG, JPG, and SVG files are allowed'
+      error: 'Invalid file type'
     };
   }
 
-  const { db } = await connectToDatabase();
-
-  // In a real implementation, we would:
-  // 1. Upload the file to cloud storage (e.g., S3)
-  // 2. Get the URL of the uploaded file
-  // For testing, we'll create a mock URL
-  const mockFileUrl = `https://storage.example.com/logos/${input.file.name}`;
-
-  // Store logo metadata in database
-  const result = await db.collection('logos').insertOne({
-    title: input.title,
-    userId: input.userId,
-    fileUrl: mockFileUrl,
-    tags: input.tags,
-    createdAt: new Date(),
-    fileName: input.file.name,
-    fileType: input.file.type,
-    fileSize: input.file.size
-  });
-
-  return {
-    status: 201,
-    logo: {
-      _id: result.insertedId.toString(),
+  try {
+    const logo = {
       title: input.title,
-      userId: input.userId,
-      fileUrl: mockFileUrl,
+      description: input.description || '',
       tags: input.tags,
-      createdAt: new Date()
-    }
-  };
+      userId: input.userId,
+      file: {
+        name: input.file.name,
+        type: input.file.type,
+        size: input.file.size,
+        data: input.file.buffer
+      },
+      name: input.file.name,
+      createdAt: new Date().toISOString()
+    };
+
+    const result = await db.collection('logos').insertOne(logo);
+    
+    return {
+      status: 201,
+      logo: { ...logo, _id: result.insertedId }
+    };
+  } catch (error) {
+    return {
+      status: 500,
+      error: 'Failed to upload logo'
+    };
+  }
 }
 
 export async function getLogo(logoId: string): Promise<Logo | null> {
   const { db } = await connectToDatabase();
 
-  try {
-    const logo = await db.collection('logos').findOne({
-      _id: new ObjectId(logoId)
-    });
+  if (!db) {
+    return null;
+  }
 
+  try {
+    const logo = await db.collection('logos').findOne({ _id: new ObjectId(logoId) });
+    
     if (!logo) {
       return null;
     }
@@ -105,13 +117,18 @@ export async function getLogo(logoId: string): Promise<Logo | null> {
     return {
       _id: logo._id.toString(),
       title: logo.title,
-      userId: logo.userId,
-      fileUrl: logo.fileUrl,
+      description: logo.description,
       tags: logo.tags,
-      createdAt: logo.createdAt
+      userId: logo.userId,
+      createdAt: logo.createdAt,
+      file: {
+        name: logo.file.name,
+        type: logo.file.type,
+        size: logo.file.size,
+        data: logo.file.data
+      }
     };
   } catch (error) {
-    // Handle invalid ObjectId
     return null;
   }
 } 

@@ -41,7 +41,7 @@ interface ShareCollectionInput {
 
 interface CollectionResult {
   status: number;
-  collection: CollectionDocument;
+  collection: CollectionDocument | null;
 }
 
 interface CollectionsResult {
@@ -56,20 +56,27 @@ interface SuccessResult {
 }
 
 export async function createCollection(input: CreateCollectionInput): Promise<CollectionResult> {
-  const db = await connectToDatabase();
+  const { db } = await connectToDatabase();
+  
+  if (!db) {
+    return { status: 500, collection: null };
+  }
 
   const collection = {
     ...input,
+    _id: new ObjectId().toString(),
     logos: [],
     sharedWith: [],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
 
-  const result = await db.collection('collections').insertOne(collection);
-  collection._id = result.insertedId.toString();
+  await db.collection('collections').insertOne({
+    ...collection,
+    _id: new ObjectId(collection._id)
+  });
 
-  return { status: 200, collection: collection as CollectionDocument };
+  return { status: 200, collection };
 }
 
 export async function updateCollection(
@@ -77,26 +84,32 @@ export async function updateCollection(
   userId: string,
   updates: UpdateCollectionInput
 ): Promise<CollectionResult> {
-  const db = await connectToDatabase();
+  const { db } = await connectToDatabase();
+  
+  if (!db) {
+    return { status: 500, collection: null };
+  }
 
-  const collection = await db.collection('collections').findOne({
+  const existingCollection = await db.collection('collections').findOne({
     _id: new ObjectId(collectionId),
     userId,
   });
 
-  if (!collection) {
+  if (!existingCollection) {
     return { status: 404, collection: null };
   }
 
   const updatedCollection = {
-    ...collection,
+    ...existingCollection,
     ...updates,
+    _id: existingCollection._id.toString(),
     updatedAt: new Date().toISOString(),
   };
 
-  await db
-    .collection('collections')
-    .updateOne({ _id: new ObjectId(collectionId) }, { $set: updatedCollection });
+  await db.collection('collections').updateOne(
+    { _id: new ObjectId(collectionId) },
+    { $set: { ...updates, updatedAt: updatedCollection.updatedAt } }
+  );
 
   return { status: 200, collection: updatedCollection as CollectionDocument };
 }
@@ -105,21 +118,26 @@ export async function deleteCollection(
   collectionId: string,
   userId: string
 ): Promise<SuccessResult> {
-  const db = await connectToDatabase();
+  const { db } = await connectToDatabase();
+  
+  if (!db) {
+    return { status: 500, success: false };
+  }
 
   const result = await db.collection('collections').deleteOne({
     _id: new ObjectId(collectionId),
     userId,
   });
 
-  return {
-    status: 200,
-    success: result.deletedCount === 1,
-  };
+  return { status: 200, success: result.deletedCount > 0 };
 }
 
 export async function getCollection(collectionId: string): Promise<CollectionResult> {
-  const db = await connectToDatabase();
+  const { db } = await connectToDatabase();
+  
+  if (!db) {
+    return { status: 500, collection: null };
+  }
 
   const collection = await db.collection('collections').findOne({
     _id: new ObjectId(collectionId),
@@ -129,17 +147,26 @@ export async function getCollection(collectionId: string): Promise<CollectionRes
     return { status: 404, collection: null };
   }
 
-  return { status: 200, collection: collection as CollectionDocument };
+  return {
+    status: 200,
+    collection: {
+      ...collection,
+      _id: collection._id.toString(),
+    } as CollectionDocument
+  };
 }
 
 export async function getCollections(
   userId: string,
   options: { page: number; limit: number; category?: CollectionCategory }
 ): Promise<CollectionsResult> {
-  const db = await connectToDatabase();
-  const { page, limit, category } = options;
+  const { db } = await connectToDatabase();
+  
+  if (!db) {
+    return { status: 500, collections: [], total: 0 };
+  }
 
-  const query = { userId, ...(category && { category }) };
+  const query = { userId, ...(options.category && { category: options.category }) };
 
   const total = await db.collection('collections').countDocuments(query);
 
@@ -147,11 +174,18 @@ export async function getCollections(
     .collection('collections')
     .find(query)
     .sort({ updatedAt: -1 })
-    .skip((page - 1) * limit)
-    .limit(limit)
+    .skip((options.page - 1) * options.limit)
+    .limit(options.limit)
     .toArray();
 
-  return { status: 200, collections: collections as CollectionDocument[], total };
+  return {
+    status: 200,
+    collections: collections.map(col => ({
+      ...col,
+      _id: col._id.toString(),
+    })) as CollectionDocument[],
+    total,
+  };
 }
 
 export async function addLogoToCollection(
@@ -159,7 +193,11 @@ export async function addLogoToCollection(
   logoId: string,
   userId: string
 ): Promise<SuccessResult> {
-  const db = await connectToDatabase();
+  const { db } = await connectToDatabase();
+  
+  if (!db) {
+    return { status: 500, success: false };
+  }
 
   const collection = await db.collection('collections').findOne({
     _id: new ObjectId(collectionId),
@@ -170,7 +208,7 @@ export async function addLogoToCollection(
     return { status: 404, success: false };
   }
 
-  await db.collection('collections').updateOne(
+  const result = await db.collection('collections').updateOne(
     { _id: new ObjectId(collectionId) },
     {
       $addToSet: { logos: logoId },
@@ -178,7 +216,7 @@ export async function addLogoToCollection(
     }
   );
 
-  return { status: 200, success: true };
+  return { status: 200, success: result.modifiedCount > 0 };
 }
 
 export async function removeLogoFromCollection(
@@ -186,7 +224,11 @@ export async function removeLogoFromCollection(
   logoId: string,
   userId: string
 ): Promise<SuccessResult> {
-  const db = await connectToDatabase();
+  const { db } = await connectToDatabase();
+  
+  if (!db) {
+    return { status: 500, success: false };
+  }
 
   const collection = await db.collection('collections').findOne({
     _id: new ObjectId(collectionId),
@@ -197,15 +239,15 @@ export async function removeLogoFromCollection(
     return { status: 404, success: false };
   }
 
-  await db.collection('collections').updateOne(
+  const result = await db.collection('collections').updateOne(
     { _id: new ObjectId(collectionId) },
     {
-      $pull: { logos: logoId },
+      $pull: { logos: { $eq: logoId } },
       $set: { updatedAt: new Date().toISOString() },
     }
   );
 
-  return { status: 200, success: true };
+  return { status: 200, success: result.modifiedCount > 0 };
 }
 
 export async function shareCollection(
@@ -213,7 +255,11 @@ export async function shareCollection(
   userId: string,
   input: ShareCollectionInput
 ): Promise<SuccessResult> {
-  const db = await connectToDatabase();
+  const { db } = await connectToDatabase();
+  
+  if (!db) {
+    return { status: 500, success: false };
+  }
 
   const collection = await db.collection('collections').findOne({
     _id: new ObjectId(collectionId),
@@ -224,26 +270,30 @@ export async function shareCollection(
     return { status: 404, success: false };
   }
 
-  const sharedWith = input.sharedWith.map(userId => ({
+  const sharedUsers = input.sharedWith.map(userId => ({
     userId,
     permissions: input.permissions,
   }));
 
-  await db.collection('collections').updateOne(
+  const result = await db.collection('collections').updateOne(
     { _id: new ObjectId(collectionId) },
     {
       $set: {
-        sharedWith,
+        sharedWith: sharedUsers,
         updatedAt: new Date().toISOString(),
       },
     }
   );
 
-  return { status: 200, success: true };
+  return { status: 200, success: result.modifiedCount > 0 };
 }
 
 export async function getSharedCollections(userId: string): Promise<CollectionsResult> {
-  const db = await connectToDatabase();
+  const { db } = await connectToDatabase();
+  
+  if (!db) {
+    return { status: 500, collections: [], total: 0 };
+  }
 
   const collections = await db
     .collection('collections')
@@ -254,7 +304,10 @@ export async function getSharedCollections(userId: string): Promise<CollectionsR
 
   return {
     status: 200,
-    collections: collections as CollectionDocument[],
+    collections: collections.map(col => ({
+      ...col,
+      _id: col._id.toString(),
+    })) as CollectionDocument[],
     total: collections.length,
   };
 }
@@ -264,26 +317,32 @@ export async function updateCollectionVisibility(
   userId: string,
   isPublic: boolean
 ): Promise<CollectionResult> {
-  const db = await connectToDatabase();
+  const { db } = await connectToDatabase();
+  
+  if (!db) {
+    return { status: 500, collection: null };
+  }
 
-  const collection = await db.collection('collections').findOne({
+  const existingCollection = await db.collection('collections').findOne({
     _id: new ObjectId(collectionId),
     userId,
   });
 
-  if (!collection) {
+  if (!existingCollection) {
     return { status: 404, collection: null };
   }
 
   const updatedCollection = {
-    ...collection,
+    ...existingCollection,
     isPublic,
+    _id: existingCollection._id.toString(),
     updatedAt: new Date().toISOString(),
   };
 
-  await db
-    .collection('collections')
-    .updateOne({ _id: new ObjectId(collectionId) }, { $set: updatedCollection });
+  await db.collection('collections').updateOne(
+    { _id: new ObjectId(collectionId) },
+    { $set: { isPublic, updatedAt: updatedCollection.updatedAt } }
+  );
 
   return { status: 200, collection: updatedCollection as CollectionDocument };
 }

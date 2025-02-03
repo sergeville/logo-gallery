@@ -1,407 +1,255 @@
 # Logo Gallery
 
-A modern, responsive logo gallery built with Next.js, TypeScript, and Tailwind CSS. Features include:
+A modern, real-time logo voting and showcase platform built with Next.js 14, TypeScript, and Tailwind CSS.
 
-- 🎨 Beautiful, responsive grid layout
-- 🌓 Dark mode support
-- 🔍 Search and filter functionality
-- ⚡️ Fast image loading with Next.js Image optimization
-- 📱 Mobile-friendly design
-- ✨ Smooth animations with Framer Motion
-- 🎯 Accessible UI components
-- 🔐 Authentication with NextAuth.js
-- 📤 Logo upload functionality
-- 🖼️ SVG support and optimization
-- 🧪 Visual regression testing
-- 🚀 Performance optimizations
+## Features
+
+- 🌓 Dark mode with system preference detection
+- 🔍 Advanced search and filter functionality
+- 📱 Mobile-friendly responsive design
+- ✨ Smooth animations and transitions
+- ♿️ Accessible UI components with ARIA support
+- 🔒 Secure authentication with NextAuth.js
+- 📤 Logo upload with automatic optimization
+- ⚡️ Real-time data synchronization
+- 🗳️ Multi-user voting system
+- 🎨 Theme customization
+
+## Prerequisites
+
+- Node.js 18.17 or later
+- Redis 7.0 or later
+- PostgreSQL 14 or later
+- pnpm (recommended) or npm
+
+## Environment Setup
+
+```bash
+# Database
+MONGODB_URI=mongodb://localhost:27017/LogoGalleryDB
+
+# Authentication
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=your-secret-key
+GITHUB_ID=your-github-id
+GITHUB_SECRET=your-github-secret
+GOOGLE_ID=your-google-id
+GOOGLE_SECRET=your-google-secret
+
+# Storage
+CLOUDINARY_CLOUD_NAME=your-cloud-name
+CLOUDINARY_API_KEY=your-api-key
+CLOUDINARY_API_SECRET=your-api-secret
+
+# Email (optional)
+SMTP_HOST=smtp.example.com
+SMTP_PORT=587
+SMTP_USER=your-smtp-user
+SMTP_PASSWORD=your-smtp-password
+```
 
 ## Getting Started
 
-### Prerequisites
-
-- Node.js 18.x or later
-- npm or yarn
-- MongoDB (for user data and logo storage)
-
-### Installation
-
-1. Clone the repository:
-
+1. Install dependencies:
 ```bash
-git clone https://github.com/yourusername/logo-gallery.git
-cd logo-gallery
+pnpm install
 ```
 
-2. Install dependencies:
-
+2. Set up MongoDB:
 ```bash
-npm install
+# macOS (using Homebrew)
+brew tap mongodb/brew
+brew install mongodb-community
+brew services start mongodb-community
+
+# Linux
+sudo systemctl start mongod
+
+# Verify MongoDB is running
+mongosh
 ```
 
-3. Set up environment variables:
-
-   - Copy `.env.example` to `.env.local`
-   - Fill in required environment variables (MongoDB URI, NextAuth secret, etc.)
+3. Create your `.env` file:
+```bash
+cp .env.example .env
+```
 
 4. Start the development server:
-
 ```bash
-npm run dev
+pnpm dev
 ```
 
-5. Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Visit http://localhost:3000 to see your app.
 
-## Features
+## Architecture
 
-### Authentication
+### Database Design
 
-- User registration and login
-- OAuth providers support
-- Protected routes and API endpoints
+The app uses MongoDB for data storage with the following collections:
+
+#### Users Collection
+- User authentication data
+- Profile information
+- Relationships with logos and votes
+
+#### Logos Collection
+- Logo metadata and storage paths
+- User ownership information
+- Tags and categories
+- Vote tracking
+
+#### Votes Collection
+- User voting records
+- Timestamp information
+- Logo references
+
+### Real-time Features
+
+The app uses WebSocket-based real-time system for:
+- Live vote updates
+- User presence
+- Real-time notifications
+- Collaborative features
+
+### Authentication System
+
+Secure authentication powered by NextAuth.js with support for:
+- Multiple providers (GitHub, Google)
+- Email/Password
+- Magic links
 - Session management
+- Role-based access control
 
 ### Logo Management
 
-- Upload logos with metadata
-- Edit logo information
-- Delete logos
+Advanced logo handling features:
 - Automatic image optimization
-- SVG support with SVGR
+- Multiple format support
+- Responsive images
+- Lazy loading
+- Blur placeholder
+- Error handling
 
-### Gallery Features
+### Voting System
 
-- Responsive grid layout
-- Search and filtering
-- Sort by various criteria
-- Infinite scroll
-- Dark mode support
-
-### Visual Testing
-
-- Visual regression testing with Playwright
-- Snapshot comparison
-- Cross-browser testing
-- Mobile responsive testing
-
-## Documentation
-
-### Project Structure
-
-- `app/` - Next.js app directory with route handlers and pages
-- `components/` - Reusable React components
-- `lib/` - Utility functions and configuration
-- `public/` - Static assets and uploaded logos
-- `docs/` - Project documentation
-- `e2e/` - End-to-end and visual tests
-
-### Documentation Categories
-
-#### Development
-
-- [Development Standards](docs/development/STANDARDS.md)
-- [Error Tracking](docs/development/ERROR_TRACKING.md)
-- [Build Fixes](docs/development/nextjs-build-fixes.md)
-- [Tasks & Planning](docs/development/TASKS.md)
-- [Development Progress](docs/development/CONVERSATION_SUMMARY.md)
-- [AI Development Guide](docs/development/AICustomInstructions.md)
-- [Todo List](docs/development/test-todo.md)
-
-#### Testing
-
-- [Test Issues](docs/testing/TEST_ISSUES.md)
-- [Current Test Failures](docs/testing/CURRENT_TEST_FAILURES.md)
-- [Test Failures Log](docs/testing/test-failures.md)
-- [Test Status](docs/testing/TEST_STATUS.md)
-
-#### Contributing
-
-- [Contributing Guide](docs/contributing/CONTRIBUTING.md)
-- [Changelog](docs/contributing/CHANGELOG.md)
-
-#### Design
-
-- [Design System](docs/design/auth-signin.md)
+Robust voting implementation with:
+- Real-time vote tracking
+- Anti-fraud measures
+- Vote analytics
+- User voting history
+- Voting deadlines
 
 ## Development
 
-### Running Tests
+### Commands
 
 ```bash
-# Run visual tests
-npm run test:visual
+# Start development server
+pnpm dev
 
-# Update visual snapshots
-npm run test:visual:update
+# Build for production
+pnpm build
+
+# Start production server
+pnpm start
+
+# Run tests
+pnpm test
+
+# Run E2E tests
+pnpm test:e2e
+
+# Run linter
+pnpm lint
+
+# Format code
+pnpm format
 ```
 
-### Code Quality
+### Cache Management
 
-- ESLint for code linting
-- Prettier for code formatting
-- Husky for pre-commit hooks
-- TypeScript for type safety
+For information about webpack cache management and troubleshooting, see [Webpack Cache Management](docs/webpack-cache-management.md).
 
-### Performance Optimization
-
-- Image optimization with Next.js Image
-- SVG optimization with SVGR
-- Code splitting and lazy loading
-- Caching strategies
-
-## Contributing
-
-Please read our [Contributing Guide](CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-# Image Handling Examples
-
-This repository contains a collection of React hooks and utilities for handling images in web applications. These examples demonstrate common image-related tasks such as optimization, preloading, validation, caching, and compression.
-
-## Features
-
-### 1. Image Optimization Hook (`useImageOptimization`)
-
-- Resize images to specified dimensions
-- Convert images to different formats (WebP, JPEG, PNG)
-- Adjust image quality
-- Handle both File and Blob inputs
-
-### 2. Image Preloading Hook (`useImagePreload`)
-
-- Preload single or multiple images
-- Cache preloaded images
-- Clear preload cache when needed
-- Prevent duplicate preloading
-
-### 3. Image Validation Hook (`useImageValidation`)
-
-- Validate image dimensions
-- Check file size limits
-- Verify allowed formats
-- Get image dimensions
-
-### 4. Image Cache Hook (`useImageCache`)
-
-- Cache images with size limits
-- Automatic cache cleanup
-- Age-based cache invalidation
-- Memory-efficient storage
-
-### 5. Image Compression Utility
-
-- Target size-based compression
-- Automatic quality adjustment
-- Compression ratio calculation
-- Original vs compressed size comparison
-
-## Installation
-
+Available cache-related commands:
 ```bash
-npm install
-# or
-yarn
+# Clean all caches
+pnpm clean-cache
+
+# Start development with clean cache
+pnpm dev:clean
 ```
 
-## Usage Examples
+### Project Structure
 
-### Image Optimization
-
-```typescript
-import { useImageOptimization } from './hooks-and-utilities';
-
-function ImageUploader() {
-  const { optimizeImage } = useImageOptimization();
-
-  const handleUpload = async (file: File) => {
-    const optimized = await optimizeImage(file, {
-      maxWidth: 1920,
-      maxHeight: 1080,
-      quality: 85,
-      format: 'webp',
-    });
-    // Use optimized image...
-  };
-}
+```
+logo-gallery/
+├── app/                    # Next.js app directory
+│   ├── api/               # API routes
+│   ├── auth/              # Authentication pages
+│   ├── components/        # Shared components
+│   ├── hooks/             # Custom React hooks
+│   ├── lib/               # Utility functions
+│   ├── providers/         # Context providers
+│   └── types/             # TypeScript types
+├── prisma/                # Database schema
+├── public/                # Static assets
+└── tests/                 # Test files
 ```
 
-### Image Preloading
+## Testing
 
-```typescript
-import { useImagePreload } from './hooks-and-utilities';
-
-function ImageGallery() {
-  const { preloadImages } = useImagePreload();
-
-  useEffect(() => {
-    const urls = ['image1.jpg', 'image2.jpg'];
-    preloadImages(urls).then(() => {
-      console.log('Images preloaded');
-    });
-  }, []);
-}
-```
-
-### Image Validation
-
-```typescript
-import { useImageValidation } from './hooks-and-utilities';
-
-function ImageUploader() {
-  const { validateImage } = useImageValidation();
-
-  const handleUpload = async (file: File) => {
-    const result = await validateImage(file, {
-      maxWidth: 2000,
-      maxHeight: 2000,
-      maxSize: 5 * 1024 * 1024,
-      allowedFormats: ['image/jpeg', 'image/png', 'image/webp'],
-    });
-
-    if (result.valid) {
-      // Process valid image...
-    } else {
-      console.error(result.error);
-    }
-  };
-}
-```
-
-### Image Caching
-
-```typescript
-import { useImageCache } from './hooks-and-utilities';
-
-function ImageViewer() {
-  const { cacheImage, getCachedImage } = useImageCache();
-
-  const loadImage = async (url: string) => {
-    const cached = getCachedImage(url);
-    if (cached) {
-      return URL.createObjectURL(cached);
-    }
-
-    const response = await fetch(url);
-    const blob = await response.blob();
-    await cacheImage(url, blob, {
-      maxSize: 50 * 1024 * 1024,
-      maxAge: 24 * 60 * 60 * 1000,
-    });
-    return URL.createObjectURL(blob);
-  };
-}
-```
-
-### Image Compression
-
-```typescript
-import { compressImage } from './hooks-and-utilities';
-
-async function handleImageUpload(file: File) {
-  const result = await compressImage(file, 1024 * 1024); // Target size: 1MB
-  console.log(`Compression ratio: ${result.compressionRatio}`);
-  console.log(`Original size: ${result.originalSize} bytes`);
-  console.log(`Compressed size: ${result.compressedSize} bytes`);
-  // Use result.blob...
-}
-```
-
-## Contributing
-
-Feel free to submit issues and enhancement requests!
-
-## License
-
-MIT
-
-# Visual Test Standards Validator
-
-This tool validates visual test files against our established standards and best practices. It helps maintain consistency and quality across our visual testing codebase.
-
-## Features
-
-- **File Organization Validation**: Ensures proper directory structure
-- **Naming Conventions**: Enforces consistent file naming patterns
-- **Component Test Structure**: Validates test setup and organization
-- **Required Test Cases**: Checks for essential test states (loading, error, empty)
-- **TypeScript Standards**: Enforces TypeScript best practices
-- **Documentation Requirements**: Ensures proper code documentation
-
-## Installation
-
-```bash
-npm install
-```
-
-## Usage
-
-Run the validation script:
-
-```bash
-npm run validate
-```
-
-Run tests:
-
-```bash
-npm test
-```
-
-## Standards Checked
-
-### 1. File Organization
-
-- Required directories:
-  - `e2e/visual-tests/components/`
-  - `e2e/visual-tests/middleware/`
-  - `e2e/visual-tests/utils/`
-
-### 2. Naming Conventions
-
-- Visual test files must end with:
-  - `.visual.spec.ts`
-  - `.percy.spec.ts`
-  - `-utils.ts`
-
-### 3. Component Test Structure
-
-- Must use `test.describe`
-- Should include `preparePageForVisualTest`
-- Recommended to use `testComponentStates`
-
-### 4. Required Test Cases
-
-- Should test loading states
-- Should test error states
-- Should test empty states
-- Should include responsive testing
-- Should include accessibility testing
-
-### 5. TypeScript Standards
-
-- Explicit return types required
-- No `any` type usage
-- Proper interface/type usage
-
-### 6. Documentation
-
-- JSDoc comments required
-- Complex setup must be documented
-
-## Error Levels
-
-- **Errors**: Must be fixed (exits with code 1)
-- **Warnings**: Should be reviewed (exits with code 0)
+The project includes:
+- Unit tests with Jest
+- Integration tests
+- E2E tests with Playwright
+- Visual regression tests
+- Performance testing
 
 ## Contributing
 
 1. Fork the repository
 2. Create your feature branch
-3. Add or modify tests as needed
-4. Submit a pull request
+3. Commit your changes
+4. Push to the branch
+5. Create a Pull Request
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
+
+## Performance
+
+The app is optimized for performance:
+- Server-side rendering
+- Static page generation
+- Image optimization
+- Code splitting
+- Bundle optimization
+- Caching strategies
+- CDN integration
+
+## Security
+
+Security measures include:
+- CSRF protection
+- XSS prevention
+- Rate limiting
+- Input validation
+- Secure headers
+- Content security policy
+- OAuth 2.0 compliance
 
 ## License
 
-MIT
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Support
+
+For support:
+1. Check the [documentation](docs/README.md)
+2. Search [existing issues](https://github.com/yourusername/logo-gallery/issues)
+3. Create a new issue
+
+## Acknowledgments
+
+- Next.js team for the amazing framework
+- Vercel for hosting and deployment
+- Contributors and maintainers

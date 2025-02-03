@@ -146,3 +146,61 @@ Additional features that provide extra value but aren't critical for core functi
    - Dependency management
    - Performance optimization
    - Documentation updates
+
+## Duplicate File Handling
+
+### Overview
+The logo gallery implements robust duplicate file detection to prevent redundant uploads and maintain data integrity. The system uses SHA-256 hashing to identify duplicate files, regardless of filename or metadata differences.
+
+### Features
+- Per-user duplicate detection
+- System-wide duplicate detection (optional)
+- Content-based detection (using file hashes)
+- Support for reupload after deletion
+- Concurrent upload handling
+
+### Implementation Details
+
+#### File Hash Generation
+- Uses SHA-256 hashing algorithm
+- Hash is generated from file content (buffer)
+- Stored with each logo record for efficient lookups
+
+#### Duplicate Detection Process
+1. File hash is generated upon upload
+2. System checks for existing files with the same hash
+3. Two levels of duplicate checking:
+   - User-level: Prevents same user from uploading duplicate files
+   - System-level: Optional check for duplicates across all users
+
+#### Configuration Options
+- `allowSystemDuplicates`: Controls whether to allow the same file to be uploaded by different users
+- Default behavior prevents duplicates per user but allows cross-user duplicates
+
+### Error Handling
+- Status code 409 (Conflict) for duplicate files
+- Different error messages for:
+  - User-owned duplicates: "Duplicate file detected"
+  - System-wide duplicates: "File already exists in the system"
+
+### Test Coverage
+The duplicate handling functionality is thoroughly tested with cases for:
+- Basic duplicate detection
+- Cross-user uploads
+- Filename variations
+- Metadata differences
+- Post-deletion reuploads
+- Concurrent uploads
+
+### Best Practices
+1. Always check for duplicates before processing uploads
+2. Use content-based detection rather than filename matching
+3. Consider storage implications when allowing cross-user duplicates
+4. Implement proper cleanup for deleted files
+5. Handle concurrent uploads gracefully
+
+### Future Enhancements
+- [ ] Add similarity detection for near-duplicate images
+- [ ] Implement duplicate file management UI
+- [ ] Add batch duplicate checking
+- [ ] Support for duplicate file versioning

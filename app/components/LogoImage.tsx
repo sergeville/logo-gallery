@@ -24,8 +24,8 @@ export default function LogoImage({
   priority = false,
   quality = 75,
   responsiveUrls,
-  width = 200,
-  height = 200,
+  width,
+  height,
   onError,
 }: LogoImageProps) {
   const [error, setError] = useState<Error | null>(null);
@@ -34,6 +34,7 @@ export default function LogoImage({
 
   const handleError = (e: Error) => {
     setError(e);
+    setIsLoading(false);
     onError?.(e);
     console.error('Image loading error:', e);
   };
@@ -45,7 +46,7 @@ export default function LogoImage({
         className={`flex flex-col items-center justify-center gap-2 ${
           theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'
         } ${className}`}
-        style={{ aspectRatio: width && height ? width / height : '1' }}
+        style={{ aspectRatio: '1' }}
         role="alert"
         aria-label={`Error loading image: ${alt}`}
       >
@@ -55,46 +56,36 @@ export default function LogoImage({
     );
   }
 
-  // Loading state
-  if (isLoading) {
-    return (
-      <div 
-        className={`flex items-center justify-center animate-pulse ${
-          theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'
-        } ${className}`}
-        style={{ aspectRatio: width && height ? width / height : '1' }}
-        role="progressbar"
-        aria-label={`Loading image: ${alt}`}
-      >
-        <ImageIcon className="w-6 h-6 text-gray-400" />
-      </div>
-    );
-  }
-
   // Normalize image URL
-  const imageUrl = !src ? '' : src.startsWith('http') || src.startsWith('/') ? src : `/${src}`;
-
-  // Generate srcSet if responsive URLs are available
-  const generateSrcSet = () => {
-    if (!responsiveUrls) return undefined;
-    return Object.entries(responsiveUrls)
-      .map(([size, url]) => `${url} ${size}w`)
-      .join(', ');
-  };
+  const imageUrl = !src ? '/placeholder-logo.png' : src.startsWith('http') || src.startsWith('/') ? src : `/${src}`;
 
   return (
-    <Image
-      src={imageUrl}
-      alt={alt}
-      width={width}
-      height={height}
-      className={className}
-      priority={priority}
-      quality={quality}
-      srcSet={generateSrcSet()}
-      onError={(e) => handleError(e as Error)}
-      onLoad={() => setIsLoading(false)}
-      loading={priority ? 'eager' : 'lazy'}
-    />
+    <div className="relative w-full h-full">
+      {/* Loading skeleton */}
+      {isLoading && (
+        <div 
+          className={`absolute inset-0 flex items-center justify-center ${
+            theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'
+          } animate-pulse`}
+          role="progressbar"
+          aria-label={`Loading image: ${alt}`}
+        >
+          <ImageIcon className="w-6 h-6 text-gray-400" />
+        </div>
+      )}
+
+      <Image
+        src={imageUrl}
+        alt={alt}
+        fill
+        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+        className={`object-contain ${className} ${isLoading ? 'opacity-0' : 'opacity-100'}`}
+        priority={priority}
+        quality={quality}
+        onError={(e) => handleError(e as Error)}
+        onLoad={() => setIsLoading(false)}
+        loading={priority ? 'eager' : 'lazy'}
+      />
+    </div>
   );
 } 

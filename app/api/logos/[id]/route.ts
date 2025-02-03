@@ -5,7 +5,6 @@ import { Logo } from '@/app/lib/models/logo';
 import dbConnect from '@/app/lib/db-config';
 import { unlink } from 'fs/promises';
 import path from 'path';
-import { use } from 'react';
 
 export async function GET(
   request: Request,
@@ -33,10 +32,10 @@ export async function GET(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
-    const { id } = use(params);
+    const { id } = params;
     const session = await getServerSession(authConfig);
     if (!session) {
       console.log('Unauthorized: No session found');

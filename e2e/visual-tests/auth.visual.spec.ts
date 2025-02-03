@@ -118,4 +118,34 @@ test.describe('Authentication Visual Tests', () => {
     await preparePageForVisualTest(page);
     await expect(page).toHaveScreenshot('signin-form-dark-mode.png');
   });
+
+  test('sign out visual states', async ({ page }) => {
+    // First sign in
+    const testEmail = process.env.NEXT_PUBLIC_TEST_EMAIL;
+    const testPassword = process.env.NEXT_PUBLIC_TEST_PASSWORD;
+
+    await page.goto('/auth/signin');
+    await page.fill('input[name="email"]', testEmail);
+    await page.fill('input[name="password"]', testPassword);
+    await page.click('button[type="submit"]');
+    await page.waitForURL('**/gallery');
+
+    // Take screenshot of authenticated state
+    await expect(page).toHaveScreenshot('auth-authenticated.png');
+
+    // Click sign out
+    await page.click('button:has-text("Sign Out")');
+    await page.waitForURL('/');
+
+    // Take screenshot of signed out state
+    await expect(page).toHaveScreenshot('auth-signed-out.png');
+
+    // Verify UI elements
+    await expect(page.locator('button:has-text("Sign In")')).toBeVisible();
+    await expect(page.locator('text=Upload Logo')).not.toBeVisible();
+
+    // Test accessibility after sign out
+    const accessibilityReport = await runAccessibilityTest(page);
+    expect(accessibilityReport.violations).toEqual([]);
+  });
 });

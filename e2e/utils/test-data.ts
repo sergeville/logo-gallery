@@ -46,20 +46,20 @@ export class TestData {
     }
 
     try {
-      await this.waitForElement('[data-testid="login-button"]')
-      await this.page.click('[data-testid="login-button"]')
+      await this.waitForElement('a[href="/auth/signin"]')
+      await this.page.click('a[href="/auth/signin"]')
       
-      await this.waitForElement('[data-testid="register-tab"]')
-      await this.page.click('[data-testid="register-tab"]')
+      await this.waitForElement('a[href="/auth/register"]')
+      await this.page.click('a[href="/auth/register"]')
       
-      await this.waitForElement('[data-testid="username-input"]')
-      await this.page.fill('[data-testid="username-input"]', testUser.username)
-      await this.page.fill('[data-testid="email-input"]', testUser.email)
-      await this.page.fill('[data-testid="password-input"]', testUser.password)
+      await this.waitForElement('#name')
+      await this.page.fill('#name', testUser.username)
+      await this.page.fill('#email', testUser.email)
+      await this.page.fill('#password', testUser.password)
       
       await Promise.all([
-        this.page.waitForResponse(response => response.url().includes('/api/auth/register')),
-        this.page.click('[data-testid="register-submit"]')
+        this.page.waitForResponse(response => response.url().includes('/api/auth/signup')),
+        this.page.click('button:has-text("Sign up")')
       ])
 
       return testUser
@@ -71,16 +71,16 @@ export class TestData {
 
   async loginUser(user: TestUser) {
     try {
-      await this.waitForElement('[data-testid="login-button"]')
-      await this.page.click('[data-testid="login-button"]')
+      await this.waitForElement('a[href="/auth/signin"]')
+      await this.page.click('a[href="/auth/signin"]')
       
-      await this.waitForElement('[data-testid="email-input"]')
-      await this.page.fill('[data-testid="email-input"]', user.email)
-      await this.page.fill('[data-testid="password-input"]', user.password)
+      await this.waitForElement('#email')
+      await this.page.fill('#email', user.email)
+      await this.page.fill('#password', user.password)
       
       await Promise.all([
-        this.page.waitForResponse(response => response.url().includes('/api/auth/login')),
-        this.page.click('[data-testid="login-submit"]')
+        this.page.waitForResponse(response => response.url().includes('/api/auth/callback/credentials')),
+        this.page.click('button:has-text("Sign in")')
       ])
     } catch (error) {
       console.error('Failed to login user:', error)
@@ -118,20 +118,20 @@ export class TestData {
     }
 
     try {
-      await this.waitForElement('[data-testid="upload-button"]')
-      await this.page.click('[data-testid="upload-button"]')
+      await this.waitForElement('a:has-text("Upload Logo")')
+      await this.page.click('a:has-text("Upload Logo")')
       
-      await this.waitForElement('[data-testid="file-input"]')
-      await this.page.setInputFiles('[data-testid="file-input"]', testLogo.imagePath)
+      await this.waitForElement('input[type="file"]')
+      await this.page.setInputFiles('input[type="file"]', testLogo.imagePath)
       
-      await this.waitForElement('[data-testid="logo-name-input"]')
-      await this.page.fill('[data-testid="logo-name-input"]', testLogo.name)
-      await this.page.fill('[data-testid="logo-description-input"]', testLogo.description)
-      await this.page.fill('[data-testid="logo-tags-input"]', testLogo.tags.join(', '))
+      await this.waitForElement('#title')
+      await this.page.fill('#title', testLogo.name)
+      await this.page.fill('#description', testLogo.description)
+      await this.page.fill('#tags', testLogo.tags.join(', '))
       
       await Promise.all([
         this.page.waitForResponse(response => response.url().includes('/api/logos')),
-        this.page.click('[data-testid="upload-submit"]')
+        this.page.click('button:has-text("Upload")')
       ])
 
       return testLogo

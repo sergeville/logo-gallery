@@ -4,6 +4,33 @@
 
 The Logo Gallery application uses MongoDB as its primary database. This document outlines the database structure, collections, relationships, and validation rules.
 
+## Database Configuration
+
+The application uses environment-specific database configurations:
+
+```typescript
+// Development
+{
+  uri: process.env.MONGODB_URI || 'mongodb://localhost:27017/LogoGalleryDevelopmentDB',
+  options: {
+    retryWrites: true,
+    w: 'majority'
+  }
+}
+
+// Production
+{
+  uri: process.env.MONGODB_URI,
+  options: {
+    retryWrites: true,
+    w: 'majority',
+    ssl: true,
+    authSource: 'admin',
+    maxPoolSize: 50
+  }
+}
+```
+
 ## Collections
 
 ### Logos Collection
@@ -37,7 +64,7 @@ The Logo Gallery application uses MongoDB as its primary database. This document
     validate: /^\/uploads\/.*\.(png|jpg|jpeg|gif|webp|svg)$/i
   },
   userId: {
-    type: String,
+    type: ObjectId,
     required: true,
     index: true
   },
@@ -59,7 +86,7 @@ The Logo Gallery application uses MongoDB as its primary database. This document
   },
   votes: [{
     userId: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: ObjectId,
       required: true
     },
     timestamp: {
@@ -83,16 +110,33 @@ The Logo Gallery application uses MongoDB as its primary database. This document
 
 ```typescript
 {
-  name: String,
   email: {
     type: String,
     required: true,
-    unique: true
+    unique: true,
+    lowercase: true,
+    trim: true
   },
-  image: String,
-  emailVerified: Date,
-  createdAt: Date,
-  updatedAt: Date
+  name: String,
+  password: {
+    type: String,
+    required: true
+  },
+  bio: String,
+  role: {
+    type: String,
+    enum: ['user', 'admin'],
+    default: 'user'
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+    immutable: true
+  },
+  updatedAt: {
+    type: Date,
+    default: Date.now
+  }
 }
 ```
 
@@ -101,23 +145,70 @@ The Logo Gallery application uses MongoDB as its primary database. This document
 ### Logos Collection
 ```typescript
 // Text search on title and description
-logoSchema.index({ title: 'text', description: 'text' });
+db.logos.createIndex({ title: 'text', description: 'text' });
 
-// Quick access to user's logos and title combinations
-logoSchema.index({ userId: 1, title: 1 });
+// Quick access to user's logos
+db.logos.createIndex({ userId: 1 });
 
 // Sorting by creation date
-logoSchema.index({ createdAt: -1 });
+db.logos.createIndex({ createdAt: -1 });
 
 // Efficient vote queries
-logoSchema.index({ 'votes.userId': 1 });
+db.logos.createIndex({ 'votes.userId': 1 });
 ```
 
 ### Users Collection
 ```typescript
 // Unique email addresses
-userSchema.index({ email: 1 }, { unique: true });
+db.users.createIndex({ email: 1 }, { unique: true });
 ```
+
+## Best Practices
+
+### 1. Connection Management
+- Use connection pooling
+- Implement proper error handling
+- Cache database connections
+- Handle reconnection gracefully
+
+### 2. Data Validation
+- Validate data before insertion
+- Use MongoDB schema validation
+- Implement application-level validation
+- Handle validation errors gracefully
+
+### 3. Performance
+- Use appropriate indexes
+- Monitor query performance
+- Implement pagination
+- Use projection to limit fields
+
+### 4. Security
+- Use authentication
+- Enable SSL/TLS
+- Implement role-based access
+- Sanitize user inputs
+
+## Troubleshooting
+
+### Common Issues
+1. Connection Failures
+   - Check MongoDB service status
+   - Verify connection string
+   - Check network connectivity
+   - Verify credentials
+
+2. Performance Issues
+   - Check indexes
+   - Monitor query patterns
+   - Review connection pool settings
+   - Analyze slow queries
+
+3. Data Integrity
+   - Validate data consistency
+   - Check relationships
+   - Monitor write operations
+   - Review error logs
 
 ## Relationships
 

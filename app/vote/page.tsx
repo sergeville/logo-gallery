@@ -249,17 +249,19 @@ export default function VotePage() {
                 }`}
               >
                 {/* Logo image */}
-                <div className="aspect-w-16 aspect-h-9 relative bg-gray-100 dark:bg-gray-700">
+                <div className="relative aspect-square bg-gray-100 dark:bg-gray-700">
                   <LogoImage
-                    src={logo.thumbnailUrl}
-                    alt={`Logo: ${logo.name} by ${logo.ownerName}`}
+                    src={logo.thumbnailUrl || logo.imageUrl}
+                    alt={`Logo: ${logo.name || logo.title} by ${logo.ownerName}`}
                     className="p-4"
+                    priority={false}
+                    quality={75}
                   />
                 </div>
                 {/* Logo details */}
                 <div className="p-4">
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    {logo.name}
+                    {logo.name || logo.title}
                   </h3>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
                     by {logo.ownerName}
@@ -267,9 +269,17 @@ export default function VotePage() {
                   <p className="mt-2 text-sm text-gray-500 dark:text-gray-300">
                     {logo.description}
                   </p>
-                  <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                    Voting ends: {new Date(logo.votingDeadline).toLocaleDateString()}
-                  </p>
+                  {/* Vote count */}
+                  <div className="mt-2 flex items-center justify-between">
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      {logo.totalVotes || 0} votes
+                    </p>
+                    {isVoted && (
+                      <span className="text-sm text-blue-600 dark:text-blue-400">
+                        Your current vote
+                      </span>
+                    )}
+                  </div>
                   {/* Voting controls */}
                   <div className="mt-4">
                     <label className="inline-flex items-center">

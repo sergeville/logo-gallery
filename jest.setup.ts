@@ -244,8 +244,8 @@ class MockHeaders implements Headers {
   }
 
   getSetCookie(): string[] {
-    return [];
-  }
+        return [];
+      }
 }
 
 // Create a type-safe mock request function

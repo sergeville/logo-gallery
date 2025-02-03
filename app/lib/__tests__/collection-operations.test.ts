@@ -158,7 +158,7 @@ describe('[P2] Logo Collections', () => {
 
       // Verify logo is in collection
       const collection = await getCollection(createResult.collection._id);
-      expect(collection.collection.logos).toContain(testLogo._id);
+      expect(collection.collection.logos.map(id => id.toString())).toContain(testLogo._id.toString());
     });
 
     it('should remove a logo from a collection', async () => {
@@ -208,7 +208,7 @@ describe('[P2] Logo Collections', () => {
 
       // Verify shared collection is accessible
       const sharedCollections = await getSharedCollections(otherUserId);
-      expect(sharedCollections.collections.some(c => c._id === createResult.collection._id)).toBe(
+      expect(sharedCollections.collections.some(c => c._id.toString() === createResult.collection._id.toString())).toBe(
         true
       );
     });

@@ -5,15 +5,14 @@ test.describe('Authentication Flow', () => {
     await page.goto('/')
     
     // Find and click the add to collection button
-    const logoCard = await page.locator(`[data-testid="logo-card"]:has-text("${testLogo.name}")`)
+    const logoCard = await page.locator(`.bg-[#0A1A2F]:has-text("${testLogo.name}")`)
     await expect(logoCard).toBeVisible()
-    const actionButton = await logoCard.locator('[aria-label="Add to collection"]')
+    const actionButton = await logoCard.locator('button[aria-label="Add to collection"]')
     await actionButton.click()
 
     // Verify login modal appears
-    const modal = await page.locator('[data-testid="auth-modal"]')
-    await expect(modal).toBeVisible()
-    await expect(page.locator('[data-testid="auth-modal-title"]')).toContainText('Login')
+    await expect(page.locator('dialog[role="dialog"]')).toBeVisible()
+    await expect(page.locator('h2')).toContainText('Sign in to your account')
   })
 
   test('allows user registration', async ({ page, testData }) => {
@@ -25,8 +24,8 @@ test.describe('Authentication Flow', () => {
 
     await testData.createTestUser(user)
 
-    // Verify successful registration
-    await expect(page.locator('[data-testid="user-menu"]')).toBeVisible()
+    // Verify successful registration by checking for upload button visibility
+    await expect(page.locator('a:has-text("Upload Logo")')).toBeVisible()
 
     // Clean up
     await testData.cleanupTestUser(user)
@@ -35,8 +34,8 @@ test.describe('Authentication Flow', () => {
   test('allows user login', async ({ page, testUser, testData }) => {
     await testData.loginUser(testUser)
 
-    // Verify successful login
-    await expect(page.locator('[data-testid="user-menu"]')).toBeVisible()
+    // Verify successful login by checking for upload button visibility
+    await expect(page.locator('a:has-text("Upload Logo")')).toBeVisible()
   })
 
   test('maintains user session after page reload', async ({ page, testUser, testData }) => {
@@ -44,13 +43,13 @@ test.describe('Authentication Flow', () => {
     await testData.loginUser(testUser)
 
     // Verify login
-    await expect(page.locator('[data-testid="user-menu"]')).toBeVisible()
+    await expect(page.locator('a:has-text("Upload Logo")')).toBeVisible()
 
     // Reload page
     await page.reload()
 
     // Verify still logged in
-    await expect(page.locator('[data-testid="user-menu"]')).toBeVisible()
+    await expect(page.locator('a:has-text("Upload Logo")')).toBeVisible()
   })
 
   test('allows user logout', async ({ page, testUser, testData }) => {
@@ -58,40 +57,61 @@ test.describe('Authentication Flow', () => {
     await testData.loginUser(testUser)
 
     // Click logout
-    await page.click('[data-testid="user-menu"]')
-    await page.click('[data-testid="logout-button"]')
+    await page.click('button:has-text("Sign Out")')
 
-    // Verify logged out
-    await expect(page.locator('[data-testid="login-button"]')).toBeVisible()
+    // Verify logged out by checking for sign in link
+    await expect(page.locator('a[href="/auth/signin"]')).toBeVisible()
   })
 
   test('shows validation errors for invalid input', async ({ page }) => {
     await page.goto('/')
     
     // Open login modal
-    await page.click('[data-testid="login-button"]')
+    await page.click('a[href="/auth/signin"]')
 
     // Submit empty form
-    await page.click('[data-testid="login-submit"]')
+    await page.click('button:has-text("Sign in")')
 
     // Verify validation errors
-    await expect(page.locator('[data-testid="username-error"]')).toBeVisible()
-    await expect(page.locator('[data-testid="password-error"]')).toBeVisible()
+    await expect(page.locator('#email:invalid')).toBeVisible()
+    await expect(page.locator('#password:invalid')).toBeVisible()
   })
 
   test('shows error for invalid credentials', async ({ page }) => {
     await page.goto('/')
     
     // Open login modal
-    await page.click('[data-testid="login-button"]')
+    await page.click('a[href="/auth/signin"]')
 
     // Fill with invalid credentials
-    await page.fill('[data-testid="username-input"]', 'wronguser')
-    await page.fill('[data-testid="password-input"]', 'wrongpass')
-    await page.click('[data-testid="login-submit"]')
+    await page.fill('#email', 'wronguser@example.com')
+    await page.fill('#password', 'wrongpass')
+    await page.click('button:has-text("Sign in")')
 
     // Verify error message
-    await expect(page.locator('[data-testid="auth-error"]')).toBeVisible()
-    await expect(page.locator('[data-testid="auth-error"]')).toContainText('Invalid credentials')
+    await expect(page.locator('.text-red-700')).toBeVisible()
+    await expect(page.locator('.text-red-700')).toContainText('Invalid credentials')
+  })
+
+  test('sign out flow works correctly', async ({ page, testUser, testData }) => {
+    // Login first using test utilities
+    await testData.loginUser(testUser);
+
+    // Verify user is signed in
+    await expect(page.locator('a:has-text("Upload Logo")')).toBeVisible();
+    
+    // Click sign out button
+    await page.click('button:has-text("Sign Out")');
+    
+    // Verify redirect to home page
+    await page.waitForURL('/');
+    
+    // Verify user is signed out
+    await expect(page.locator('a[href="/auth/signin"]')).toBeVisible();
+    await expect(page.locator('a:has-text("Upload Logo")')).not.toBeVisible();
+    
+    // Verify session is cleared by trying to access protected route
+    await page.goto('/my-logos');
+    await page.waitForURL('/auth/signin');
   })
 }) 

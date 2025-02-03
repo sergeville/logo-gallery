@@ -3,6 +3,7 @@ import { vi } from 'vitest';
 import { connectToDatabase, disconnectFromDatabase } from '../db-config';
 import path from 'path';
 import fs from 'fs';
+import type { FileUpload, ImageMetadata, UserData } from '../types';
 
 export class TestHelper {
   private static instance: TestHelper;
@@ -46,62 +47,56 @@ export class TestHelper {
     }
   }
 
-  mockFileUpload(fileData: { name: string; type: string; size: number }): any {
-    let imageBuffer: Buffer;
-    try {
-      const testImagePath = path.join(process.cwd(), 'test-assets', fileData.name);
-      imageBuffer = fs.readFileSync(testImagePath);
-    } catch (error) {
-      // For test cases that don't need real image data
-      if (fileData.type === 'application/pdf') {
-        imageBuffer = Buffer.from('%PDF-1.4\n%test pdf content');
-      } else {
-        // Create a small valid PNG buffer for test cases
-        imageBuffer = Buffer.from([
-          0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, // PNG signature
-          0x00, 0x00, 0x00, 0x0D, // IHDR chunk length
-          0x49, 0x48, 0x44, 0x52, // "IHDR"
-          0x00, 0x00, 0x00, 0x01, // width: 1
-          0x00, 0x00, 0x00, 0x01, // height: 1
-          0x08, // bit depth
-          0x06, // color type: RGBA
-          0x00, // compression method
-          0x00, // filter method
-          0x00, // interlace method
-          0x1f, 0x15, 0xc4, 0x89, // IHDR CRC
-          0x00, 0x00, 0x00, 0x0C, // IDAT chunk length
-          0x49, 0x44, 0x41, 0x54, // "IDAT"
-          0x08, 0xd7, 0x63, 0x60, // compressed data
-          0x60, 0x60, 0x00, 0x00, // more compressed data
-          0x00, 0x03, 0x00, 0x01, // IDAT CRC
-          0x00, 0x00, 0x00, 0x00, // IEND chunk length
-          0x49, 0x45, 0x4E, 0x44, // "IEND"
-          0xAE, 0x42, 0x60, 0x82  // IEND CRC
-        ]);
-      }
-    }
+  mockFileUpload(options: {
+    name: string;
+    type: string;
+    size: number;
+  }): FileUpload {
     return {
-      ...fileData,
-      buffer: imageBuffer,
-      data: imageBuffer // For MongoDB storage compatibility
+      name: options.name,
+      type: options.type,
+      size: options.size,
+      buffer: Buffer.from('test-image-data'),
     };
   }
 
-  async createTestUser(data: any = {}): Promise<any> {
-    if (!this.db) {
-      throw new Error('Database not connected');
+  private calculateCrc32(data: Buffer): number {
+    let crc = -1;
+    for (let i = 0; i < data.length; i++) {
+      crc = (crc >>> 8) ^ this.crcTable[(crc ^ data[i]) & 0xFF];
     }
+    return ~crc;
+  }
 
-    const user = {
-      email: data.email || 'test@example.com',
-      username: data.username || 'testuser',
-      password: data.password || 'password123',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+  private deflateSync(data: Buffer): Buffer {
+    const zlib = require('zlib');
+    return zlib.deflateSync(data);
+  }
+
+  private crcTable: number[] = (() => {
+    const crcTable = new Int32Array(256);
+    for (let n = 0; n < 256; n++) {
+      let c = n;
+      for (let k = 0; k < 8; k++) {
+        c = ((c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1));
+      }
+      crcTable[n] = c;
+    }
+    return crcTable;
+  })();
+
+  async createTestUser(data: Partial<UserData> = {}): Promise<UserData> {
+    const defaultUser: UserData = {
+      _id: new ObjectId(),
+      email: `test-${Date.now()}@example.com`,
+      displayName: 'Test User',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      ...data
     };
 
-    const result = await this.db.collection('users').insertOne(user);
-    return { ...user, _id: result.insertedId };
+    await this.getDb().collection('users').insertOne(defaultUser);
+    return defaultUser;
   }
 
   async createTestLogo(userId: string, data: any = {}): Promise<any> {
@@ -135,5 +130,15 @@ export class TestHelper {
       throw new Error('Database not connected');
     }
     return this.client;
+  }
+
+  generateImageMetadata(data: Partial<ImageMetadata> = {}): ImageMetadata {
+    return {
+      width: 800,
+      height: 600,
+      format: 'png',
+      size: 1024 * 100,
+      ...data
+    };
   }
 } 

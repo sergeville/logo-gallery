@@ -56,13 +56,19 @@ describe('[P2] Logo Collections', () => {
     otherUserId = otherUser.user!._id;
 
     // Upload test logo
-    const result = await uploadLogo(testUserId, {
+    const result = await uploadLogo({
+      userId: testUserId,
       title: 'Test Logo',
       description: 'A logo for testing collections',
       tags: ['test'],
-      file: Buffer.from('mock-logo-data'),
+      file: {
+        name: 'test-logo.png',
+        type: 'image/png',
+        size: 1024,
+        buffer: Buffer.from('mock-logo-data')
+      }
     });
-    testLogo = result.logo as TestLogo;
+    testLogo = result.logo;
   });
 
   afterAll(async () => {

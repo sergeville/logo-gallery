@@ -7,8 +7,12 @@ import path from 'path';
 // Load test environment variables before importing the database configuration
 config({ path: path.resolve(process.cwd(), '.env.test') });
 
+// Import test setup
+import './setup';
+
 import { beforeEach, afterEach, describe, it, expect, vi } from 'vitest';
 import { connectToDatabase, disconnectFromDatabase, DB_NAMES, DB_OPTIONS, __setTestMode } from '../db-config';
+import { MongoClient } from 'mongodb';
 
 // Enable test mode
 __setTestMode(true);
@@ -138,6 +142,27 @@ describe('MongoDB Configuration', () => {
       );
       
       expect(result).toBeNull();
+    });
+  });
+
+  describe('Database Connection', () => {
+    let testHelper: TestHelper;
+    
+    beforeEach(() => {
+      testHelper = TestHelper.getInstance();
+    });
+
+    it('should handle connection errors gracefully', async () => {
+      // Mock the MongoClient to throw an error
+      const mockError = new Error('Connection failed') as Error;
+      jest.spyOn(MongoClient.prototype, 'connect').mockRejectedValueOnce(mockError);
+      
+      try {
+        await connectToDatabase();
+      } catch (error: unknown) {
+        expect(error).toBeDefined();
+        expect(error).toBeInstanceOf(Error);
+      }
     });
   });
 }); 

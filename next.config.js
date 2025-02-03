@@ -1,4 +1,6 @@
 /** @type {import('next').NextConfig} */
+const path = require('path');
+
 const nextConfig = {
   images: {
     dangerouslyAllowSVG: true,
@@ -33,7 +35,7 @@ const nextConfig = {
         buildDependencies: {
           config: [__filename],
         },
-        cacheDirectory: '.next/cache/webpack',
+        cacheDirectory: path.resolve(process.cwd(), '.next/cache/webpack'),
         name: dev ? 'development' : 'production',
         compression: 'gzip',
       };
@@ -49,8 +51,11 @@ const nextConfig = {
   },
   // Add experimental features for better performance
   experimental: {
-    optimizeCss: true, // Enable CSS optimization
-    turbotrace: true, // Enable better dependency tracing
+    optimizeCss: {
+      inlineFonts: false, // Disable font inlining for better performance
+      pruneSource: true, // Remove unused CSS
+      minify: true, // Minify CSS
+    },
   },
 }
 

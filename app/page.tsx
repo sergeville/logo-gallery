@@ -11,28 +11,70 @@ const sampleLogos = [
   {
     _id: '1',
     title: 'Next.js',
+    name: 'Next.js',
     description: 'The React Framework for Production',
     imageUrl: '/logos/next.svg',
     thumbnailUrl: '/logos/next.svg',
+    originalUrl: '/logos/next.svg',
+    responsiveUrls: new Map([
+      ['sm', '/logos/next.svg'],
+      ['md', '/logos/next.svg'],
+      ['lg', '/logos/next.svg']
+    ]),
     userId: 'system',
-    createdAt: new Date().toISOString(),
-    totalVotes: 42,
+    ownerName: 'System',
     fileSize: 1024,
     optimizedSize: 512,
-    compressionRatio: '50%'
+    fileType: 'image/svg+xml',
+    dimensions: {
+      width: 200,
+      height: 200
+    },
+    optimizedDimensions: {
+      width: 200,
+      height: 200
+    },
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    uploadedAt: new Date().toISOString(),
+    votingDeadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+    totalVotes: 42,
+    votes: [],
+    compressionRatio: '50'
   },
   {
     _id: '2',
     title: 'Vercel',
+    name: 'Vercel',
     description: 'Develop. Preview. Ship.',
     imageUrl: '/logos/vercel.svg',
     thumbnailUrl: '/logos/vercel.svg',
+    originalUrl: '/logos/vercel.svg',
+    responsiveUrls: new Map([
+      ['sm', '/logos/vercel.svg'],
+      ['md', '/logos/vercel.svg'],
+      ['lg', '/logos/vercel.svg']
+    ]),
     userId: 'system',
-    createdAt: new Date().toISOString(),
-    totalVotes: 38,
+    ownerName: 'System',
     fileSize: 2048,
     optimizedSize: 1024,
-    compressionRatio: '50%'
+    fileType: 'image/svg+xml',
+    dimensions: {
+      width: 200,
+      height: 200
+    },
+    optimizedDimensions: {
+      width: 200,
+      height: 200
+    },
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    uploadedAt: new Date().toISOString(),
+    votingDeadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+    totalVotes: 38,
+    votes: [],
+    compressionRatio: '50'
   },
   {
     _id: '3',
@@ -109,24 +151,45 @@ function HeroSection() {
 function FeaturedLogos() {
   const [retryCount, setRetryCount] = useState(0);
   const [error, setError] = useState<Error | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // Simulate loading delay
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   // Reset error state when retrying
   useEffect(() => {
     if (retryCount > 0) {
       setError(null);
+      setIsLoading(true);
     }
   }, [retryCount]);
 
   if (error) {
     return (
       <div className="text-center py-12">
-        <p className="text-red-600 dark:text-red-400 mb-4">Failed to load featured logos</p>
+        <p className="text-red-600 dark:text-red-400 mb-4">
+          {error.message || 'Failed to load featured logos'}
+        </p>
         <button
           onClick={() => setRetryCount(count => count + 1)}
-          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
         >
-          Retry
+          Retry Loading
         </button>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center py-12">
+        <LoadingSpinner size="lg" />
       </div>
     );
   }
@@ -141,7 +204,10 @@ function FeaturedLogos() {
       <LogoGallery 
         logos={sampleLogos} 
         className="mt-8" 
-        onError={(e) => setError(e)}
+        onError={(e) => {
+          console.error('Logo gallery error:', e);
+          setError(e);
+        }}
         key={`gallery-${retryCount}`} // Force remount on retry
       />
     </div>

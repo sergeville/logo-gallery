@@ -49,7 +49,7 @@ const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
 const ALLOWED_FILE_TYPES = ['image/png', 'image/jpeg', 'image/svg+xml'];
 const MIN_DIMENSION = 1;
 const MAX_DIMENSION = 10000; // reasonable max dimension
-const SIMILARITY_THRESHOLD = 0.85;
+const SIMILARITY_THRESHOLD = 0.70;
 
 function validateMetadata(metadata: LogoMetadata): ValidationResult {
   if (!metadata || typeof metadata !== 'object') {
@@ -129,7 +129,15 @@ export async function validateLogoUpload({
   allowSystemDuplicates?: boolean;
   allowSimilarImages?: boolean;
 }): Promise<ValidationResult> {
-  // Validate file type
+  // Basic validations
+  if (!file || !file.buffer) {
+    return {
+      isValid: false,
+      status: 400,
+      error: 'Invalid file'
+    };
+  }
+
   if (!ALLOWED_FILE_TYPES.includes(file.type)) {
     return {
       isValid: false,
@@ -138,7 +146,6 @@ export async function validateLogoUpload({
     };
   }
 
-  // Validate file size
   if (file.size > MAX_FILE_SIZE) {
     return {
       isValid: false,
@@ -147,13 +154,11 @@ export async function validateLogoUpload({
     };
   }
 
-  // Validate metadata
   const metadataResult = validateMetadata(metadata);
   if (!metadataResult.isValid) {
     return metadataResult;
   }
 
-  // Validate user
   const userResult = await validateUser(userId);
   if (!userResult.isValid) {
     return userResult;
@@ -172,101 +177,30 @@ export async function validateLogoUpload({
   const fileHash = generateFileHash(file.buffer);
 
   // Extract image features
-  const imageFeatures = await extractImageFeatures(file.buffer);
-
-  // Check for duplicates and similar images first
-  const existingLogos = await db.collection('logos').find({}).toArray();
-  
-  // If this is the first upload, allow it
-  if (existingLogos.length === 0) {
-    // Prepare logo document
-    const logo = {
-      userId: new ObjectId(userId),
-      name: file.name,
-      file: {
-        name: file.name,
-        type: file.type,
-        size: file.size,
-        data: file.buffer
-      },
-      metadata,
-      fileHash,
-      imageFeatures,
-      createdAt: new Date()
+  let imageFeatures;
+  try {
+    imageFeatures = await extractImageFeatures(file.buffer);
+  } catch (error) {
+    console.error('Error extracting image features:', error);
+    return {
+      isValid: false,
+      status: 400,
+      error: 'Failed to extract image features: ' + error.message
     };
-
-    try {
-      const result = await db.collection('logos').insertOne(logo);
-      return {
-        isValid: true,
-        status: 201,
-        logoId: result.insertedId
-      };
-    } catch (error) {
-      return {
-        isValid: false,
-        status: 500,
-        error: 'Failed to store logo'
-      };
-    }
   }
 
   // Check for duplicates and similar images
-  let hasDuplicate = false;
-  let duplicateFromSameUser = false;
+  const duplicateCheck = await checkForDuplicates(db, {
+    fileHash,
+    imageFeatures,
+    userId,
+    allowSystemDuplicates,
+    allowSimilarImages
+  });
 
-  for (const existingLogo of existingLogos) {
-    // Check for exact duplicates by hash
-    if (existingLogo.fileHash === fileHash) {
-      hasDuplicate = true;
-      duplicateFromSameUser = existingLogo.userId.toString() === userId;
-      
-      // If it's from the same user, reject
-      if (duplicateFromSameUser) {
-        return {
-          isValid: false,
-          status: 409,
-          error: 'Duplicate file detected'
-        };
-      }
-      
-      // If system duplicates aren't allowed, reject
-      if (!allowSystemDuplicates) {
-        return {
-          isValid: false,
-          status: 409,
-          error: 'Duplicate file detected'
-        };
-      }
-      // If we get here, it's a duplicate from a different user but allowSystemDuplicates is true
-      // So we continue to the next logo
-      continue;
-    }
-
-    // Check for similar images (only if it's from the same user)
-    if (existingLogo.userId.toString() === userId && 
-        !allowSimilarImages && 
-        existingLogo.imageFeatures) {
-      const similarity = compareImages(imageFeatures, existingLogo.imageFeatures);
-      if (similarity.similarity > SIMILARITY_THRESHOLD) {
-        return {
-          isValid: false,
-          status: 400,
-          error: 'Similar image detected',
-          similarityInfo: {
-            similarity: similarity.similarity,
-            matchType: similarity.matchType
-          }
-        };
-      }
-    }
+  if (!duplicateCheck.isValid) {
+    return duplicateCheck;
   }
-
-  // If we get here, either:
-  // 1. No duplicates found
-  // 2. Found duplicate but from different user and allowSystemDuplicates is true
-  // 3. Found similar image but from different user
-  // In all cases, we should allow the upload
 
   // Prepare logo document
   const logo = {
@@ -285,25 +219,135 @@ export async function validateLogoUpload({
   };
 
   try {
+    // Insert the new logo
     const result = await db.collection('logos').insertOne(logo);
+
+    if (!result.insertedId) {
+      console.error('Failed to store logo: No logo ID returned');
+      return {
+        isValid: false,
+        status: 500,
+        error: 'Failed to store logo'
+      };
+    }
+
     return {
       isValid: true,
-      status: 201,
+      status: 201, // Created
       logoId: result.insertedId
     };
+
   } catch (error) {
-    // Check if it's a duplicate key error
-    if (error && typeof error === 'object' && 'code' in error && error.code === 11000) {
+    if (error.code === 11000) { // Duplicate key error
       return {
         isValid: false,
         status: 409,
-        error: 'Duplicate file detected'
+        error: 'You have already uploaded this logo'
       };
     }
+    console.error('Error storing logo:', error);
     return {
       isValid: false,
       status: 500,
       error: 'Failed to store logo'
     };
   }
+}
+
+async function checkForDuplicates(
+  db: Db,
+  {
+    fileHash,
+    imageFeatures,
+    userId,
+    allowSystemDuplicates,
+    allowSimilarImages
+  }: {
+    fileHash: string;
+    imageFeatures: ImageFeatures;
+    userId: string;
+    allowSystemDuplicates: boolean;
+    allowSimilarImages: boolean;
+  }
+): Promise<ValidationResult> {
+  try {
+    // Check for exact duplicates first
+    const exactDuplicate = await db.collection('logos').findOne({ 
+      fileHash,
+      userId: new ObjectId(userId) // Only check user's own logos for exact duplicates
+    });
+    
+    if (exactDuplicate) {
+      return {
+        isValid: false,
+        status: 409,
+        error: 'You have already uploaded this logo'
+      };
+    }
+    
+    // Check for system-wide duplicates if not allowed
+    if (!allowSystemDuplicates) {
+      const systemDuplicate = await db.collection('logos').findOne({ 
+        fileHash,
+        userId: { $ne: new ObjectId(userId) }
+      });
+      
+      if (systemDuplicate) {
+        return {
+          isValid: false,
+          status: 409,
+          error: 'This logo has already been uploaded by another user'
+        };
+      }
+    }
+    
+    // Check for similar images if needed
+    if (!allowSimilarImages) {
+      const userLogos = await db.collection('logos')
+        .find({ 
+          userId: new ObjectId(userId),
+          _id: { $ne: exactDuplicate?._id } // Exclude the exact duplicate if it exists
+        })
+        .toArray();
+
+      for (const existingLogo of userLogos) {
+        if (existingLogo.imageFeatures) {
+          const similarity = compareImages(imageFeatures, existingLogo.imageFeatures);
+          
+          if (similarity.similarity > SIMILARITY_THRESHOLD) {
+            return {
+              isValid: false,
+              status: 409,
+              error: 'Similar logo already exists in your collection',
+              similarityInfo: {
+                similarity: similarity.similarity,
+                matchType: similarity.matchType
+              }
+            };
+          }
+        }
+      }
+    }
+
+    // No duplicates found - this is a valid upload
+    return {
+      isValid: true,
+      status: 200 // Changed from 201 since this is just a check, not the actual creation
+    };
+  } catch (error) {
+    console.error('Error checking for duplicates:', error);
+    return {
+      isValid: false,
+      status: 500,
+      error: 'Error checking for duplicates'
+    };
+  }
+}
+
+// Add unique index on fileHash and userId to handle concurrent uploads
+export async function createLogoIndexes(db: Db): Promise<void> {
+  await db.collection('logos').createIndex(
+    { fileHash: 1, userId: 1 },
+    { unique: true }
+  );
 }

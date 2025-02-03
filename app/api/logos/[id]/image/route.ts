@@ -1,14 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Logo } from '@/app/lib/models/logo';
-import dbConnect from '@/app/lib/db-config';
-import { isValidObjectId } from 'mongoose';
-import { imageCacheService } from '@/app/lib/services/ImageCacheService';
-import { use } from 'react';
+import { ObjectId } from 'mongodb';
+import { connectToDatabase } from '@/app/lib/db-config';
 
-// Configure route to run at the edge
-export const runtime = 'edge';
-export const preferredRegion = 'auto';
-export const dynamic = 'force-dynamic'; // Ensure dynamic processing of query parameters
+// Configure route to use Node.js runtime
+export const dynamic = 'force-dynamic';
 
 const contentTypes: Record<string, string> = {
   'png': 'image/png',
@@ -22,64 +17,47 @@ const contentTypes: Record<string, string> = {
 const ALLOWED_EXTENSIONS = new Set(['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg']);
 
 // Cache configuration
-const CACHE_CONTROL_IMMUTABLE = 'public, max-age=31536000, immutable, stale-while-revalidate=86400'; // 1 year + 24h stale
-const CACHE_CONTROL_REVALIDATE = 'public, max-age=3600, stale-while-revalidate=86400, must-revalidate'; // 1 hour + 24h stale
+const CACHE_CONTROL = 'public, max-age=3600, stale-while-revalidate=86400'; // 1 hour + 24h stale
 const SECURITY_HEADERS = {
   'X-Content-Type-Options': 'nosniff',
   'X-Frame-Options': 'DENY',
   'Referrer-Policy': 'strict-origin-when-cross-origin'
 };
 
-// Image processing constraints
-const MAX_DIMENSION = 2048;
-const MIN_DIMENSION = 16;
-const MAX_QUALITY = 100;
-const MIN_QUALITY = 1;
-
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
-    const { id } = use(params);
-    if (!isValidObjectId(id)) {
+    const { id } = params;
+    
+    // Validate ObjectId
+    if (!ObjectId.isValid(id)) {
       return new NextResponse('Invalid logo ID', { status: 400 });
     }
 
-    await dbConnect();
-    const logo = await Logo.findById(id);
+    // Connect to database
+    const { db } = await connectToDatabase();
+    const logo = await db.collection('logos').findOne({ _id: new ObjectId(id) });
 
     if (!logo) {
       return new NextResponse('Logo not found', { status: 404 });
     }
 
-    // Check cache first
-    const cachedImage = await imageCacheService.getImage(logo.imageUrl);
-    if (cachedImage) {
-      return new NextResponse(cachedImage.buffer, {
-        headers: {
-          'Content-Type': cachedImage.contentType,
-          'Cache-Control': 'public, max-age=3600',
-          'x-cache': 'HIT'
-        }
-      });
+    // Fetch image from URL
+    const imageResponse = await fetch(logo.imageUrl);
+    if (!imageResponse.ok) {
+      return new NextResponse('Error fetching image', { status: 502 });
     }
 
-    // If not in cache, fetch from URL
-    const imageResponse = await fetch(logo.imageUrl);
-    const imageBuffer = await imageResponse.arrayBuffer();
+    const contentType = imageResponse.headers.get('content-type') || 'image/png';
+    const imageArrayBuffer = await imageResponse.arrayBuffer();
 
-    // Cache the image
-    await imageCacheService.getImage(logo.imageUrl, {
-      buffer: Buffer.from(imageBuffer),
-      contentType: 'image/png'
-    });
-
-    return new NextResponse(imageBuffer, {
+    return new NextResponse(imageArrayBuffer, {
       headers: {
-        'Content-Type': 'image/png',
-        'Cache-Control': 'public, max-age=3600',
-        'x-cache': 'MISS'
+        'Content-Type': contentType,
+        'Cache-Control': CACHE_CONTROL,
+        ...SECURITY_HEADERS
       }
     });
   } catch (error) {

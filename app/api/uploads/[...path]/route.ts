@@ -1,11 +1,6 @@
-import { NextResponse } from 'next/server';
-import { readFile } from 'fs/promises';
-import path from 'path';
-import { headers } from 'next/headers';
-import { imageCacheService } from '@/app/lib/services/ImageCacheService';
-import { use } from 'react';
+import { NextRequest, NextResponse } from 'next/server';
 
-const UPLOAD_DIR = path.join(process.cwd(), 'public', 'uploads');
+export const dynamic = 'force-dynamic';
 
 const contentTypes: Record<string, string> = {
   'png': 'image/png',
@@ -17,14 +12,18 @@ const contentTypes: Record<string, string> = {
 };
 
 export async function GET(
-  request: Request,
-  { params }: { params: Promise<{ path: string[] }> }
+  request: NextRequest,
+  { params }: { params: { path: string[] } }
 ) {
   try {
-    const { path: pathArray } = use(params);
-    const filePath = path.join(UPLOAD_DIR, pathArray.join('/'));
-    const ext = path.extname(filePath).slice(1).toLowerCase();
-    const contentType = contentTypes[ext] || 'application/octet-stream';
+    // Validate and sanitize path
+    if (!params.path || !Array.isArray(params.path)) {
+      return new NextResponse('Invalid path parameter', { status: 400 });
+    }
+
+    const sanitizedPath = params.path
+      .map(segment => segment.replace(/[^a-zA-Z0-9-_.]/g, ''))
+      .join('/');
 
     // Get image processing options from query parameters
     const url = new URL(request.url);
@@ -33,26 +32,30 @@ export async function GET(
     const quality = url.searchParams.get('q') ? parseInt(url.searchParams.get('q')!) : undefined;
     const format = url.searchParams.get('f') as 'jpeg' | 'png' | 'webp' | undefined;
 
-    try {
-      const result = await imageCacheService.getImage(filePath, {
-        width,
-        height,
-        quality,
-        format
-      });
+    // Construct the file URL
+    const fileUrl = new URL(`/uploads/${sanitizedPath}`, request.url).toString();
 
-      if (!result) {
-        console.error('Failed to process or retrieve image:', { path: filePath });
-        return new NextResponse('Error processing image', { status: 500 });
+    try {
+      // Fetch the image
+      const imageResponse = await fetch(fileUrl);
+      if (!imageResponse.ok) {
+        return new NextResponse('Image not found', { status: 404 });
       }
 
+      // Get the image data
+      const imageData = await imageResponse.arrayBuffer();
+
+      // Determine content type based on file extension or format parameter
+      const ext = format || sanitizedPath.match(/[^.]+$/)?.[0]?.toLowerCase();
+      const contentType = contentTypes[ext] || 'application/octet-stream';
+
       const headers = new Headers({
-        'Content-Type': result.contentType,
+        'Content-Type': contentType,
         'Cache-Control': 'public, max-age=31536000, immutable',
-        'Content-Length': result.buffer.length.toString(),
+        'Content-Length': imageData.byteLength.toString(),
       });
 
-      return new NextResponse(result.buffer, { headers });
+      return new NextResponse(imageData, { headers });
     } catch (error) {
       console.error('Error serving file:', error);
       return new NextResponse('File not found', { status: 404 });

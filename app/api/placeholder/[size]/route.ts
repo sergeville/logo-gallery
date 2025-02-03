@@ -1,8 +1,6 @@
 import { NextResponse } from 'next/server';
-import sharp from 'sharp';
 
 export const dynamic = 'force-dynamic';
-export const runtime = 'nodejs';
 
 export async function GET(
   request: Request,
@@ -14,7 +12,7 @@ export async function GET(
     const imageWidth = width || 200;
     const imageHeight = height || width || 200;
 
-    // Generate a placeholder image with text
+    // Generate a placeholder SVG
     const svg = `
       <svg width="${imageWidth}" height="${imageHeight}" xmlns="http://www.w3.org/2000/svg">
         <rect width="100%" height="100%" fill="#f0f0f0"/>
@@ -23,14 +21,10 @@ export async function GET(
       </svg>
     `;
 
-    // Convert SVG to PNG using sharp
-    const pngBuffer = await sharp(Buffer.from(svg))
-      .png()
-      .toBuffer();
-
-    return new NextResponse(pngBuffer, {
+    // Return the SVG with proper headers
+    return new NextResponse(svg, {
       headers: {
-        'Content-Type': 'image/png',
+        'Content-Type': 'image/svg+xml',
         'Cache-Control': 'public, max-age=31536000',
         'X-Content-Type-Options': 'nosniff',
       },

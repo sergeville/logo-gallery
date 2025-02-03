@@ -14,15 +14,17 @@ test.describe('Loading Initial State', () => {
         setTimeout(() => {
           route.fulfill({
             status: 200,
-            body: JSON.stringify({ data: [] })
+            body: JSON.stringify({ data: [] }),
           });
         }, 1000);
       });
     });
 
     await page.goto(`${LOCALHOST_URL}/gallery`);
-    
+
     // Capture the loading state immediately after navigation
-    await expect(page.locator('[data-testid="loading-initial"]')).toHaveScreenshot('loading-initial.png');
+    await expect(page.locator('[data-testid="loading-initial"]')).toHaveScreenshot(
+      'loading-initial.png'
+    );
   });
-}); 
+});

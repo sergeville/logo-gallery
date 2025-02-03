@@ -10,10 +10,10 @@ test.describe('Button Disabled State', () => {
   test('disabled state', async ({ page }) => {
     await page.goto(`${LOCALHOST_URL}/gallery`);
     const buttonSelector = 'button.primary';
-    await page.evaluate((sel) => {
+    await page.evaluate(sel => {
       const button = document.querySelector(sel) as HTMLButtonElement;
       if (button) button.disabled = true;
     }, buttonSelector);
     await expect(page.locator(buttonSelector)).toHaveScreenshot('button-disabled.png');
   });
-}); 
+});

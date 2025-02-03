@@ -85,6 +85,15 @@ export default function LogoCard({
     onError?.(new Error('Failed to load logo image'))
   }
 
+  const imageLoader = ({ src }: { src: string }) => {
+    // If it's already an absolute URL, return it as is
+    if (src.startsWith('http')) {
+      return src
+    }
+    // Otherwise, ensure it starts with a forward slash
+    return src.startsWith('/') ? src : `/${src}`
+  }
+
   return (
     <div 
       data-testid="logo-card"
@@ -108,6 +117,7 @@ export default function LogoCard({
 
         {/* Image */}
         <Image
+          loader={imageLoader}
           src={imageError ? '/placeholder-logo.png' : (logo.thumbnailUrl || logo.imageUrl)}
           alt={logo.title}
           fill

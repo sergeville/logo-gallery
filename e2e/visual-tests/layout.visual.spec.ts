@@ -1,203 +1,181 @@
-import { test, expect } from '@/e2e/utils/auth-setup';
-import { LOCALHOST_URL } from '@/config/constants';
+import { test, expect } from '@playwright/test';
 import {
-  preparePageForVisualTest,
-  testResponsiveLayouts,
   VIEWPORT_SIZES,
-  compareScreenshots,
-  waitForElement,
-  ensurePageReady
-} from '@/e2e/visual-tests/utils/visual-test-utils';
+  preparePageForVisualTest,
+  TestState,
+  VisualTestOptions,
+  runAccessibilityTest,
+  AccessibilityResult
+} from './utils/visual-test-utils';
 
-test.describe('Visual Regression Tests - Layout', () => {
-  test.beforeEach(async ({ page }) => {
-    await preparePageForVisualTest(page);
+/**
+ * Visual regression tests for layout components and responsive behavior.
+ * Tests the visual appearance and functionality of core layout elements across different viewports.
+ * 
+ * @packageDocumentation
+ * 
+ * @remarks
+ * Test Coverage:
+ * - Grid Layout:
+ *   - Responsive grid system
+ *   - Grid spacing and alignment
+ *   - Content distribution
+ * 
+ * - Header Component:
+ *   - Fixed positioning
+ *   - Responsive navigation
+ *   - Brand elements
+ * 
+ * - Footer Component:
+ *   - Fixed positioning
+ *   - Responsive behavior
+ *   - Content alignment
+ * 
+ * - Navigation:
+ *   - Mobile menu states
+ *   - Desktop navigation
+ *   - Menu transitions
+ * 
+ * - Accessibility:
+ *   - ARIA landmarks
+ *   - Navigation structure
+ *   - Focus management
+ */
+
+interface Viewport {
+  width: number;
+  height: number;
+}
+
+test.describe('Layout Visual Tests', () => {
+  /**
+   * Setup before each test case
+   * Navigates to homepage and ensures page is ready
+   */
+  test.beforeEach(async ({ page }): Promise<void> => {
+    await page.goto('/');
   });
 
-  test('Homepage layout', async ({ page }) => {
-    await page.goto(LOCALHOST_URL);
-    await expect(page).toHaveScreenshot('homepage.png', {
-      fullPage: true,
-      animations: 'disabled',
-      timeout: 30000,
-    });
-  });
+  /**
+   * Tests grid layout responsiveness across different viewport sizes
+   * Verifies spacing, alignment, and content distribution
+   */
+  test('should render grid layout correctly across viewports', async ({ page }): Promise<void> => {
+    const options: VisualTestOptions = {
+      waitForSelectors: ['[data-testid="grid-layout"]'],
+      customStyles: `
+        .grid-layout {
+          gap: 16px !important;
+        }
+      `,
+      setup: async () => {
+        await page.waitForSelector('[data-testid="grid-layout"]');
+      },
+    };
 
-  test('Gallery page responsive layout', async ({ authenticatedPage: page }) => {
-    await page.goto(`${LOCALHOST_URL}/gallery`);
-    await testResponsiveLayouts(page, [
-      VIEWPORT_SIZES.mobile,
-      VIEWPORT_SIZES.tablet,
-      VIEWPORT_SIZES.desktop,
-    ]);
-
-    // Compare full page screenshots for each viewport
-    for (const viewport of [VIEWPORT_SIZES.mobile, VIEWPORT_SIZES.tablet, VIEWPORT_SIZES.desktop]) {
-      await page.setViewportSize(viewport);
-      await page.waitForTimeout(500);
-      await expect(page).toHaveScreenshot(`gallery-${viewport.width}x${viewport.height}.png`, {
-        fullPage: true,
-        timeout: 30000,
-      });
+    for (const viewport of Object.values(VIEWPORT_SIZES)) {
+      await page.setViewportSize(viewport as Viewport);
+      await preparePageForVisualTest(page, options);
+      await expect(page).toHaveScreenshot(`grid-layout-${viewport.width}x${viewport.height}.png`);
+      
+      // Test accessibility for each viewport
+      const accessibilityReport: AccessibilityResult = await runAccessibilityTest(page);
+      expect(accessibilityReport.violations).toEqual([]);
     }
   });
 
-  test('Vote page responsive layout', async ({ authenticatedPage: page }) => {
-    await page.goto(`${LOCALHOST_URL}/vote`);
-    await testResponsiveLayouts(page, [
-      VIEWPORT_SIZES.mobile,
-      VIEWPORT_SIZES.tablet,
-      VIEWPORT_SIZES.desktop,
-    ]);
+  /**
+   * Tests header component rendering across different viewport sizes
+   * Verifies fixed positioning and responsive behavior
+   */
+  test('should render header correctly across viewports', async ({ page }): Promise<void> => {
+    const options: VisualTestOptions = {
+      waitForSelectors: ['[data-testid="header"]'],
+      customStyles: `
+        .header {
+          position: fixed !important;
+          top: 0 !important;
+        }
+      `,
+      setup: async () => {
+        await page.waitForSelector('[data-testid="header"]');
+      },
+    };
 
-    // Compare full page screenshots for each viewport
-    for (const viewport of [VIEWPORT_SIZES.mobile, VIEWPORT_SIZES.tablet, VIEWPORT_SIZES.desktop]) {
-      await page.setViewportSize(viewport);
-      await page.waitForTimeout(500);
-      await expect(page).toHaveScreenshot(`vote-${viewport.width}x${viewport.height}.png`, {
-        fullPage: true,
-        timeout: 30000,
-      });
+    for (const viewport of Object.values(VIEWPORT_SIZES)) {
+      await page.setViewportSize(viewport as Viewport);
+      await preparePageForVisualTest(page, options);
+      await expect(page).toHaveScreenshot(`header-${viewport.width}x${viewport.height}.png`);
+      
+      // Test accessibility for each viewport
+      const accessibilityReport: AccessibilityResult = await runAccessibilityTest(page);
+      expect(accessibilityReport.violations).toEqual([]);
     }
   });
 
-  test('Navigation menu states', async ({ page }) => {
-    await page.goto(LOCALHOST_URL);
-    
-    // Desktop navigation
-    await expect(page.locator('nav')).toHaveScreenshot('nav-desktop.png', {
-      timeout: 30000,
-    });
-    
-    // Mobile navigation (closed)
-    await page.setViewportSize(VIEWPORT_SIZES.mobile);
-    await page.waitForTimeout(500);
-    await expect(page.locator('nav')).toHaveScreenshot('nav-mobile-closed.png', {
-      timeout: 30000,
-    });
-    
-    // Mobile navigation (open)
-    const menuButton = await page.waitForSelector('button[aria-label="Open menu"]', { timeout: 5000 });
-    await menuButton.click();
-    await page.waitForTimeout(500);
-    await expect(page.locator('nav')).toHaveScreenshot('nav-mobile-open.png', {
-      timeout: 30000,
-    });
+  /**
+   * Tests footer component rendering across different viewport sizes
+   * Verifies fixed positioning and content alignment
+   */
+  test('should render footer correctly across viewports', async ({ page }): Promise<void> => {
+    const options: VisualTestOptions = {
+      waitForSelectors: ['[data-testid="footer"]'],
+      customStyles: `
+        .footer {
+          position: fixed !important;
+          bottom: 0 !important;
+        }
+      `,
+      setup: async () => {
+        await page.waitForSelector('[data-testid="footer"]');
+      },
+    };
+
+    for (const viewport of Object.values(VIEWPORT_SIZES)) {
+      await page.setViewportSize(viewport as Viewport);
+      await preparePageForVisualTest(page, options);
+      await expect(page).toHaveScreenshot(`footer-${viewport.width}x${viewport.height}.png`);
+      
+      // Test accessibility for each viewport
+      const accessibilityReport: AccessibilityResult = await runAccessibilityTest(page);
+      expect(accessibilityReport.violations).toEqual([]);
+    }
   });
 
-  test('Footer layout', async ({ page }) => {
-    await page.goto(LOCALHOST_URL);
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-    await page.waitForTimeout(500);
-    await expect(page.locator('footer')).toHaveScreenshot('footer.png', {
-      timeout: 30000,
-    });
-  });
-
-  test('Grid layout', async ({ authenticatedPage: page }) => {
-    await page.goto(`${LOCALHOST_URL}/gallery`);
-    await page.waitForSelector('.grid', { timeout: 5000 });
-    
-    // Test different grid layouts
-    const viewports = [
-      { width: 375, height: 667, name: 'mobile' },
-      { width: 768, height: 1024, name: 'tablet' },
-      { width: 1280, height: 720, name: 'desktop' },
+  /**
+   * Tests responsive navigation menu behavior
+   * Verifies mobile and desktop states, including menu transitions
+   */
+  test('should handle responsive navigation menu', async ({ page }): Promise<void> => {
+    const states: TestState[] = [
+      {
+        name: 'mobile-closed',
+        async setup(): Promise<void> {
+          await page.setViewportSize(VIEWPORT_SIZES.mobile as Viewport);
+        },
+      },
+      {
+        name: 'mobile-open',
+        async setup(): Promise<void> {
+          await page.setViewportSize(VIEWPORT_SIZES.mobile as Viewport);
+          await page.click('[data-testid="menu-button"]');
+          await page.waitForTimeout(300); // Wait for menu animation
+        },
+      },
+      {
+        name: 'desktop',
+        async setup(): Promise<void> {
+          await page.setViewportSize(VIEWPORT_SIZES.desktop as Viewport);
+        },
+      },
     ];
 
-    for (const viewport of viewports) {
-      await page.setViewportSize(viewport);
-      await page.waitForTimeout(500); // Wait for layout to adjust
-      await expect(page.locator('.grid')).toHaveScreenshot(`grid-${viewport.name}.png`, {
-        timeout: 30000,
-      });
-    }
-  });
-
-  test('Theme switching', async ({ page }) => {
-    await page.goto(LOCALHOST_URL);
-    
-    // Light theme
-    await expect(page).toHaveScreenshot('theme-light.png', {
-      fullPage: true,
-      timeout: 30000,
-    });
-    
-    // Dark theme
-    await page.evaluate(() => {
-      document.documentElement.classList.add('dark');
-    });
-    await page.waitForTimeout(500);
-    await expect(page).toHaveScreenshot('theme-dark.png', {
-      fullPage: true,
-      timeout: 30000,
-    });
-  });
-
-  test('should test responsive grid layouts', async ({ page }) => {
     await preparePageForVisualTest(page);
+    await testComponentStates(page, '[data-testid="navigation"]', states);
+    await expect(page).toHaveScreenshot('navigation-states.png');
     
-    await testResponsiveLayouts(page, 'grid-layout', async (viewport) => {
-      await page.setViewportSize(viewport);
-      await page.route('**/api/config', (route) => {
-        route.fulfill({
-          status: 200,
-          body: JSON.stringify({
-            data: {
-              gallery: {
-                columns: viewport.width >= 1024 ? 4 : viewport.width >= 768 ? 3 : 2,
-                spacing: 16,
-                maxWidth: 1200,
-                imageHeight: 200
-              }
-            }
-          })
-        });
-      });
-      await page.route('**/api/images', (route) => {
-        route.fulfill({
-          status: 200,
-          body: JSON.stringify({
-            data: Array(6).fill(null).map((_, i) => ({
-              id: String(i + 1),
-              name: `Logo ${i + 1}`,
-              url: `https://example.com/logo${i + 1}.png`
-            }))
-          })
-        });
-      });
-      await page.goto('/gallery');
-      await ensurePageReady(page);
-      await waitForElement(page, '[data-testid="gallery-grid"]');
-      await compareScreenshots(page, `grid-layout-${viewport.width}x${viewport.height}`);
-    });
+    // Test accessibility in each navigation state
+    const accessibilityReport: AccessibilityResult = await runAccessibilityTest(page);
+    expect(accessibilityReport.violations).toEqual([]);
   });
-
-  test('should test header and navigation layout', async ({ page }) => {
-    await preparePageForVisualTest(page);
-    
-    await testResponsiveLayouts(page, 'header-layout', async (viewport) => {
-      await page.setViewportSize(viewport);
-      await page.goto('/gallery');
-      await ensurePageReady(page);
-      await waitForElement(page, '[data-testid="main-header"]');
-      await compareScreenshots(page, `header-layout-${viewport.width}x${viewport.height}`);
-    });
-  });
-
-  test('should test footer layout', async ({ page }) => {
-    await preparePageForVisualTest(page);
-    
-    await testResponsiveLayouts(page, 'footer-layout', async (viewport) => {
-      await page.setViewportSize(viewport);
-      await page.goto('/gallery');
-      await ensurePageReady(page);
-      await waitForElement(page, '[data-testid="main-footer"]');
-      await page.evaluate(() => {
-        window.scrollTo(0, document.body.scrollHeight);
-      });
-      await page.waitForTimeout(1000); // Wait for scroll to complete
-      await compareScreenshots(page, `footer-layout-${viewport.width}x${viewport.height}`);
-    });
-  });
-}); 
+});

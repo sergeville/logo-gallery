@@ -9,7 +9,7 @@ test.describe('Loading States Visual Tests', () => {
 
   test('loading states', async ({ page }) => {
     await page.goto(`${LOCALHOST_URL}/gallery`);
-    
+
     // Simulate loading state
     await page.evaluate(() => {
       const loadingElements = document.querySelectorAll('[aria-busy="true"]');
@@ -19,4 +19,4 @@ test.describe('Loading States Visual Tests', () => {
     // Compare loading states
     await expect(page.locator('[data-testid="loading"]')).toHaveScreenshot('loading-states.png');
   });
-}); 
+});

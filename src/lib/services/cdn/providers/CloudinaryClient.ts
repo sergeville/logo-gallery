@@ -1,124 +1,72 @@
-import { CDNProvider, CDNUploadOptions, CDNUploadResult, CDNTransformOptions } from '@/lib/services/cdn/CDNService';
-import { v2 as cloudinary } from 'cloudinary';
-import sharp from 'sharp';
-
-interface CloudinaryConfig {
-  enabled: boolean;
-  cloudName: string;
-  apiKey: string;
-  apiSecret: string;
-  options: {
-    secure: boolean;
-    cdn_subdomain: boolean;
-    transformation: {
-      quality: string;
-      fetchFormat: string;
-    };
-  };
-}
+import { CDNProvider, UploadOptions, UploadResult } from '../types';
 
 export class CloudinaryClient implements CDNProvider {
-  private config: CloudinaryConfig;
+  private cloudName: string;
+  private apiKey: string;
+  private apiSecret: string;
 
-  constructor(config: CloudinaryConfig) {
-    this.config = config;
-    
-    // Initialize Cloudinary
-    cloudinary.config({
-      cloud_name: config.cloudName,
-      api_key: config.apiKey,
-      api_secret: config.apiSecret,
-      secure: config.options.secure,
-    });
+  constructor(config: { cloudName: string; apiKey: string; apiSecret: string }) {
+    this.cloudName = config.cloudName;
+    this.apiKey = config.apiKey;
+    this.apiSecret = config.apiSecret;
   }
 
-  async uploadImage(buffer: Buffer, options: CDNUploadOptions): Promise<CDNUploadResult> {
-    const metadata = await sharp(buffer).metadata();
+  async uploadImage(file: File | Blob, options: UploadOptions): Promise<UploadResult> {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('upload_preset', options.preset || 'default');
 
-    // Convert buffer to base64
-    const base64Data = buffer.toString('base64');
-    const uploadStr = `data:${options.contentType};base64,${base64Data}`;
+    const response = await fetch(
+      `https://api.cloudinary.com/v1_1/${this.cloudName}/image/upload`,
+      {
+        method: 'POST',
+        body: formData,
+      }
+    );
 
-    // Prepare upload options
-    const uploadOptions = {
-      public_id: options.path || undefined,
-      folder: !options.path ? 'logos' : undefined,
-      resource_type: 'image',
-      ...options.transformation,
-    };
+    if (!response.ok) {
+      throw new Error('Failed to upload image to Cloudinary');
+    }
 
-    // Upload to Cloudinary
-    const result = await new Promise<any>((resolve, reject) => {
-      cloudinary.uploader.upload(uploadStr, uploadOptions, (error, result) => {
-        if (error) reject(error);
-        else resolve(result);
-      });
-    });
-
+    const result = await response.json();
     return {
       url: result.secure_url,
       publicId: result.public_id,
-      metadata: {
-        width: metadata.width || 0,
-        height: metadata.height || 0,
-        format: metadata.format || 'unknown',
-        size: buffer.length,
-      },
+      width: result.width,
+      height: result.height,
+      format: result.format,
+      size: result.bytes,
     };
   }
 
-  getUrl(path: string, options?: CDNTransformOptions): string {
-    if (!options) {
-      return cloudinary.url(path, {
-        secure: this.config.options.secure,
-        cdn_subdomain: this.config.options.cdn_subdomain,
-      });
-    }
+  async deleteImage(publicId: string): Promise<void> {
+    const timestamp = Math.floor(Date.now() / 1000);
+    const signature = await this.generateSignature(publicId, timestamp);
 
-    const transformation: any = {
-      secure: this.config.options.secure,
-      cdn_subdomain: this.config.options.cdn_subdomain,
-    };
+    const formData = new FormData();
+    formData.append('public_id', publicId);
+    formData.append('signature', signature);
+    formData.append('api_key', this.apiKey);
+    formData.append('timestamp', timestamp.toString());
 
-    if (options.width) transformation.width = options.width;
-    if (options.height) transformation.height = options.height;
-    if (options.quality) transformation.quality = options.quality;
-    if (options.format) transformation.fetch_format = options.format;
-    if (options.fit) {
-      switch (options.fit) {
-        case 'cover':
-          transformation.crop = 'fill';
-          break;
-        case 'contain':
-          transformation.crop = 'fit';
-          break;
-        case 'fill':
-          transformation.crop = 'scale';
-          break;
-        case 'inside':
-          transformation.crop = 'limit';
-          break;
-        case 'outside':
-          transformation.crop = 'mfit';
-          break;
+    const response = await fetch(
+      `https://api.cloudinary.com/v1_1/${this.cloudName}/image/destroy`,
+      {
+        method: 'POST',
+        body: formData,
       }
-    }
-    if (options.background) transformation.background = options.background.replace('#', 'rgb:');
-    if (options.dpr) transformation.dpr = options.dpr;
-    if (options.auto) {
-      transformation.fetch_format = 'auto';
-      transformation.quality = 'auto';
-    }
+    );
 
-    return cloudinary.url(path, transformation);
+    if (!response.ok) {
+      throw new Error('Failed to delete image from Cloudinary');
+    }
   }
 
-  async purgeCache(paths: string[]): Promise<void> {
-    await new Promise<void>((resolve, reject) => {
-      cloudinary.api.delete_resources(paths, (error: any) => {
-        if (error) reject(error);
-        else resolve();
-      });
-    });
+  private async generateSignature(publicId: string, timestamp: number): Promise<string> {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(`public_id=${publicId}&timestamp=${timestamp}${this.apiSecret}`);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
   }
 } 

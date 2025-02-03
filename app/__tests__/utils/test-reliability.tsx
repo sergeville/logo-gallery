@@ -1,7 +1,6 @@
 import React from 'react';
 import { act, waitFor } from '@testing-library/react';
 import { TEST_TIMEOUTS } from '../constants';
-import { render, RenderResult } from '@testing-library/react';
 
 /**
  * Waits for all pending timers and animations to complete
@@ -12,6 +11,12 @@ export const waitForAnimations = async (): Promise<void> => {
   });
 };
 
+interface PendingRequest {
+  url: string;
+  method: string;
+  status: 'pending' | 'complete' | 'error';
+}
+
 /**
  * Waits for all pending network requests to complete
  * @param timeout - Optional timeout in milliseconds
@@ -19,7 +24,8 @@ export const waitForAnimations = async (): Promise<void> => {
 export const waitForNetwork = async (timeout = TEST_TIMEOUTS.API_CALL): Promise<void> => {
   await waitFor(
     () => {
-      const pendingRequests = (global as any).pendingRequests || [];
+      const pendingRequests =
+        (global as { pendingRequests?: PendingRequest[] }).pendingRequests || [];
       if (pendingRequests.length > 0) {
         throw new Error('Waiting for network requests to complete');
       }
@@ -51,6 +57,16 @@ export const waitForImages = async (container: HTMLElement): Promise<void> => {
   );
 };
 
+interface GlobalWithFetch extends NodeJS.Global {
+  fetch: {
+    mockClear?: () => void;
+  };
+}
+
+interface GlobalWithEventListeners extends NodeJS.Global {
+  __TEST_EVENT_LISTENERS__?: Array<() => void>;
+}
+
 /**
  * Cleans up after each test
  */
@@ -58,11 +74,12 @@ export const cleanupTest = async (): Promise<void> => {
   jest.clearAllTimers();
   jest.clearAllMocks();
 
-  if (typeof (global.fetch as any).mockClear === 'function') {
-    (global.fetch as any).mockClear();
+  const globalWithFetch = global as GlobalWithFetch;
+  if (typeof globalWithFetch.fetch.mockClear === 'function') {
+    globalWithFetch.fetch.mockClear();
   }
 
-  (global as any).pendingRequests = [];
+  (global as { pendingRequests?: unknown[] }).pendingRequests = [];
   window.localStorage.clear();
   window.sessionStorage.clear();
 
@@ -72,10 +89,11 @@ export const cleanupTest = async (): Promise<void> => {
       .replace(/=.*/, `=;expires=${new Date(0).toUTCString()};path=/`);
   });
 
-  const cleanup = (global as any).__TEST_EVENT_LISTENERS__;
+  const globalWithListeners = global as GlobalWithEventListeners;
+  const cleanup = globalWithListeners.__TEST_EVENT_LISTENERS__;
   if (cleanup) {
-    cleanup.forEach((fn: () => void) => fn());
-    (global as any).__TEST_EVENT_LISTENERS__ = [];
+    cleanup.forEach(fn => fn());
+    globalWithListeners.__TEST_EVENT_LISTENERS__ = [];
   }
 };
 
@@ -92,11 +110,12 @@ export const trackEventListener = (
 ): void => {
   element.addEventListener(eventName, handler);
 
-  if (!(global as any).__TEST_EVENT_LISTENERS__) {
-    (global as any).__TEST_EVENT_LISTENERS__ = [];
+  const globalWithListeners = global as GlobalWithEventListeners;
+  if (!globalWithListeners.__TEST_EVENT_LISTENERS__) {
+    globalWithListeners.__TEST_EVENT_LISTENERS__ = [];
   }
 
-  (global as any).__TEST_EVENT_LISTENERS__.push(() => {
+  globalWithListeners.__TEST_EVENT_LISTENERS__.push(() => {
     element.removeEventListener(eventName, handler);
   });
 };
@@ -120,22 +139,25 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
     return { hasError: true, error };
   }
 
-  render(): React.ReactNode {
+  render(): JSX.Element {
     if (this.state.hasError) {
-      return (
-        <div data-testid="error-boundary">
-          <h1>Something went wrong.</h1>
-          <pre>{this.state.error?.message}</pre>
-        </div>
+      return React.createElement(
+        'div',
+        { 'data-testid': 'error-boundary' },
+        React.createElement('h1', null, 'Something went wrong.'),
+        React.createElement('pre', null, this.state.error?.message)
       );
     }
 
-    return this.props.children;
+    return React.createElement(React.Fragment, null, this.props.children);
   }
 }
 
 interface ReliabilityTestUtils {
-  wrapWithErrorBoundary: (Component: React.ComponentType<unknown>, props?: Record<string, unknown>) => React.ReactElement;
+  wrapWithErrorBoundary: (
+    Component: React.ComponentType<unknown>,
+    props?: Record<string, unknown>
+  ) => React.ReactElement;
 }
 
 export function setupReliabilityTest(): ReliabilityTestUtils {
@@ -156,7 +178,10 @@ export function setupReliabilityTest(): ReliabilityTestUtils {
     console.error = originalConsoleError;
   });
 
-  function wrapWithErrorBoundary(Component: React.ComponentType<unknown>, props: Record<string, unknown> = {}): React.ReactElement {
+  function wrapWithErrorBoundary(
+    Component: React.ComponentType<unknown>,
+    props: Record<string, unknown> = {}
+  ): React.ReactElement {
     return React.createElement(ErrorBoundary, null, React.createElement(Component, props));
   }
 

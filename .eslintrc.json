@@ -4,15 +4,7 @@
     "es2021": true,
     "node": true
   },
-  "extends": [
-    "eslint:recommended",
-    "plugin:react/recommended",
-    "plugin:@typescript-eslint/recommended",
-    "plugin:react-hooks/recommended",
-    "prettier",
-    "next/core-web-vitals",
-    "plugin:prettier/recommended"
-  ],
+  "extends": ["next/core-web-vitals", "plugin:@typescript-eslint/recommended", "prettier"],
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
     "ecmaFeatures": {
@@ -21,19 +13,55 @@
     "ecmaVersion": 12,
     "sourceType": "module"
   },
-  "plugins": ["react", "@typescript-eslint", "react-hooks", "prettier"],
+  "plugins": ["@typescript-eslint", "playwright"],
   "rules": {
-    "react/react-in-jsx-scope": "off",
-    "react/prop-types": "off",
-    "@typescript-eslint/explicit-module-boundary-types": "off",
-    "@typescript-eslint/no-explicit-any": "warn",
-    "react-hooks/rules-of-hooks": "error",
-    "react-hooks/exhaustive-deps": "warn",
-    "@next/next/no-html-link-for-pages": "error",
-    "react/no-unescaped-entities": "off",
-    "@next/next/no-img-element": "off",
-    "prettier/prettier": "error"
+    "@typescript-eslint/no-unused-vars": "error",
+    "@typescript-eslint/no-explicit-any": "error",
+    "@typescript-eslint/explicit-function-return-type": [
+      "error",
+      {
+        "allowExpressions": true,
+        "allowTypedFunctionExpressions": true
+      }
+    ],
+    "playwright/expect-expect": [
+      "error",
+      {
+        "assertFunctionNames": ["expect", "expectLoaded", "expectScreenshot", "testComponentStates"]
+      }
+    ],
+    "playwright/no-conditional-in-test": "warn",
+    "playwright/no-force-option": "error",
+    "playwright/no-wait-for-timeout": "off",
+    "playwright/valid-title": "error",
+    "playwright/no-networkidle": "off",
+    "playwright/no-wait-for-selector": "off"
   },
+  "overrides": [
+    {
+      "files": ["**/*.visual.spec.ts", "**/*.percy.spec.ts"],
+      "rules": {
+        "playwright/no-skipped-test": "error",
+        "playwright/no-focused-test": "error",
+        "playwright/valid-expect": "error",
+        "playwright/no-conditional-expect": "warn"
+      }
+    },
+    {
+      "files": ["**/utils/**/*.ts"],
+      "rules": {
+        "@typescript-eslint/explicit-function-return-type": "error",
+        "playwright/expect-expect": "off"
+      }
+    },
+    {
+      "files": ["**/__tests__/**/*.[jt]s?(x)", "**/?(*.)+(spec|test).[jt]s?(x)"],
+      "rules": {
+        "playwright/no-standalone-expect": "off"
+      }
+    }
+  ],
+  "ignorePatterns": ["node_modules/", "dist/", ".next/", "out/"],
   "settings": {
     "react": {
       "version": "detect"

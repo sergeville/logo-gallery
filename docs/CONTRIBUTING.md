@@ -126,25 +126,23 @@ This guide will help you contribute to the Logo Gallery project effectively whil
 - Include code examples in documentation
 - Provide usage examples in component files
 - Add test cases that serve as documentation:
-
-```typescript
-// Example test case
-describe('LogoCard', () => {
-  it('should handle image loading errors gracefully', () => {
-    const { getByTestId } = render(
-      <LogoCard 
-        logo={{
-          _id: '123',
-          imageUrl: 'invalid-url.jpg',
-          title: 'Test Logo'
-        }}
-      />
-    );
-    
-    expect(getByTestId('error-fallback')).toBeInTheDocument();
+  ```typescript
+  describe('LogoCard', () => {
+    it('should handle image loading errors gracefully', () => {
+      const { getByTestId } = render(
+        <LogoCard 
+          logo={{
+            _id: '123',
+            imageUrl: 'invalid-url.jpg',
+            title: 'Test Logo'
+          }}
+        />
+      );
+      
+      expect(getByTestId('error-fallback')).toBeInTheDocument();
+    });
   });
-});
-```
+  ```
 
 ### 6. Technically Thorough
 
@@ -153,21 +151,20 @@ describe('LogoCard', () => {
 - Document technical decisions and trade-offs
 - Use TypeScript with strict mode enabled
 - Implement proper error handling:
-
-```typescript
-try {
-  await uploadLogo(file);
-} catch (error) {
-  if (error instanceof ValidationError) {
-    handleValidationError(error);
-  } else if (error instanceof StorageError) {
-    handleStorageError(error);
-  } else {
-    captureException(error);
-    showGenericError();
+  ```typescript
+  try {
+    await uploadLogo(file);
+  } catch (error) {
+    if (error instanceof ValidationError) {
+      handleValidationError(error);
+    } else if (error instanceof StorageError) {
+      handleStorageError(error);
+    } else {
+      captureException(error);
+      showGenericError();
+    }
   }
-}
-```
+  ```
 
 ### 7. Following Best Practices
 
@@ -240,83 +237,51 @@ Example decision matrix:
    - [ ] Includes appropriate tests
    - [ ] Has meaningful comments
    - [ ] Handles errors appropriately
+   - [ ] No unnecessary dependencies
+   - [ ] Optimized imports
+   - [ ] No console logs in production code
 
 2. Documentation
    - [ ] Updates relevant documentation
    - [ ] Includes inline comments where needed
    - [ ] Updates changelog if needed
+   - [ ] JSDoc comments for public APIs
+   - [ ] Updated README if needed
+   - [ ] Added examples for new features
 
 3. Testing
    - [ ] Unit tests pass
    - [ ] Integration tests pass
    - [ ] E2E tests pass
    - [ ] Visual regression tests pass
+   - [ ] Performance tests pass
+   - [ ] Test coverage maintained or improved
 
 4. Performance
    - [ ] No unnecessary re-renders
    - [ ] Efficient database queries
    - [ ] Proper image optimization
+   - [ ] Bundle size impact considered
+   - [ ] Lazy loading where appropriate
+   - [ ] Caching strategy implemented
 
-## Security Guidelines
-
-### Security Best Practices
-
-1. **Input Validation**
-   - Validate all user inputs
-   - Use Zod schemas
-   - Sanitize HTML content
-   - Example:
-     ```typescript
-     const LogoSchema = z.object({
-       title: z.string().min(1).max(100),
-       description: z.string().max(500).optional(),
-       file: z.instanceof(File).refine(
-         (file) => ALLOWED_TYPES.includes(file.type),
-         'Invalid file type'
-       )
-     });
-     ```
-
-2. **Authentication & Authorization**
-   - Use NextAuth.js middleware
-   - Implement RBAC
-   - Rate limiting
-   - Example:
-     ```typescript
-     export const config = {
-       matcher: ['/api/upload', '/api/logos/:path*']
-     };
-     
-     export function middleware(request: NextRequest) {
-       const token = await getToken({ req: request });
-       if (!token) {
-         return new NextResponse(
-           JSON.stringify({ error: 'Unauthorized' }),
-           { status: 401 }
-         );
-       }
-     }
-     ```
-
-3. **Data Protection**
-   - Use environment variables
-   - Implement proper CORS
-   - Set security headers
-   - Example:
-     ```typescript
-     // next.config.js
-     const securityHeaders = [
-       {
-         key: 'X-DNS-Prefetch-Control',
-         value: 'on'
-       },
-       {
-         key: 'Strict-Transport-Security',
-         value: 'max-age=63072000; includeSubDomains; preload'
-       }
-     ];
-     ```
+5. Security
+   - [ ] Input validation implemented
+   - [ ] Authentication/Authorization checked
+   - [ ] No sensitive data exposure
+   - [ ] XSS prevention
+   - [ ] CSRF protection
+   - [ ] Rate limiting where needed
 
 ## Getting Help
 
 - Check existing documentation in `/docs`
+- Review test cases for examples
+- Ask questions in pull request comments
+- Join our Discord community
+- Search existing issues
+- Create a new issue if needed
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](../LICENSE) file for details.

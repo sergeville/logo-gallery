@@ -1,0 +1,92 @@
+{
+  "metadata": {
+    "last_updated": "2024-03-19",
+    "total_errors": 4,
+    "total_tasks": 4
+  },
+  "tasks": [
+    {
+      "id": "CRIT-001",
+      "priority": "CRITICAL",
+      "title": "Fix Authentication Server Error",
+      "error_type": "Runtime",
+      "description": "Initial authentication requests returning 500 server errors",
+      "evidence": {
+        "log": "GET /auth/signin 500 in 27ms",
+        "frequency": "Multiple occurrences",
+        "impact": "Authentication system completely unavailable"
+      },
+      "recommended_steps": [
+        "Check authentication server logs",
+        "Verify database connections",
+        "Review authentication middleware",
+        "Test credentials validation"
+      ],
+      "estimated_effort": "High",
+      "status": "Open"
+    },
+    {
+      "id": "HIGH-001",
+      "priority": "HIGH",
+      "title": "Resolve Test Data Cleanup API Method",
+      "error_type": "Configuration",
+      "description": "Test cleanup endpoint returning 405 Method Not Allowed",
+      "evidence": {
+        "log": "GET /api/test/cleanup 405 in 2048ms",
+        "frequency": "Multiple occurrences",
+        "impact": "Test data not being cleaned up between test runs"
+      },
+      "recommended_steps": [
+        "Update global setup to use POST instead of GET",
+        "Verify API route handler accepts correct HTTP method",
+        "Add proper error handling for invalid methods"
+      ],
+      "estimated_effort": "Medium",
+      "status": "In Progress"
+    },
+    {
+      "id": "MED-001",
+      "priority": "MEDIUM",
+      "title": "Fix Settings Page 404 Errors",
+      "error_type": "Routing",
+      "description": "Settings page consistently returning 404 Not Found",
+      "evidence": {
+        "log": "GET /settings 404 in 806ms",
+        "frequency": "Multiple occurrences",
+        "impact": "Settings page inaccessible"
+      },
+      "recommended_steps": [
+        "Create settings page route",
+        "Implement settings page component",
+        "Add route to Next.js configuration"
+      ],
+      "estimated_effort": "Medium",
+      "status": "Open"
+    },
+    {
+      "id": "LOW-001",
+      "priority": "LOW",
+      "title": "Resolve Webpack Cache Issues",
+      "error_type": "Development",
+      "description": "Webpack cache failing during development",
+      "evidence": {
+        "log": "[webpack.cache.PackFileCacheStrategy] Caching failed for pack",
+        "frequency": "Intermittent",
+        "impact": "Development environment performance"
+      },
+      "recommended_steps": [
+        "Clear webpack cache",
+        "Verify file permissions",
+        "Update webpack configuration"
+      ],
+      "estimated_effort": "Low",
+      "status": "Open"
+    }
+  ],
+  "priority_definitions": {
+    "CRITICAL": "Immediate fix required - blocking core functionality",
+    "HIGH": "Major feature/functionality affected - needs urgent attention",
+    "MEDIUM": "Important but not blocking core functionality",
+    "LOW": "Minor issues affecting development experience"
+  }
+} 

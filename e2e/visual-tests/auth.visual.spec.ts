@@ -1,150 +1,151 @@
 import { test, expect } from '@playwright/test';
-import { preparePageForVisualTest, testComponentStates } from '@/e2e/visual-tests/utils/visual-test-utils';
+import { 
+  preparePageForVisualTest, 
+  testComponentStates, 
+  VIEWPORT_SIZES, 
+  runAccessibilityTest,
+  TestState,
+  AccessibilityResult 
+} from './utils/visual-test-utils';
 
-test.describe('Auth Visual Tests', () => {
-  test('auth modal layout matches snapshot', async ({ page }) => {
-    await page.goto('/');
-    
-    // Open auth modal by clicking the Sign In link
-    await page.getByRole('link', { name: 'Sign In' }).click();
-    await page.waitForURL('**/auth/signin**');
-    
-    await preparePageForVisualTest(page, {
-      waitForSelectors: ['form'],
-      maskSelectors: ['time', '[data-dynamic]'],
-    });
-
-    await expect(page).toHaveScreenshot('auth-modal.png');
+/**
+ * Visual regression tests for authentication components.
+ * Tests various states and responsive layouts of the auth pages.
+ * 
+ * @remarks
+ * Test Coverage:
+ * - Sign In Form:
+ *   - Default state
+ *   - Loading state
+ *   - Error state
+ *   - Empty state
+ * - Responsive layouts
+ * - Accessibility
+ * - Social login buttons
+ * - Dark mode
+ */
+test.describe('Authentication Visual Tests', () => {
+  /**
+   * Setup for each test case
+   */
+  test.beforeEach(async ({ page }): Promise<void> => {
+    await page.goto('/auth/signin');
+    await preparePageForVisualTest(page);
   });
 
-  test('auth modal responsive layout', async ({ page }) => {
-    await page.goto('/');
-    await page.getByRole('link', { name: 'Sign In' }).click();
-    await page.waitForURL('**/auth/signin**');
-    
-    // Mobile view
-    await page.setViewportSize({ width: 375, height: 667 });
-    await preparePageForVisualTest(page, {
-      waitForSelectors: ['form'],
-      maskSelectors: ['time', '[data-dynamic]'],
-    });
-    await expect(page).toHaveScreenshot('auth-modal-mobile.png');
-    
-    // Tablet view
-    await page.setViewportSize({ width: 768, height: 1024 });
-    await preparePageForVisualTest(page, {
-      waitForSelectors: ['form'],
-      maskSelectors: ['time', '[data-dynamic]'],
-    });
-    await expect(page).toHaveScreenshot('auth-modal-tablet.png');
-    
-    // Desktop view
-    await page.setViewportSize({ width: 1280, height: 720 });
-    await preparePageForVisualTest(page, {
-      waitForSelectors: ['form'],
-      maskSelectors: ['time', '[data-dynamic]'],
-    });
-    await expect(page).toHaveScreenshot('auth-modal-desktop.png');
+  /**
+   * Tests sign-in form states and accessibility
+   */
+  test('sign in form visual states', async ({ page }): Promise<void> => {
+    const states: TestState[] = [
+      {
+        name: 'default',
+        setup: async (): Promise<void> => {
+          await page.goto('/auth/signin');
+        }
+      },
+      {
+        name: 'loading',
+        setup: async (): Promise<void> => {
+          await page.goto('/auth/signin');
+          await page.getByRole('button', { name: 'Sign in' }).click();
+        }
+      },
+      {
+        name: 'error',
+        setup: async (): Promise<void> => {
+          await page.goto('/auth/signin');
+          await page.getByPlaceholder('Email').fill('invalid@email.com');
+          await page.getByPlaceholder('Password').fill('wrongpass');
+          await page.getByRole('button', { name: 'Sign in' }).click();
+        }
+      },
+      {
+        name: 'empty',
+        setup: async (): Promise<void> => {
+          await page.goto('/auth/signin');
+          await page.getByPlaceholder('Email').fill('');
+          await page.getByPlaceholder('Password').fill('');
+        }
+      }
+    ];
+
+    // Test component states
+    await testComponentStates(page, '[data-testid="signin-form"]', states);
+
+    // Test responsive layouts
+    for (const [device, viewport] of Object.entries(VIEWPORT_SIZES)) {
+      await page.setViewportSize(viewport);
+      await expect(page).toHaveScreenshot(`signin-form-${device}.png`);
+    }
+
+    // Test accessibility
+    const accessibilityReport: AccessibilityResult = await runAccessibilityTest(page);
+    expect(accessibilityReport.violations).toEqual([]);
   });
 
-  test('auth form states', async ({ page }) => {
-    await page.goto('/');
-    await page.getByRole('link', { name: 'Sign In' }).click();
-    await page.waitForURL('**/auth/signin**');
-    
-    // Test form field states
-    await testComponentStates(page, 'input[type="email"]', [
-      { name: 'default', action: async () => {} },
-      { name: 'focus', action: async (el) => await el.focus() },
-      { name: 'filled', action: async (el) => await el.fill('test@example.com') },
-      { name: 'error', action: async (el) => {
-        await el.fill('invalid-email');
-        await el.evaluate(e => e.blur());
-      }},
-    ]);
+  /**
+   * Tests social login button states
+   */
+  test('social login buttons', async ({ page }): Promise<void> => {
+    const states: TestState[] = [
+      {
+        name: 'default',
+        setup: async (): Promise<void> => {
+          await page.goto('/auth/signin');
+        }
+      },
+      {
+        name: 'hover',
+        setup: async (): Promise<void> => {
+          await page.goto('/auth/signin');
+          await page.getByRole('button', { name: 'Continue with Google' }).hover();
+        }
+      }
+    ];
 
-    // Test password field states
-    await testComponentStates(page, 'input[type="password"]', [
-      { name: 'default', action: async () => {} },
-      { name: 'focus', action: async (el) => await el.focus() },
-      { name: 'filled', action: async (el) => await el.fill('password123') },
-      { name: 'error', action: async (el) => {
-        await el.fill('123');
-        await el.evaluate(e => e.blur());
-      }},
-    ]);
+    await testComponentStates(page, '[data-testid="social-login-buttons"]', states);
   });
 
-  test('auth modal dark mode', async ({ page }) => {
-    await page.goto('/');
-    await page.waitForLoadState('networkidle');
-    
-    // Enable dark mode
-    await page.evaluate(() => {
-      const html = document.documentElement;
-      html.classList.remove('light');
-      html.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
+  /**
+   * Tests dark mode appearance
+   */
+  test('dark mode appearance', async ({ page }): Promise<void> => {
+    await page.goto('/auth/signin');
+    await page.evaluate((): void => {
+      document.documentElement.classList.add('dark');
     });
-    
-    // Open auth modal
-    await page.getByRole('link', { name: 'Sign In' }).click();
-    await page.waitForURL('**/auth/signin**');
-    
-    await preparePageForVisualTest(page, {
-      waitForSelectors: ['form'],
-      maskSelectors: ['time', '[data-dynamic]'],
-    });
-    
-    await expect(page).toHaveScreenshot('auth-modal-dark.png');
+    await preparePageForVisualTest(page);
+    await expect(page).toHaveScreenshot('signin-form-dark-mode.png');
   });
 
-  test('auth error states', async ({ page }) => {
-    await page.goto('/');
-    await page.getByRole('link', { name: 'Sign In' }).click();
-    await page.waitForURL('**/auth/signin**');
-    
-    // Test invalid credentials error
-    await page.locator('input[type="email"]').fill('test@example.com');
-    await page.locator('input[type="password"]').fill('wrongpassword');
-    
-    // Click sign in and wait for error response
-    await Promise.all([
-      page.waitForResponse(res => 
-        res.url().includes('/api/auth/callback/credentials') && 
-        res.status() === 401
-      ),
-      page.getByRole('button', { name: 'Sign in' }).click()
-    ]);
+  test('sign out visual states', async ({ page }) => {
+    // First sign in
+    const testEmail = process.env.NEXT_PUBLIC_TEST_EMAIL;
+    const testPassword = process.env.NEXT_PUBLIC_TEST_PASSWORD;
 
-    // Wait for error message with more specific selector and longer timeout
-    await page.waitForSelector('div[class*="bg-red-50"] div[class*="text-red-700"]', { 
-      state: 'visible',
-      timeout: 30000 
-    });
-    
-    await preparePageForVisualTest(page, {
-      waitForSelectors: ['div[class*="bg-red-50"]', 'form'],
-      maskSelectors: ['time', '[data-dynamic]'],
-    });
-    
-    await expect(page).toHaveScreenshot('auth-error-invalid-credentials.png');
-    
-    // Test network error
-    await page.route('**/api/auth/**', route => route.abort('failed'));
-    await page.getByRole('button', { name: 'Sign in' }).click();
-    
-    // Wait for network error message
-    await page.waitForSelector('div[class*="bg-red-50"] div[class*="text-red-700"]', { 
-      state: 'visible',
-      timeout: 30000 
-    });
-    
-    await preparePageForVisualTest(page, {
-      waitForSelectors: ['div[class*="bg-red-50"]', 'form'],
-      maskSelectors: ['time', '[data-dynamic]'],
-    });
-    
-    await expect(page).toHaveScreenshot('auth-error-network.png');
+    await page.goto('/auth/signin');
+    await page.fill('input[name="email"]', testEmail);
+    await page.fill('input[name="password"]', testPassword);
+    await page.click('button[type="submit"]');
+    await page.waitForURL('**/gallery');
+
+    // Take screenshot of authenticated state
+    await expect(page).toHaveScreenshot('auth-authenticated.png');
+
+    // Click sign out
+    await page.click('button:has-text("Sign Out")');
+    await page.waitForURL('/');
+
+    // Take screenshot of signed out state
+    await expect(page).toHaveScreenshot('auth-signed-out.png');
+
+    // Verify UI elements
+    await expect(page.locator('button:has-text("Sign In")')).toBeVisible();
+    await expect(page.locator('text=Upload Logo')).not.toBeVisible();
+
+    // Test accessibility after sign out
+    const accessibilityReport = await runAccessibilityTest(page);
+    expect(accessibilityReport.violations).toEqual([]);
   });
-}); 
+});

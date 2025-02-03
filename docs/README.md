@@ -6,56 +6,90 @@ This documentation covers all aspects of the Logo Gallery project, from developm
 
 ## Table of Contents
 
+### Core Features
+- [Getting Started](../README.md#getting-started)
+- [Authentication System](features/authentication.md)
+- [Real-time Sync System](features/sync-system.md)
+- [Voting System](features/voting-system.md)
+- [Image Processing](features/image-processing.md)
+
 ### Development
-- [Getting Started](development/getting-started.md)
 - [Code Standards](development/code-standards.md)
-- [Git Workflow](development/git-workflow.md)
-- [Environment Setup](development/environment.md)
+- [Development Standards](development/STANDARDS.md)
+- [Error Tracking](development/ERROR_TRACKING.md)
+- [Build Fixes](development/nextjs-build-fixes.md)
+- [Tasks & Planning](development/TASKS.md)
+- [Development Progress](development/CONVERSATION_SUMMARY.md)
+- [Real-time Sync System](development/SYNC_SYSTEM.md)
 
-### Design
-- [Design System](design/design-system.md)
-- [Component Library](design/components.md)
-- [Theme Guidelines](design/theme.md)
-- [Screenshots](design/screenshots/)
-
-### Testing
-- [Visual Testing Guide](../e2e/visual-tests/README.md)
-- [Test Coverage](testing/coverage.md)
-- [Test Standards](testing/standards.md)
-- [Performance Testing](testing/performance.md)
-
-### Error Tracking
-- [Error Tracking System](error-tracking/README.md)
-- [Task Management](error-tracking/tasks.csv)
-- [Issue Resolution](error-tracking/resolution.md)
+### Architecture
+- [Project Structure](architecture/project-structure.md)
+- [API Design](architecture/api-design.md)
+- [Database Schema](architecture/database-schema.md)
+- [Real-time Architecture](architecture/real-time.md)
+- [Security Model](architecture/security.md)
 
 ### Components
-- [Component Documentation](../app/components/README.md)
-- [Component Architecture](components/architecture.md)
-- [State Management](components/state.md)
-- [Props Interface](components/props.md)
+- [Component Library](components/README.md)
+- [Header](components/header.md)
+- [LogoCard](components/logo-card.md)
+- [VotePage](components/vote-page.md)
+- [AuthModal](components/auth-modal.md)
+- [ImageUpload](components/image-upload.md)
 
-### API
-- [API Documentation](api/README.md)
+### API Reference
 - [Authentication](api/auth.md)
-- [Endpoints](api/endpoints.md)
-- [Data Models](api/models.md)
+- [Logo Management](api/logos.md)
+- [Vote Handling](api/votes.md)
+- [Real-time Sync](api/sync.md)
+- [Image Processing](api/images.md)
+
+### Testing
+- [Testing Strategy](testing/strategy.md)
+- [Visual Testing](testing/visual-testing.md)
+- [Unit Testing](testing/unit-testing.md)
+- [E2E Testing](testing/e2e-testing.md)
+- [Performance Testing](testing/performance-testing.md)
+- [Test Issues](testing/TEST_ISSUES.md)
+
+### Deployment
+- [Deployment Guide](deployment/README.md)
+- [Environment Setup](deployment/environment.md)
+- [Monitoring](deployment/monitoring.md)
+- [Performance Optimization](deployment/performance.md)
+- [Security Guidelines](deployment/security.md)
+
+### Contributing
+- [Contributing Guide](contributing/CONTRIBUTING.md)
+- [Code of Conduct](contributing/CODE_OF_CONDUCT.md)
+- [Development Workflow](contributing/workflow.md)
+- [Pull Request Template](contributing/PULL_REQUEST_TEMPLATE.md)
+- [Changelog](contributing/CHANGELOG.md)
+
+## Quick Links
+
+- [Installation Guide](../README.md#installation)
+- [Environment Variables](../README.md#environment-variables)
+- [Running Tests](../README.md#running-tests)
+- [Contributing](../CONTRIBUTING.md)
+- [License](../LICENSE)
 
 ## Recent Updates
 
-### January 31, 2024
-- Added comprehensive visual testing suite
-- Implemented authentication system
-- Added error boundary and loading components
-- Enhanced component styling and theming
-- Improved error handling and loading states
+### February 2024
+- Added real-time synchronization system
+- Enhanced authentication system
+- Improved voting functionality
+- Added performance optimizations
+- Updated documentation structure
 
-### Next Steps
-1. Address Homepage Layout Rendering Failure (HOMEPAGE-001)
-2. Fix Navigation Components (NAV-001)
-3. Complete theme implementation (THEME-001)
-4. Enhance interactive elements (INTERACT-001)
+## Support
 
-## Contributing
+For support, please:
+1. Check the documentation
+2. Search existing issues
+3. Create a new issue if needed
 
-See [CONTRIBUTING.md](../CONTRIBUTING.md) for guidelines on contributing to this project. 
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](../LICENSE) file for details. 

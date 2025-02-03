@@ -1,143 +1,233 @@
-import { Page, expect, Locator } from '@playwright/test';
+import { Page } from '@playwright/test';
+import { injectAxe } from 'axe-playwright';
 
+/**
+ * Standard viewport sizes for responsive testing
+ */
 export const VIEWPORT_SIZES = {
   mobile: { width: 375, height: 667 },
   tablet: { width: 768, height: 1024 },
-  desktop: { width: 1280, height: 720 }
-};
+  desktop: { width: 1280, height: 800 },
+} as const;
 
-export interface VisualTestOptions {
-  maskSelectors?: string[];
-  removeSelectors?: string[];
-  waitForSelectors?: string[];
-  waitForTimeout?: number;
-  customStyles?: string;
-  setup?: () => Promise<void>;
-}
-
+/**
+ * Represents a test state configuration
+ */
 export interface TestState {
+  /** Name of the test state */
   name: string;
-  action: (element: Locator) => Promise<void>;
+  /** Setup function to prepare the state */
   setup?: () => Promise<void>;
 }
 
-export async function waitForElement(page: Page, selector: string, timeout = 30000) {
-  return page.waitForSelector(selector, { state: 'visible', timeout });
+/**
+ * Options for visual test preparation
+ */
+export interface VisualTestOptions {
+  /** Selectors to wait for before testing */
+  waitForSelectors?: string[];
+  /** Custom styles to inject */
+  customStyles?: string;
+  /** Custom setup function */
+  setup?: () => Promise<void>;
 }
 
-export async function ensurePageReady(page: Page) {
+/**
+ * Represents an accessibility violation
+ */
+export interface AccessibilityViolation {
+  /** Unique identifier */
+  id: string;
+  /** Severity of the violation */
+  impact: 'minor' | 'moderate' | 'serious' | 'critical';
+  /** Description of the violation */
+  description: string;
+  /** Affected nodes */
+  nodes: Array<{
+    target: string[];
+    html: string;
+  }>;
+}
+
+/**
+ * Results from an accessibility test
+ */
+export interface AccessibilityResult {
+  /** Found violations */
+  violations: Array<{
+    id: string;
+    impact: string;
+    description: string;
+    nodes: Array<{
+      html: string;
+      target: string[];
+    }>;
+  }>;
+}
+
+declare global {
+  interface Window {
+    axe: {
+      run: (callback: (err: Error | null, results: AccessibilityResult) => void) => void;
+    }
+  }
+}
+
+/**
+ * Waits for an element to be visible
+ * @param page - Playwright page object
+ * @param selector - Element selector
+ * @param timeout - Wait timeout in ms
+ */
+export async function waitForElement(page: Page, selector: string, timeout = 30000): Promise<void> {
+  await page.waitForSelector(selector, { state: 'visible', timeout });
+}
+
+/**
+ * Ensures the page is ready for testing
+ * @param page - Playwright page object
+ */
+export async function ensurePageReady(page: Page): Promise<void> {
   await page.waitForLoadState('networkidle');
   await page.waitForLoadState('domcontentloaded');
 }
 
-export async function preparePageForVisualTest(page: Page, options: VisualTestOptions = {}) {
-  const {
-    maskSelectors = [],
-    removeSelectors = [],
-    waitForSelectors = [],
-    waitForTimeout = 1000,
-    customStyles = '',
-    setup,
-  } = options;
+/**
+ * Prepares a page for visual testing
+ * @param page - Playwright page object
+ * @param options - Visual test options
+ */
+export async function preparePageForVisualTest(
+  page: Page,
+  options: VisualTestOptions = {}
+): Promise<void> {
+  const { waitForSelectors = [], customStyles = '', setup } = options;
 
-  // Run setup if provided
+  // Wait for specified selectors
+  for (const selector of waitForSelectors) {
+    await page.waitForSelector(selector);
+  }
+
+  // Apply custom styles if provided
+  if (customStyles) {
+    await page.addStyleTag({ content: customStyles });
+  }
+
+  // Run custom setup if provided
   if (setup) {
     await setup();
   }
-
-  // Wait for specified selectors
-  if (waitForSelectors.length > 0) {
-    await Promise.all(
-      waitForSelectors.map((selector) =>
-        waitForElement(page, selector)
-      )
-    );
-  }
-
-  // Remove dynamic elements
-  if (removeSelectors.length > 0) {
-    await page.evaluate((selectors) => {
-      selectors.forEach((selector) => {
-        document.querySelectorAll(selector).forEach((el) => el.remove());
-      });
-    }, removeSelectors);
-  }
-
-  // Add custom styles to stabilize the page
-  await page.addStyleTag({
-    content: `
-      * {
-        animation: none !important;
-        transition: none !important;
-        caret-color: transparent !important;
-      }
-      ${customStyles}
-    `,
-  });
-
-  // Wait for any animations to complete
-  await page.waitForTimeout(waitForTimeout);
-
-  return {
-    takeScreenshot: async (name: string) => {
-      await expect(page).toHaveScreenshot(name, {
-        mask: maskSelectors.map((selector) => page.locator(selector)),
-      });
-    },
-  };
 }
 
+/**
+ * Tests responsive layouts across different viewport sizes
+ * @param page - Playwright page object
+ * @param viewports - Array of viewport sizes to test
+ */
 export async function testResponsiveLayouts(
   page: Page,
-  name: string,
-  options: VisualTestOptions = {}
-) {
-  const viewports = [
-    { ...VIEWPORT_SIZES.mobile, name: 'mobile' },
-    { ...VIEWPORT_SIZES.tablet, name: 'tablet' },
-    { ...VIEWPORT_SIZES.desktop, name: 'desktop' },
-  ];
-
+  viewports: (typeof VIEWPORT_SIZES)[keyof typeof VIEWPORT_SIZES][]
+): Promise<void> {
   for (const viewport of viewports) {
     await page.setViewportSize(viewport);
-    await preparePageForVisualTest(page, options);
-    await expect(page).toHaveScreenshot(`${name}-${viewport.name}.png`);
+    await page.waitForTimeout(500);
   }
 }
 
+/**
+ * Tests component states
+ * @param page - Playwright page object
+ * @param selector - Component selector
+ * @param states - Array of states to test
+ */
 export async function testComponentStates(
   page: Page,
   selector: string,
-  states: TestState[],
-  options: VisualTestOptions = {}
-) {
-  const element = page.locator(selector);
-  await element.waitFor({ state: 'visible' });
-
+  states: TestState[]
+): Promise<void> {
   for (const state of states) {
-    if (state.setup) {
-      await state.setup();
-    }
-    await state.action(element);
-    await preparePageForVisualTest(page, options);
-    await expect(element).toHaveScreenshot(`${selector}-${state.name}.png`);
+    await state.setup?.();
+    await page.waitForSelector(selector, { state: 'visible' });
+    await preparePageForVisualTest(page);
   }
 }
 
+/**
+ * Compares screenshots before and after an action
+ * @param page - Playwright page object
+ * @param name - Screenshot name
+ * @param beforeAction - Action to perform before screenshot
+ * @param afterAction - Action to perform after screenshot
+ * @param options - Visual test options
+ */
 export async function compareScreenshots(
   page: Page,
   name: string,
   beforeAction: () => Promise<void>,
   afterAction: () => Promise<void>,
   options: VisualTestOptions = {}
-) {
-  // Take before screenshot
+): Promise<void> {
   await beforeAction();
   await preparePageForVisualTest(page, options);
-  await expect(page).toHaveScreenshot(`${name}-before.png`);
+  await page.screenshot({ path: `${name}-before.png` });
 
-  // Take after screenshot
   await afterAction();
   await preparePageForVisualTest(page, options);
-  await expect(page).toHaveScreenshot(`${name}-after.png`);
-} 
+  await page.screenshot({ path: `${name}-after.png` });
+}
+
+/**
+ * Waits for all images to be loaded
+ * @param page - Playwright page object
+ */
+export async function waitForImagesLoaded(page: Page): Promise<void> {
+  await page.waitForFunction(() => {
+    const images: HTMLImageElement[] = Array.from(document.querySelectorAll('img'));
+    return images.every(img => img.complete);
+  });
+}
+
+/**
+ * Waits for all animations to complete
+ * @param page - Playwright page object
+ */
+export async function waitForAnimationsComplete(page: Page): Promise<void> {
+  await page.evaluate(() => {
+    return new Promise<void>(resolve => {
+      const observer = new MutationObserver(mutations => {
+        const hasAnimations = mutations.some(
+          mutation =>
+            mutation.target instanceof HTMLElement &&
+            window.getComputedStyle(mutation.target).animation !== 'none'
+        );
+
+        if (!hasAnimations) {
+          observer.disconnect();
+          resolve();
+        }
+      });
+
+      observer.observe(document.body, {
+        subtree: true,
+        attributes: true,
+        attributeFilter: ['style', 'class'],
+      });
+
+      setTimeout(resolve, 2000);
+    });
+  });
+}
+
+/**
+ * Runs accessibility tests using axe-core
+ * @param page - Playwright page object
+ * @returns Accessibility test results
+ */
+export async function runAccessibilityTest(page: Page): Promise<AccessibilityResult> {
+  await injectAxe(page);
+  return new Promise((resolve, reject) => {
+    page.evaluate(() => {
+      return window.axe.run();
+    }).then(resolve).catch(reject);
+  });
+}

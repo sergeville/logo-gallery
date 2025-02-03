@@ -243,3 +243,275 @@ These standards should be reviewed and updated when:
 - Modifying deployment processes
 
 Last updated: [Current Date] 
+
+# Project Standards
+
+## Testing Standards
+
+### 1. Visual Testing
+
+#### File Organization
+```typescript
+e2e/visual-tests/
+├── components/          # Component-specific tests
+│   ├── button/
+│   ├── input/
+│   └── theme/
+├── middleware/         # Middleware tests
+├── utils/             # Test utilities
+└── *.visual.spec.ts   # Feature tests
+```
+
+#### Naming Conventions
+- Test files: `*.visual.spec.ts`
+- Percy tests: `*.percy.spec.ts`
+- Utility files: `*-utils.ts`
+- Screenshot names: `{component}-{state}-{viewport}.png`
+
+#### Component Test Structure
+```typescript
+test.describe('Component Name', () => {
+  test.beforeEach(async ({ page }) => {
+    await preparePageForVisualTest(page);
+  });
+
+  test('should render correctly in all states', async ({ page }) => {
+    const states = [
+      {
+        name: 'default',
+        setup: async () => { /* setup code */ }
+      },
+      {
+        name: 'loading',
+        setup: async () => { /* setup code */ }
+      }
+    ];
+
+    await testComponentStates(page, selector, states);
+    await expect(page).toHaveScreenshot('component-states.png');
+  });
+});
+```
+
+#### Required Test Cases
+1. Visual States
+   - Initial render
+   - Loading state
+   - Error state
+   - Empty state
+   - Interactive states (hover, focus, active)
+
+2. Responsive Testing
+   - Mobile (375x667)
+   - Tablet (768x1024)
+   - Desktop (1280x800)
+
+3. Theme Testing
+   - Light mode
+   - Dark mode
+   - Custom themes (if applicable)
+
+4. Accessibility Testing
+   - Color contrast
+   - Focus indicators
+   - ARIA attributes
+   - Screen reader compatibility
+
+### 2. Code Quality
+
+#### TypeScript Standards
+1. Types and Interfaces
+   ```typescript
+   interface TestState {
+     name: string;
+     setup: () => Promise<void>;
+     cleanup?: () => Promise<void>;
+   }
+
+   type ViewportSize = {
+     width: number;
+     height: number;
+   };
+   ```
+
+2. Function Signatures
+   ```typescript
+   async function preparePageForVisualTest(
+     page: Page,
+     options?: VisualTestOptions
+   ): Promise<void>;
+
+   async function testComponentStates(
+     page: Page,
+     selector: string,
+     states: TestState[]
+   ): Promise<void>;
+   ```
+
+#### ESLint Rules
+```json
+{
+  "rules": {
+    "playwright/expect-expect": "error",
+    "playwright/no-conditional-in-test": "warn",
+    "playwright/no-force-option": "error",
+    "@typescript-eslint/explicit-function-return-type": "error"
+  }
+}
+```
+
+### 3. Test Utilities
+
+#### Required Utilities
+1. Page Preparation
+   ```typescript
+   await preparePageForVisualTest(page, {
+     waitForSelectors: ['[data-testid="component"]'],
+     customStyles: '* { animation: none !important; }',
+     maskSelectors: ['.dynamic-content'],
+     removeSelectors: ['.ads'],
+     waitForTimeout: 1000
+   });
+   ```
+
+2. Component Testing
+   ```typescript
+   await testComponentStates(page, '[data-testid="component"]', [
+     { name: 'default', setup: async () => {} },
+     { name: 'loading', setup: async () => {} }
+   ]);
+   ```
+
+3. Responsive Testing
+   ```typescript
+   await testResponsiveLayouts(page, [
+     VIEWPORT_SIZES.mobile,
+     VIEWPORT_SIZES.tablet,
+     VIEWPORT_SIZES.desktop
+   ]);
+   ```
+
+### 4. Best Practices
+
+#### Test Organization
+1. Group Related Tests
+   ```typescript
+   test.describe('Feature Group', () => {
+     test.describe('Subfeature', () => {
+       test('specific behavior', async () => {});
+     });
+   });
+   ```
+
+2. Use Meaningful Names
+   ```typescript
+   // Good
+   test('should display error message when API fails');
+   
+   // Bad
+   test('test error');
+   ```
+
+#### Test Isolation
+1. Reset State
+   ```typescript
+   test.beforeEach(async ({ page }) => {
+     await page.goto('/');
+     await clearTestData();
+   });
+   ```
+
+2. Mock External Dependencies
+   ```typescript
+   await page.route('**/api/data', route => {
+     route.fulfill({
+       status: 200,
+       body: JSON.stringify(mockData)
+     });
+   });
+   ```
+
+#### Error Handling
+1. Meaningful Assertions
+   ```typescript
+   await expect(page.locator('error-message')).toBeVisible();
+   await expect(page.locator('error-message')).toHaveText('Invalid input');
+   ```
+
+2. Proper Timeouts
+   ```typescript
+   await page.waitForSelector('[data-testid="content"]', {
+     state: 'visible',
+     timeout: 5000
+   });
+   ```
+
+### 5. Documentation
+
+#### Required Documentation
+1. Test Description
+   ```typescript
+   /**
+    * Tests the logo gallery component in various states:
+    * - Empty state
+    * - Loading state
+    * - Error state
+    * - Populated state with different grid layouts
+    */
+   test.describe('Logo Gallery', () => {});
+   ```
+
+2. Complex Setup
+   ```typescript
+   /**
+    * Prepares the test environment with:
+    * - Mocked API responses
+    * - Authentication state
+    * - Required test data
+    */
+   async function setupTestEnvironment(): Promise<void> {}
+   ```
+
+#### Maintenance
+1. Regular Updates
+   - Review and update baselines monthly
+   - Document known issues
+   - Track flaky tests
+   - Update test data
+
+2. Performance
+   - Optimize test setup
+   - Minimize redundant checks
+   - Use appropriate timeouts
+   - Group related tests
+
+### 6. CI/CD Integration
+
+#### Pipeline Configuration
+```yaml
+visual-tests:
+  script:
+    - npm run test:visual
+  artifacts:
+    paths:
+      - test-results/
+    expire_in: 1 week
+```
+
+#### Required Checks
+1. Visual Regression
+   - Compare against baselines
+   - Check responsive layouts
+   - Verify theme variations
+
+2. Accessibility
+   - Run axe-core checks
+   - Verify ARIA attributes
+   - Check color contrast
+
+3. Performance
+   - Test load times
+   - Check image optimization
+   - Verify caching behavior
+
+Last updated: [Current Date] 

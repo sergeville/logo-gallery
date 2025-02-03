@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useAuth } from '@/app/contexts/AuthContext';
-import { useSession } from 'next-auth/react';
+import { useSession, signOut } from 'next-auth/react';
 import Image from 'next/image';
 import { useTheme } from 'next-themes';
 import { Sun, Moon, Menu, X, Loader } from 'lucide-react';
@@ -13,7 +12,6 @@ import { usePathname } from 'next/navigation';
 
 export default function Header() {
   const { data: session, status } = useSession();
-  const { signOut } = useAuth();
   const { theme, setTheme } = useTheme();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -26,6 +24,7 @@ export default function Header() {
 
   const navigationLinks = [
     { href: '/gallery', label: 'Gallery' },
+    { href: '/vote', label: 'Vote' },
     ...(session ? [
       { href: '/my-logos', label: 'My Logos' },
       { href: '/upload', label: 'Upload Logo' }
@@ -111,7 +110,10 @@ export default function Header() {
                     {session.user?.name}
                   </span>
                   <button
-                    onClick={() => signOut()}
+                    onClick={async () => {
+                      await signOut({ redirect: false });
+                      window.location.href = '/';
+                    }}
                     className="text-sm text-gray-400 hover:text-white transition-colors"
                     aria-label="Sign out"
                   >
@@ -190,9 +192,9 @@ export default function Header() {
                       {session.user?.name}
                     </div>
                     <button
-                      onClick={() => {
-                        signOut();
-                        setIsMenuOpen(false);
+                      onClick={async () => {
+                        await signOut({ redirect: false });
+                        window.location.href = '/';
                       }}
                       className="block w-full text-left px-3 py-2 text-base text-gray-400 hover:text-white transition-colors"
                     >

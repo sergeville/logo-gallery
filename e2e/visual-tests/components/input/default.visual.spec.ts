@@ -12,4 +12,4 @@ test.describe('Input Default State', () => {
     const inputSelector = 'input[type="text"]';
     await expect(page.locator(inputSelector)).toHaveScreenshot('input-default.png');
   });
-}); 
+});
